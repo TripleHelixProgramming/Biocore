@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Triple Helix Robotics, FRC Team 2363
+// Copyright (c) 2025-2026 Triple Helix Robotics, FRC Team 2363
 // https://github.com/TripleHelixProgramming
 //
 // Use of this source code is governed by a BSD
