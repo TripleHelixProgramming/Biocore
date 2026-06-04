@@ -205,6 +205,7 @@ createVersionFile.dependsOn(eventDeploy)
 
 // Install git hooks on first build
 task installHooks(type: Exec) {
+    onlyIf { file(".git").exists() }
     commandLine "git", "config", "core.hooksPath", ".githooks"
 }
 project.compileJava.dependsOn(installHooks)
