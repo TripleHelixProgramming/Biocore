@@ -1,6 +1,6 @@
 # Improving Trajectory Tracking
 
-This document outlines strategies for reducing trajectory tracking error on a swerve drive robot, roughly ordered from easiest to hardest. The current system uses Choreo trajectories with P-only feedback controllers (Kp=8.01) on X, Y, and heading, plus Choreo's velocity feedforward. At VACHE, the best-case tracking error was about 0.2 m at trajectory end, with peaks of 1.0-1.4 m mid-trajectory.
+This document outlines strategies for reducing trajectory tracking error on a swerve drive robot, roughly ordered from easiest to hardest. The current system uses Choreo trajectories with P-only feedback controllers (Kp=8.01) on X, Y, and heading, plus Choreo's velocity feedforward.
 
 The goal is to understand *where the error comes from* and *what we can do about it* — not to implement everything at once, but to have a menu of options ranked by effort and impact.
 
@@ -64,13 +64,13 @@ Update the measured value in both `DriveConstants.wheelRadius` and `Rho.chor`.
 
 **Expected impact**: if the current value is off by 2-3%, fixing it could reduce tracking error proportionally. Small in absolute terms but it's free accuracy.
 
-#### Fix cameras 2 and 3
+#### Verify all cameras see tags from your starting positions
 
-At VACHE, cameras 2 and 3 detected zero tags in every single match before auto. This meant no multi-camera fusion, no score-boosted observations, and marginal observation quality. Fixing this alone would likely be the single biggest improvement to pre-auto localization.
+Before each event, place the robot at each starting position and confirm that all cameras are detecting tags. Rear cameras (mounted at 135° yaw) have no tags in their field of view from some starting positions — this means the robot is running on only front cameras for pre-auto localization, which eliminates multi-camera fusion and leaves only marginal single-tag observations.
 
-Possible causes: disconnected cables, camera orientation pointing away from tags at starting positions, PhotonVision pipeline misconfiguration, or coprocessor not running.
+If cameras that work during teleop produce zero observations pre-auto, the issue is usually field geometry (no tags visible), not a hardware or software fault. See [VISION_CALIBRATION_AND_VALIDATION.md](VISION_CALIBRATION_AND_VALIDATION.md) for validation procedures.
 
-**Expected impact**: multi-camera fusion produces observation scores of 0.9-1.0 instead of 0.65-0.68. The pose estimator would converge faster and more accurately before auto even starts.
+**Expected impact**: multi-camera fusion produces observation scores of 0.9–1.0 instead of 0.65–0.68. The pose estimator converges faster and more accurately before auto.
 
 ### Tier 2: Moderate effort, moderate impact
 
@@ -187,15 +187,15 @@ Instead of following a pre-computed trajectory and correcting errors with PID, r
 
 ## Where to start
 
-For your current system, the highest-impact improvements are:
+The highest-impact improvements, roughly in order:
 
-1. **Fix the Choreo mass mismatch** (130 lbs vs 150 lbs) and verify tmax — this is causing systematic feedforward error in every trajectory
-2. **Fix cameras 2 and 3** — hardware/configuration issue that would dramatically improve localization
+1. **Fix the Choreo mass mismatch** (130 lbs vs 150 lbs) and verify tmax — this causes systematic feedforward error in every trajectory
+2. **Verify all cameras see tags from your starting positions** — missing cameras during pre-auto eliminates multi-camera fusion at the most critical time
 3. **Characterize wheel radius on competition carpet** — free accuracy, update both code and Choreo config
 4. **Add trajectory error logging** — can't improve what you can't measure
 5. **Add D term to trajectory controllers** — small code change, reduces overshoot
 
-These five changes could plausibly reduce your 0.2-1.4 m tracking range to 0.05-0.5 m with modest effort. The more advanced strategies (LQR, velocity feedback, replanning) are worth exploring for a future season where scoring tolerances demand it.
+The more advanced strategies (LQR, velocity feedback, replanning) are worth exploring when scoring tolerances demand sub-10cm accuracy.
 
 ## References
 
