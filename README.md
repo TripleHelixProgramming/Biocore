@@ -146,7 +146,7 @@ The robot-specific subsystems (launcher, feeder, intake, hopper, LEDs, autos, an
 
 ### AdvantageKit — Littleton Robotics (FRC 6328)
 
-The swerve drive subsystem, I/O architecture, and logging infrastructure are based on the [AdvantageKit TalonFX Swerve template](https://github.com/Mechanical-Advantage/AdvantageKit/tree/main/template_projects/sources/talonfx_swerve) by Littleton Robotics (FRC 6328 "Mechanical Advantage"), and have been substantially modified. AdvantageKit is licensed under BSD 3-Clause; see [AdvantageKit-License.md](AdvantageKit-License.md).
+The swerve drive subsystem, I/O architecture, and logging infrastructure are based on the [AdvantageKit TalonFX Swerve template](https://github.com/Mechanical-Advantage/AdvantageKit/tree/main/template_projects/sources/talonfx_swerve) by Littleton Robotics (FRC 6328 "Mechanical Advantage"), and have been substantially modified. AdvantageKit is licensed under BSD 3-Clause; see [LICENSE](LICENSE).
 
 ### WPILib
 
