@@ -1,6 +1,9 @@
 // Copyright (c) 2021-2025 Littleton Robotics
 // http://github.com/Mechanical-Advantage
 //
+// Modified work Copyright (c) 2025 Triple Helix Robotics, FRC Team 2363
+// https://github.com/TripleHelixProgramming
+//
 // Use of this source code is governed by a BSD
 // license that can be found in the LICENSE file
 // at the root directory of this project.
