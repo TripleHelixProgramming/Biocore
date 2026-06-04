@@ -1,16 +1,12 @@
 # Defensive Guards: Design Philosophy and Implementation
 
-This document explains the defensive guard changes made to the codebase to prevent NaN values, division by zero errors, and other numerical instabilities.
+This document explains the defensive guards in the codebase that prevent NaN values, division by zero errors, and other numerical instabilities.
 
 ## Overview
 
-Numerical errors like NaN (Not a Number) and Infinity can silently propagate through calculations, causing erratic robot behavior. This document describes the guards added or refined in the recent code review.
+Numerical errors like NaN (Not a Number) and Infinity can silently propagate through calculations, causing erratic robot behavior. This document describes where guards are placed and why.
 
-## Changes Summary
-
-### New Guards Added
-
-These guards did not exist before and were added to protect against runtime edge cases:
+## Guard Summary
 
 | File | Guard | Risk Mitigated |
 |------|-------|----------------|
@@ -20,16 +16,9 @@ These guards did not exist before and were added to protect against runtime edge
 | PathCommands.java | Zero-length vector check | NaN from `getAngle()` on zero vector |
 | VisionIOPhotonVision.java | Target count check | Division by zero with empty targets list |
 | VisionIOPhotonVisionSim.java | Null pose check | NPE during subsystem initialization |
-| Launcher.java | v_0r < 1e-6 check | Division by zero in subsequent calculation |
-
-### Existing Guards Refined
-
-These guards already existed but were refined with better thresholds and documentation:
-
-| File | Before | After | Why Changed |
-|------|--------|-------|-------------|
-| Launcher.java | `denominator <= 0` | `denominator < 1e-6` | Also catches near-zero values causing numerical instability |
-| Launcher.java | `discriminant < 0` | `discriminant < 1e-6` | Safety margin for floating-point edge cases |
+| Launcher.java | `denominator < 1e-6` | Division by zero / numerical instability in ballistics |
+| Launcher.java | `v_0r < 1e-6` | Division by zero in subsequent calculation |
+| Launcher.java | `discriminant < 1e-6` | Safety margin at edge of reachable range |
 
 ---
 

@@ -1,7 +1,44 @@
-# Rebuilt — FRC 2363 2026 Robot Code
-[![CI](https://github.com/TripleHelixProgramming/Rebuilt/actions/workflows/build.yml/badge.svg)](https://github.com/TripleHelixProgramming/Rebuilt/actions/workflows/build.yml)
+# Biocore — FRC 2363 2027 Robot Code
+[![CI](https://github.com/TripleHelixProgramming/Biocore/actions/workflows/build.yml/badge.svg)](https://github.com/TripleHelixProgramming/Biocore/actions/workflows/build.yml)
 
-Java robot code for the 2026 FRC season, built on [WPILib](https://docs.wpilib.org) and [AdvantageKit](https://github.com/Mechanical-Advantage/AdvantageKit).
+Java robot code for the 2027 FRC season, built on [WPILib](https://docs.wpilib.org) and [AdvantageKit](https://docs.advantagekit.org/).
+
+## Contributing
+
+See [How to Contribute](doc/CONTRIBUTING.md) for the full workflow: environment setup, branching, conflict resolution, formatting, and PR review requirements.
+
+---
+
+## Documentation
+
+### Architecture
+
+| Doc | What it covers |
+|-----|---------------|
+| [Drive Subsystem: Pose and Heading](doc/DRIVE_HEADING_REFACTOR.md) | Why there is one rotation source of truth, how `Drive` and `DriveCommands` divide responsibilities, what `setPose` and `getHeading` do |
+| [I/O Architecture: Background Threading](doc/TWEAKS.md) | Why sensor reads happen on background threads, how Phoenix 6 auto-refresh works, deferred logging pattern, profiling infrastructure |
+| [Defensive Guards](doc/DEFENSIVE_GUARDS.md) | Philosophy for numerical guard placement (NaN, division by zero), where guards exist and why |
+
+### Subsystems
+
+| Doc | What it covers |
+|-----|---------------|
+| [LED System](doc/LED.md) | Physical strip layout, series/portion definitions, display functions, how to add custom patterns |
+| [Pneumatics Simulation](doc/pneumatics-sim.md) | Physics model behind `PneumaticsSimulator` — ideal gas law, Cv flow, compressor model, piston dynamics |
+
+### Vision
+
+| Doc | What it covers |
+|-----|---------------|
+| [Vision Calibration and Validation](doc/VISION_CALIBRATION_AND_VALIDATION.md) | Camera intrinsics, extrinsics, field layout accuracy, pre-season and per-event validation procedures |
+| [VisionFilter Architecture](doc/VISION_TESTS.md) | How observations are scored and filtered — weighted geometric mean, velocity consistency, cross-camera correlation boost |
+| [Vision Filter Tuning](doc/VISION_FILTER_TUNING.md) | Why `minScore = 0.6` and `velocityUncertainScore = 0.7`, how to check the score distribution in logs |
+
+### Autonomous
+
+| Doc | What it covers |
+|-----|---------------|
+| [Improving Trajectory Tracking](doc/TRAJECTORY_TRACKING_IMPROVEMENTS.md) | Where tracking error comes from and a tiered menu of strategies to reduce it |
 
 ---
 
@@ -46,8 +83,6 @@ This project uses [Spotless](https://github.com/diffplug/spotless) with Google J
 ```bash
 ./gradlew spotlessCheck
 ```
-
-> CI will fail if `spotlessCheck` does not pass. Always run `spotlessApply` before pushing.
 
 ---
 
@@ -98,12 +133,3 @@ When running in simulation, a keyboard (`Keyboard 0`) can be used as a driver co
 | Key rate | `0.01` | `0.050` |
 | Decay rate | `0` | `0.050` |
 | Max absolute value | `1.0` | `1.0` |
-
----
-
-## Contributing
-
-1. Fork or branch from `main`.
-2. Run `./gradlew build` locally to verify your changes compile and pass formatting.
-3. Open a pull request targeting `main`. CI will run a build check and Spotless formatting check automatically.
-4. Keep PRs focused — one feature or fix per PR.
