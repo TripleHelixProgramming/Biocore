@@ -36,6 +36,7 @@ import frc.lib.ControllerSelector.OperatorConfig;
 import frc.lib.LoggedCompressor;
 import frc.lib.LoggedPowerDistribution;
 import frc.lib.ZorroController.Axis;
+import frc.robot.Constants.CANBusPorts.CAN2;
 import frc.robot.Constants.DIOPorts;
 import frc.robot.Constants.FeatureFlags;
 import frc.robot.auto.B_LeftTrenchAuto;
@@ -122,11 +123,11 @@ public class Robot extends LoggedRobot {
   }
 
   public static final AllianceSelector allianceSelector =
-      new AllianceSelector(DIOPorts.allianceColorSelector);
+      new AllianceSelector(DIOPorts.ALLIANCE_COLOR_SELECTOR);
   public static final AutoSelector autoSelector =
-      new AutoSelector(DIOPorts.autonomousModeSelector, allianceSelector::getAllianceColor);
+      new AutoSelector(DIOPorts.AUTONOMOUS_MODE_SELECTOR, allianceSelector::getAllianceColor);
   public final LoggedPowerDistribution powerDistribution =
-      new LoggedPowerDistribution(1, ModuleType.kRev, "PDH");
+      new LoggedPowerDistribution(CAN2.PD, ModuleType.kRev, "PD");
 
   private final java.util.Set<String> activeCommands = new java.util.LinkedHashSet<>();
 
@@ -176,18 +177,18 @@ public class Robot extends LoggedRobot {
         drive =
             new Drive(
                 new GyroIOBoron(),
-                new ModuleIOTalonFX(DriveConstants.FrontLeft),
-                new ModuleIOTalonFX(DriveConstants.FrontRight),
-                new ModuleIOTalonFX(DriveConstants.BackLeft),
-                new ModuleIOTalonFX(DriveConstants.BackRight));
+                new ModuleIOTalonFX(DriveConstants.FRONT_LEFT),
+                new ModuleIOTalonFX(DriveConstants.FRONT_RIGHT),
+                new ModuleIOTalonFX(DriveConstants.BACK_LEFT),
+                new ModuleIOTalonFX(DriveConstants.BACK_RIGHT));
         vision =
             new Vision(
                 drive::addVisionMeasurement,
                 drive::getFieldRelativeHeading,
-                new VisionIOPhotonVision(cameraFrontRightName, robotToFrontRightCamera),
-                new VisionIOPhotonVision(cameraFrontLeftName, robotToFrontLeftCamera),
-                new VisionIOPhotonVision(cameraBackRightName, robotToBackRightCamera),
-                new VisionIOPhotonVision(cameraBackLeftName, robotToBackLeftCamera));
+                new VisionIOPhotonVision(FRONT_RIGHT_CAMERA),
+                new VisionIOPhotonVision(FRONT_LEFT_CAMERA),
+                new VisionIOPhotonVision(BACK_RIGHT_CAMERA),
+                new VisionIOPhotonVision(BACK_LEFT_CAMERA));
         launcher =
             new Launcher(
                 drive::getPose,
@@ -195,11 +196,11 @@ public class Robot extends LoggedRobot {
                 new TurretIOSpark(),
                 new FlywheelIOTalonFX(),
                 new HoodIOSpark());
-        if (FeatureFlags.kHopperEnabled) hopper = new Hopper(new HopperIOReal());
+        if (FeatureFlags.HOPPER_ENABLED) hopper = new Hopper(new HopperIOReal());
         intake =
             new Intake(
-                new RollerIOSpark(RollerConstants.upperRollerConfig),
-                new RollerIOSpark(RollerConstants.lowerRollerConfig),
+                new RollerIOSpark(RollerConstants.UPPER_ROLLER_CONFIG),
+                new RollerIOSpark(RollerConstants.LOWER_ROLLER_CONFIG),
                 new IntakeArmIOReal());
         feeder = new Feeder(new SpindexerIOSpark(), new KickerIOSpark());
         compressor = new LoggedCompressor(PneumaticsModuleType.REVPH, "Compressor");
@@ -217,22 +218,18 @@ public class Robot extends LoggedRobot {
         drive =
             new Drive(
                 new GyroIO() {},
-                new ModuleIOSimWPI(DriveConstants.FrontLeft),
-                new ModuleIOSimWPI(DriveConstants.FrontRight),
-                new ModuleIOSimWPI(DriveConstants.BackLeft),
-                new ModuleIOSimWPI(DriveConstants.BackRight));
+                new ModuleIOSimWPI(DriveConstants.FRONT_LEFT),
+                new ModuleIOSimWPI(DriveConstants.FRONT_RIGHT),
+                new ModuleIOSimWPI(DriveConstants.BACK_LEFT),
+                new ModuleIOSimWPI(DriveConstants.BACK_RIGHT));
         vision =
             new Vision(
                 drive::addVisionMeasurement,
                 drive::getFieldRelativeHeading,
-                new VisionIOPhotonVisionSim(
-                    cameraFrontRightName, robotToFrontRightCamera, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    cameraFrontLeftName, robotToFrontLeftCamera, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    cameraBackRightName, robotToBackRightCamera, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    cameraBackLeftName, robotToBackLeftCamera, drive::getPose));
+                new VisionIOPhotonVisionSim(FRONT_RIGHT_CAMERA, drive::getPose),
+                new VisionIOPhotonVisionSim(FRONT_LEFT_CAMERA, drive::getPose),
+                new VisionIOPhotonVisionSim(BACK_RIGHT_CAMERA, drive::getPose),
+                new VisionIOPhotonVisionSim(BACK_LEFT_CAMERA, drive::getPose));
         launcher =
             new Launcher(
                 drive::getPose,
@@ -241,12 +238,12 @@ public class Robot extends LoggedRobot {
                 new FlywheelIOSimTalonFX(),
                 new HoodIOSimSpark());
         feeder = new Feeder(new SpindexerIOSimSpark(), new KickerIOSimSpark());
-        if (FeatureFlags.kHopperEnabled) hopper = new Hopper(new HopperIOSim());
+        if (FeatureFlags.HOPPER_ENABLED) hopper = new Hopper(new HopperIOSim());
         var intakeArmIOSim = new IntakeArmIOSim();
         intake =
             new Intake(
-                new RollerIOSimSpark(RollerConstants.upperRollerConfig),
-                new RollerIOSimSpark(RollerConstants.lowerRollerConfig),
+                new RollerIOSimSpark(RollerConstants.UPPER_ROLLER_CONFIG),
+                new RollerIOSimSpark(RollerConstants.LOWER_ROLLER_CONFIG),
                 intakeArmIOSim);
         pneumaticsSimulator =
             new PneumaticsSimulator(intakeArmIOSim.intakeArmPneumatic, new REVPHSim(1));
@@ -283,7 +280,7 @@ public class Robot extends LoggedRobot {
                 new TurretIO() {},
                 new FlywheelIO() {},
                 new HoodIO() {});
-        if (FeatureFlags.kHopperEnabled) hopper = new Hopper(new HopperIO() {});
+        if (FeatureFlags.HOPPER_ENABLED) hopper = new Hopper(new HopperIO() {});
         intake = new Intake(new RollerIO() {}, new RollerIO() {}, new IntakeArmIO() {});
         feeder = new Feeder(new SpindexerIO() {}, new KickerIO() {});
         break;
@@ -302,13 +299,13 @@ public class Robot extends LoggedRobot {
 
     // Wire the hopper/intake interlocks. Done here (after both subsystems exist) to avoid a
     // circular dependency between the two subsystems.
-    if (FeatureFlags.kHopperEnabled) {
+    if (FeatureFlags.HOPPER_ENABLED) {
       intake.setDeployInterlock(
           hopper::isDeployed,
-          () -> hopper.getDeployCommand().withTimeout(IntakeConstants.kInterlockSettleSeconds));
+          () -> hopper.getDeployCommand().withTimeout(IntakeConstants.INTERLOCK_SETTLE_SECONDS));
       hopper.setRetractInterlock(
           intake::isStowed,
-          () -> intake.getStopCommand().withTimeout(IntakeConstants.kInterlockSettleSeconds));
+          () -> intake.getStopCommand().withTimeout(IntakeConstants.INTERLOCK_SETTLE_SECONDS));
     }
 
     configureControlPanelBindings();
@@ -352,8 +349,8 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().run();
     long t1 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
-    logCANBus("CAN2", Constants.CANBusPorts.CAN2.bus);
-    logCANBus("CANHD", Constants.CANBusPorts.CANHD.bus);
+    logCANBus("CAN2", Constants.CANBusPorts.CAN2.BUS);
+    logCANBus("CANHD", Constants.CANBusPorts.CANHD.BUS);
     powerDistribution.log();
     if (compressor != null) compressor.log();
     logHIDs();
@@ -548,7 +545,7 @@ public class Robot extends LoggedRobot {
     // Toggle hopper: deploy if stowed, stow if deployed (retracting intake first if needed).
     // runOnce has no subsystem requirements so it always executes; the scheduled command
     // requires hopper and will interrupt whatever is currently running on that subsystem.
-    if (FeatureFlags.kHopperEnabled)
+    if (FeatureFlags.HOPPER_ENABLED)
       zorroDriver
           .DIn()
           .onTrue(
