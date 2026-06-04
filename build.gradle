@@ -203,6 +203,12 @@ task(eventDeploy) {
 }
 createVersionFile.dependsOn(eventDeploy)
 
+// Install git hooks on first build
+task installHooks(type: Exec) {
+    commandLine "git", "config", "core.hooksPath", ".githooks"
+}
+project.compileJava.dependsOn(installHooks)
+
 // Spotless formatting
 project.compileJava.dependsOn(spotlessApply)
 spotless {

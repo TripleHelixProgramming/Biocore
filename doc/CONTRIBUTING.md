@@ -166,20 +166,13 @@ If `main` has changes that overlap with your branch, Git will flag conflicts. Do
 
 ### Final check before opening a PR
 
-Run the full build and formatting check one more time before pushing. Use `./gradlew` on Mac/Linux or Git Bash; use `gradlew` in Windows Command Prompt:
+Run the full build one more time before pushing. Use `./gradlew` on Mac/Linux or Git Bash; use `gradlew` in Windows Command Prompt:
 
 ```bash
 ./gradlew build
-./gradlew spotlessCheck
 ```
 
-If `spotlessCheck` fails, it means there are formatting issues. Apply the formatter automatically:
-
-```bash
-./gradlew spotlessApply
-```
-
-Review the diff, then stage and commit the formatting changes before pushing. CI will run `spotlessCheck` automatically on your PR and will fail if formatting is not clean.
+Formatting is applied automatically on every commit by the pre-commit hook (installed on first build), so it should already be clean. CI will run `spotlessCheck` on your PR and will fail if formatting is not clean — if that happens, run `./gradlew spotlessApply`, commit, and push.
 
 ### Open a pull request
 
@@ -207,7 +200,7 @@ Once approved and CI is green, a mentor or senior programmer will merge the PR.
 
 ### Formatting
 
-This project uses [Spotless](https://github.com/diffplug/spotless) with Google Java Format to keep code style consistent across the whole codebase. Formatting is applied automatically every time you run `./gradlew build`, so in most cases you do not need to think about it. If you ever want to apply it manually without building:
+This project uses [Spotless](https://github.com/diffplug/spotless) with Google Java Format to keep code style consistent across the whole codebase. Formatting is applied automatically on every build and on every commit via a pre-commit hook in `.githooks/`. The hook is installed automatically the first time you run `./gradlew build`, so in most cases you do not need to think about it. If you ever want to apply it manually:
 
 ```bash
 ./gradlew spotlessApply

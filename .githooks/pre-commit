@@ -1,0 +1,7 @@
+#!/bin/sh
+./gradlew spotlessApply --quiet
+if [ $? -ne 0 ]; then
+  echo "spotlessApply failed — commit aborted"
+  exit 1
+fi
+git diff --name-only | xargs -r git add
