@@ -142,7 +142,7 @@ This project is licensed under the [BSD 3-Clause License](LICENSE). See individu
 
 ### Triple Helix Robotics (FRC Team 2363)
 
-The robot-specific subsystems and supporting utilities are original work by Triple Helix Robotics, copyright 2025.
+The robot-specific subsystems and supporting utilities are original work by Triple Helix Robotics, copyright 2025-2026.
 
 ### AdvantageKit — Littleton Robotics (FRC 6328)
 
