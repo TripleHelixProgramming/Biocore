@@ -133,3 +133,21 @@ When running in simulation, a keyboard (`Keyboard 0`) can be used as a driver co
 | Key rate | `0.01` | `0.050` |
 | Decay rate | `0` | `0.050` |
 | Max absolute value | `1.0` | `1.0` |
+
+---
+
+## Credits and Licensing
+
+This project is licensed under the [BSD 3-Clause License](LICENSE). See individual source files for copyright holders.
+
+### Triple Helix Robotics (FRC Team 2363)
+
+The robot-specific subsystems and supporting utilities are original work by Triple Helix Robotics, copyright 2025.
+
+### AdvantageKit — Littleton Robotics (FRC 6328)
+
+The swerve drive subsystem, I/O architecture, and logging infrastructure are based on the [AdvantageKit TalonFX Swerve template](https://github.com/Mechanical-Advantage/AdvantageKit/tree/main/template_projects/sources/talonfx_swerve) by Littleton Robotics (FRC 6328 "Mechanical Advantage"), and have been substantially modified. AdvantageKit is licensed under BSD 3-Clause; see [LICENSE](LICENSE).
+
+### WPILib
+
+This project uses [WPILib](https://docs.wpilib.org), the standard FRC robot programming library maintained by FIRST and WPILib contributors, licensed under BSD; see [WPILib-License.md](WPILib-License.md).
