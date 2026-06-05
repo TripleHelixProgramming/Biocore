@@ -36,9 +36,6 @@ public final class Constants {
   public static final class FeatureFlags {
     /** Enable to print loop timing when total exceeds 20ms. */
     public static final boolean PROFILING_ENABLED = false;
-
-    /** Set to false to disable the hopper subsystem entirely. */
-    public static final boolean HOPPER_ENABLED = false;
   }
 
   public final class RobotConstants {
@@ -72,8 +69,6 @@ public final class Constants {
     public static final int[] AUTONOMOUS_MODE_SELECTOR = {0, 1, 2};
 
     public static final int ALLIANCE_COLOR_SELECTOR = 3;
-
-    public static final int TURRET_ABS_ENCODER = 4;
   }
 
   public static final class CANBusPorts {
@@ -86,20 +81,6 @@ public final class Constants {
 
       // Drivetrain
       public static final int GYRO = 0;
-
-      // Launcher
-      public static final int TURRET = 12;
-      public static final int HOOD = 13;
-      public static final int FLYWHEEL_LEADER = 14;
-      public static final int FLYWHEEL_FOLLOWER = 15;
-
-      // Feeder
-      public static final int SPINDEXER = 16;
-      public static final int KICKER = 17;
-
-      // Intake
-      public static final int INTAKE_ROLLER_LOWER = 22;
-      public static final int INTAKE_ROLLER_UPPER = 23;
     }
 
     public static final class CANHD {
@@ -123,15 +104,5 @@ public final class Constants {
       public static final int FRONT_LEFT_TURN_ABS_ENC = 43;
       public static final int BACK_LEFT_TURN_ABS_ENC = 45;
     }
-  }
-
-  public static final class PneumaticChannels {
-    // hopper
-    public static final int HOPPER_FWD = 14;
-    public static final int HOPPER_REV = 15;
-
-    // intake arm
-    public static final int INTAKE_ARM_FWD = 0;
-    public static final int INTAKE_ARM_REV = 1;
   }
 }
