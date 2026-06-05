@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.game.Field;
+import frc.game.GameState;
 import frc.lib.AllianceSelector;
 import frc.lib.AutoSelector;
 import frc.lib.CommandZorroController;
@@ -253,6 +254,7 @@ public class Robot extends LoggedRobot {
     powerDistribution.log();
     logHIDs();
     logScheduler();
+    GameState.logValues();
 
     Logger.recordOutput("USB/FreeSpaceMB", getUSBStorageFreeSpace() / 1024 / 1024);
     long t2 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
