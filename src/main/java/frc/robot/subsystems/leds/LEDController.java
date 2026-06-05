@@ -170,10 +170,7 @@ public class LEDController extends SubsystemBase {
           10.0,
           // Fill color
           () -> {
-            if (GameState.isMyHubActive()) {
-              return GameState.getMyAlliance() == Alliance.Blue ? Color.kBlue : Color.kRed;
-            }
-            return GameState.getMyAlliance() == Alliance.Blue ? Color.kRed : Color.kBlue;
+            return GameState.getMyAlliance() == Alliance.Blue ? Color.kBlue : Color.kRed;
           },
           // Background color
           Color.kBlack,
