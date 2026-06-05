@@ -65,36 +65,6 @@ import frc.robot.subsystems.drive.GyroIOBoron;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSimWPI;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-import frc.robot.subsystems.feeder.Feeder;
-import frc.robot.subsystems.feeder.KickerIO;
-import frc.robot.subsystems.feeder.KickerIOSimSpark;
-import frc.robot.subsystems.feeder.KickerIOSpark;
-import frc.robot.subsystems.feeder.SpindexerIO;
-import frc.robot.subsystems.feeder.SpindexerIOSimSpark;
-import frc.robot.subsystems.feeder.SpindexerIOSpark;
-import frc.robot.subsystems.hopper.Hopper;
-import frc.robot.subsystems.hopper.HopperIO;
-import frc.robot.subsystems.hopper.HopperIOReal;
-import frc.robot.subsystems.hopper.HopperIOSim;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeArmIO;
-import frc.robot.subsystems.intake.IntakeArmIOReal;
-import frc.robot.subsystems.intake.IntakeArmIOSim;
-import frc.robot.subsystems.intake.IntakeConstants;
-import frc.robot.subsystems.intake.IntakeConstants.RollerConstants;
-import frc.robot.subsystems.intake.RollerIO;
-import frc.robot.subsystems.intake.RollerIOSimSpark;
-import frc.robot.subsystems.intake.RollerIOSpark;
-import frc.robot.subsystems.launcher.FlywheelIO;
-import frc.robot.subsystems.launcher.FlywheelIOSimTalonFX;
-import frc.robot.subsystems.launcher.FlywheelIOTalonFX;
-import frc.robot.subsystems.launcher.HoodIO;
-import frc.robot.subsystems.launcher.HoodIOSimSpark;
-import frc.robot.subsystems.launcher.HoodIOSpark;
-import frc.robot.subsystems.launcher.Launcher;
-import frc.robot.subsystems.launcher.TurretIO;
-import frc.robot.subsystems.launcher.TurretIOSimSpark;
-import frc.robot.subsystems.launcher.TurretIOSpark;
 import frc.robot.subsystems.leds.LEDController;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
@@ -144,10 +114,6 @@ public class Robot extends LoggedRobot {
   // Subsystems
   private Drive drive;
   private Vision vision;
-  private Launcher launcher;
-  private Feeder feeder;
-  private Intake intake;
-  private Hopper hopper;
   private LEDController leds = LEDController.getInstance();
   private LoggedCompressor compressor;
   private PneumaticsSimulator pneumaticsSimulator;
@@ -199,20 +165,6 @@ public class Robot extends LoggedRobot {
                 new VisionIOPhotonVision(FRONT_LEFT_CAMERA),
                 new VisionIOPhotonVision(BACK_RIGHT_CAMERA),
                 new VisionIOPhotonVision(BACK_LEFT_CAMERA));
-        launcher =
-            new Launcher(
-                drive::getPose,
-                drive::getRobotRelativeChassisSpeeds,
-                new TurretIOSpark(),
-                new FlywheelIOTalonFX(),
-                new HoodIOSpark());
-        if (FeatureFlags.HOPPER_ENABLED) hopper = new Hopper(new HopperIOReal());
-        intake =
-            new Intake(
-                new RollerIOSpark(RollerConstants.UPPER_ROLLER_CONFIG),
-                new RollerIOSpark(RollerConstants.LOWER_ROLLER_CONFIG),
-                new IntakeArmIOReal());
-        feeder = new Feeder(new SpindexerIOSpark(), new KickerIOSpark());
         compressor = new LoggedCompressor(PneumaticsModuleType.REVPH, "Compressor");
 
         // Start kernel log monitoring (singleton, starts automatically on first call)
@@ -240,23 +192,6 @@ public class Robot extends LoggedRobot {
                 new VisionIOPhotonVisionSim(FRONT_LEFT_CAMERA, drive::getPose),
                 new VisionIOPhotonVisionSim(BACK_RIGHT_CAMERA, drive::getPose),
                 new VisionIOPhotonVisionSim(BACK_LEFT_CAMERA, drive::getPose));
-        launcher =
-            new Launcher(
-                drive::getPose,
-                drive::getRobotRelativeChassisSpeeds,
-                new TurretIOSimSpark(),
-                new FlywheelIOSimTalonFX(),
-                new HoodIOSimSpark());
-        feeder = new Feeder(new SpindexerIOSimSpark(), new KickerIOSimSpark());
-        if (FeatureFlags.HOPPER_ENABLED) hopper = new Hopper(new HopperIOSim());
-        var intakeArmIOSim = new IntakeArmIOSim();
-        intake =
-            new Intake(
-                new RollerIOSimSpark(RollerConstants.UPPER_ROLLER_CONFIG),
-                new RollerIOSimSpark(RollerConstants.LOWER_ROLLER_CONFIG),
-                intakeArmIOSim);
-        pneumaticsSimulator =
-            new PneumaticsSimulator(intakeArmIOSim.intakeArmPneumatic, new REVPHSim(1));
         break;
 
       case REPLAY: // Replaying a log
@@ -283,16 +218,6 @@ public class Robot extends LoggedRobot {
                 new VisionIO() {},
                 new VisionIO() {},
                 new VisionIO() {});
-        launcher =
-            new Launcher(
-                drive::getPose,
-                drive::getRobotRelativeChassisSpeeds,
-                new TurretIO() {},
-                new FlywheelIO() {},
-                new HoodIO() {});
-        if (FeatureFlags.HOPPER_ENABLED) hopper = new Hopper(new HopperIO() {});
-        intake = new Intake(new RollerIO() {}, new RollerIO() {}, new IntakeArmIO() {});
-        feeder = new Feeder(new SpindexerIO() {}, new KickerIO() {});
         break;
     }
 
