@@ -36,6 +36,9 @@ public final class Constants {
   public static final class FeatureFlags {
     /** Enable to print loop timing when total exceeds 20ms. */
     public static final boolean PROFILING_ENABLED = false;
+
+    public static final boolean LEDS_ENABLED = false;
+    public static final boolean VISION_ENABLED = false;
   }
 
   public final class RobotConstants {

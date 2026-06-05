@@ -17,7 +17,6 @@ import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
@@ -39,7 +38,6 @@ import frc.lib.ControllerSelector.ControllerType;
 import frc.lib.ControllerSelector.DriverConfig;
 import frc.lib.ControllerSelector.DriverController;
 import frc.lib.ControllerSelector.OperatorConfig;
-import frc.lib.LoggedCompressor;
 import frc.lib.LoggedPowerDistribution;
 import frc.robot.Constants.CANBusPorts.CAN2;
 import frc.robot.Constants.DIOPorts;
@@ -101,9 +99,7 @@ public class Robot extends LoggedRobot {
   // Subsystems
   private Drive drive;
   private Vision vision;
-  private LEDController leds = LEDController.getInstance();
-  private LoggedCompressor compressor;
-
+  private final LEDController leds = FeatureFlags.LEDS_ENABLED ? LEDController.getInstance() : null;
   // Battery simulation constants
   private static final double ELECTRONICS_OVERHEAD_AMPS = 4.5; // RoboRIO + radio + PDH + misc
   private final LinearFilter vBusFilter = LinearFilter.singlePoleIIR(0.04, Robot.defaultPeriodSecs);
@@ -143,16 +139,16 @@ public class Robot extends LoggedRobot {
                 new ModuleIOTalonFX(DriveConstants.FRONT_RIGHT),
                 new ModuleIOTalonFX(DriveConstants.BACK_LEFT),
                 new ModuleIOTalonFX(DriveConstants.BACK_RIGHT));
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                drive::getFieldRelativeHeading,
-                new VisionIOPhotonVision(FRONT_RIGHT_CAMERA),
-                new VisionIOPhotonVision(FRONT_LEFT_CAMERA),
-                new VisionIOPhotonVision(BACK_RIGHT_CAMERA),
-                new VisionIOPhotonVision(BACK_LEFT_CAMERA));
-        compressor = new LoggedCompressor(PneumaticsModuleType.REVPH, "Compressor");
-
+        if (FeatureFlags.VISION_ENABLED) {
+          vision =
+              new Vision(
+                  drive::addVisionMeasurement,
+                  drive::getFieldRelativeHeading,
+                  new VisionIOPhotonVision(FRONT_RIGHT_CAMERA),
+                  new VisionIOPhotonVision(FRONT_LEFT_CAMERA),
+                  new VisionIOPhotonVision(BACK_RIGHT_CAMERA),
+                  new VisionIOPhotonVision(BACK_LEFT_CAMERA));
+        }
         // Start kernel log monitoring (singleton, starts automatically on first call)
         KernelLogMonitor.getInstance();
         break;
@@ -170,14 +166,16 @@ public class Robot extends LoggedRobot {
                 new ModuleIOSimWPI(DriveConstants.FRONT_RIGHT),
                 new ModuleIOSimWPI(DriveConstants.BACK_LEFT),
                 new ModuleIOSimWPI(DriveConstants.BACK_RIGHT));
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                drive::getFieldRelativeHeading,
-                new VisionIOPhotonVisionSim(FRONT_RIGHT_CAMERA, drive::getPose),
-                new VisionIOPhotonVisionSim(FRONT_LEFT_CAMERA, drive::getPose),
-                new VisionIOPhotonVisionSim(BACK_RIGHT_CAMERA, drive::getPose),
-                new VisionIOPhotonVisionSim(BACK_LEFT_CAMERA, drive::getPose));
+        if (FeatureFlags.VISION_ENABLED) {
+          vision =
+              new Vision(
+                  drive::addVisionMeasurement,
+                  drive::getFieldRelativeHeading,
+                  new VisionIOPhotonVisionSim(FRONT_RIGHT_CAMERA, drive::getPose),
+                  new VisionIOPhotonVisionSim(FRONT_LEFT_CAMERA, drive::getPose),
+                  new VisionIOPhotonVisionSim(BACK_RIGHT_CAMERA, drive::getPose),
+                  new VisionIOPhotonVisionSim(BACK_LEFT_CAMERA, drive::getPose));
+        }
         break;
 
       case REPLAY: // Replaying a log
@@ -196,20 +194,22 @@ public class Robot extends LoggedRobot {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                drive::getFieldRelativeHeading,
-                new VisionIO() {},
-                new VisionIO() {},
-                new VisionIO() {},
-                new VisionIO() {});
+        if (FeatureFlags.VISION_ENABLED) {
+          vision =
+              new Vision(
+                  drive::addVisionMeasurement,
+                  drive::getFieldRelativeHeading,
+                  new VisionIO() {},
+                  new VisionIO() {},
+                  new VisionIO() {},
+                  new VisionIO() {});
+        }
         break;
     }
 
     // Start background threads (for non-blocking CAN/network reads)
     SparkOdometryThread.getInstance().start();
-    VisionThread.getInstance().start();
+    if (FeatureFlags.VISION_ENABLED) VisionThread.getInstance().start();
     CanandgyroThread.getInstance().start();
 
     // Start AdvantageKit logger
@@ -251,7 +251,6 @@ public class Robot extends LoggedRobot {
     logCANBus("CAN2", Constants.CANBusPorts.CAN2.BUS);
     logCANBus("CANHD", Constants.CANBusPorts.CANHD.BUS);
     powerDistribution.log();
-    if (compressor != null) compressor.log();
     logHIDs();
     logScheduler();
 
@@ -291,7 +290,7 @@ public class Robot extends LoggedRobot {
   /** This function is called once when the robot is disabled. */
   @Override
   public void disabledInit() {
-    leds.clear();
+    if (leds != null) leds.clear();
   }
 
   /** This function is called periodically when disabled. */
@@ -300,12 +299,15 @@ public class Robot extends LoggedRobot {
     allianceSelector.disabledPeriodic();
     autoSelector.disabledPeriodic();
     ControllerSelector.getInstance().scan(false);
-    leds.displayAutoSelection();
+    if (leds != null) leds.displayAutoSelection();
     var autoOption = autoSelector.get();
     autoOption.ifPresent(
         a ->
             a.getInitialPose()
-                .ifPresent(targetPose -> leds.displayPoseSeek(drive.getPose(), targetPose)));
+                .ifPresent(
+                    targetPose -> {
+                      if (leds != null) leds.displayPoseSeek(drive.getPose(), targetPose);
+                    }));
   }
 
   /** This function is called once when autonomous mode is enabled. */
@@ -313,7 +315,7 @@ public class Robot extends LoggedRobot {
   public void autonomousInit() {
     drive.setDefaultCommand(Commands.runOnce(drive::stop, drive).withName("Stop"));
     autoSelector.scheduleAuto();
-    leds.clear();
+    if (leds != null) leds.clear();
   }
 
   /** This function is called periodically during autonomous. */
@@ -325,23 +327,19 @@ public class Robot extends LoggedRobot {
   public void teleopInit() {
     autoSelector.cancelAuto();
     ControllerSelector.getInstance().scan(true);
-    leds.clear();
+    if (leds != null) leds.clear();
   }
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {
-    if (!DriverStation.isFMSAttached()) {
-      leds.displayCompressorState(compressor != null && compressor.isEnabled());
-    }
-  }
+  public void teleopPeriodic() {}
 
   /** This function is called once when test mode is enabled. */
   @Override
   public void testInit() {
     // Cancels all running commands at the start of test mode.
     CommandScheduler.getInstance().cancelAll();
-    leds.clear();
+    if (leds != null) leds.clear();
   }
 
   /** This function is called periodically during test mode. */
@@ -351,7 +349,7 @@ public class Robot extends LoggedRobot {
   /** This function is called once when the robot is first started up. */
   @Override
   public void simulationInit() {
-    leds.clear();
+    if (leds != null) leds.clear();
   }
 
   /** This function is called periodically whilst in simulation. */
@@ -547,7 +545,7 @@ public class Robot extends LoggedRobot {
   private void logScheduler() {
     Logger.recordOutput("Commands/ActiveCommands", activeCommands.toArray(new String[0]));
     logSubsystem("Drive", drive);
-    logSubsystem("Vision", vision);
+    if (vision != null) logSubsystem("Vision", vision);
     logAlerts();
   }
 
