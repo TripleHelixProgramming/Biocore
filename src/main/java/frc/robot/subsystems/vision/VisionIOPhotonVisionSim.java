@@ -10,8 +10,8 @@
 
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
 import frc.robot.subsystems.vision.VisionConstants.CameraConfig;
 import java.util.function.Supplier;
 import org.photonvision.simulation.PhotonCameraSim;

@@ -1,7 +1,7 @@
 package frc.game;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import org.wpilib.wpilibj.DriverStation;
+import org.wpilib.wpilibj.DriverStation.Alliance;
 import frc.robot.Robot;
 import java.util.List;
 import java.util.Optional;

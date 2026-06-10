@@ -1,7 +1,7 @@
 package frc.lib;
 
-import edu.wpi.first.wpilibj.Compressor;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import org.wpilib.wpilibj.Compressor;
+import org.wpilib.wpilibj.PneumaticsModuleType;
 import org.littletonrobotics.junction.Logger;
 
 public class LoggedCompressor extends Compressor {

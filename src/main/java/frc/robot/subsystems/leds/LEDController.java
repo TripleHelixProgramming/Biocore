@@ -7,16 +7,16 @@
 
 package frc.robot.subsystems.leds;
 
-import static edu.wpi.first.units.Units.Centimeters;
-import static edu.wpi.first.units.Units.Seconds;
+import static org.wpilib.units.Units.Centimeters;
+import static org.wpilib.units.Units.Seconds;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.LEDPattern;
-import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.wpilib.math.MathUtil;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.wpilibj.DriverStation;
+import org.wpilib.wpilibj.DriverStation.Alliance;
+import org.wpilib.wpilibj.LEDPattern;
+import org.wpilib.wpilibj.util.Color;
+import org.wpilib.commandsv2.SubsystemBase;
 import frc.game.GameState;
 import frc.robot.Robot;
 import java.util.function.Supplier;

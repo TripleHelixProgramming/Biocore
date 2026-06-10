@@ -1,9 +1,9 @@
 package frc.lib;
 
-import edu.wpi.first.wpilibj.event.EventLoop;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import org.wpilib.wpilibj.event.EventLoop;
+import org.wpilib.commandsv2.CommandScheduler;
+import org.wpilib.commandsv2.button.CommandGenericHID;
+import org.wpilib.commandsv2.button.Trigger;
 
 /**
  * A version of {@link ZorroController} with {@link Trigger} factories for command-based.

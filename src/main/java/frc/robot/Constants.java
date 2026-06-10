@@ -11,7 +11,7 @@
 package frc.robot;
 
 import com.ctre.phoenix6.CANBus;
-import edu.wpi.first.wpilibj.RobotBase;
+import org.wpilib.wpilibj.RobotBase;
 
 /**
  * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running

@@ -7,10 +7,10 @@
 
 package frc.robot.subsystems.leds;
 
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.LEDPattern;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.util.Color;
+import org.wpilib.wpilibj.DriverStation.Alliance;
+import org.wpilib.wpilibj.LEDPattern;
+import org.wpilib.wpilibj.Timer;
+import org.wpilib.wpilibj.util.Color;
 import frc.robot.Robot;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -89,7 +89,7 @@ public final class LEDCustomPattern {
    */
   public static LEDPattern scrollingBlocks(Color color, int blockSize, int gapSize) {
     return stackedBlocks(color, blockSize, gapSize)
-        .scrollAtRelativeSpeed(edu.wpi.first.units.Units.Hertz.of(2));
+        .scrollAtRelativeSpeed(org.wpilib.units.Units.Hertz.of(2));
   }
 
   /**

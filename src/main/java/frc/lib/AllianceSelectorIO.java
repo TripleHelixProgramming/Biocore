@@ -1,8 +1,8 @@
 package frc.lib;
 
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import org.wpilib.wpilibj.DigitalInput;
+import org.wpilib.wpilibj.DriverStation;
+import org.wpilib.wpilibj.DriverStation.Alliance;
 import java.util.Optional;
 import org.littletonrobotics.junction.AutoLog;
 

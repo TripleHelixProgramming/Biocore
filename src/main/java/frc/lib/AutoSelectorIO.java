@@ -1,6 +1,6 @@
 package frc.lib;
 
-import edu.wpi.first.wpilibj.DigitalInput;
+import org.wpilib.wpilibj.DigitalInput;
 import org.littletonrobotics.junction.AutoLog;
 
 public class AutoSelectorIO {

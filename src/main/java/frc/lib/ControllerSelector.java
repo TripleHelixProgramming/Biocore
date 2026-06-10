@@ -1,8 +1,8 @@
 package frc.lib;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import org.wpilib.wpilibj.DriverStation;
+import org.wpilib.wpilibj.GenericHID;
+import org.wpilib.commandsv2.CommandScheduler;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import java.util.Objects;

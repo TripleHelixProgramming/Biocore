@@ -1,10 +1,10 @@
 package frc.lib;
 
 import choreo.trajectory.SwerveSample;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj2.command.Command;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.wpilibj.DriverStation.Alliance;
+import org.wpilib.wpilibj.util.Color;
+import org.wpilib.commandsv2.Command;
 import frc.robot.auto.AutoMode;
 import java.util.Optional;
 

@@ -7,7 +7,7 @@
 
 package frc.robot.util;
 
-import edu.wpi.first.wpilibj.Notifier;
+import org.wpilib.wpilibj.Notifier;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIO.PoseObservation;
 import frc.robot.subsystems.vision.VisionIO.TargetObservation;

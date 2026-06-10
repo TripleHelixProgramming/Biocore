@@ -1,8 +1,8 @@
 package frc.lib;
 
-import edu.wpi.first.util.sendable.Sendable;
-import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.GenericHID;
+import org.wpilib.util.sendable.Sendable;
+import org.wpilib.util.sendable.SendableBuilder;
+import org.wpilib.wpilibj.GenericHID;
 
 public class ZorroController extends GenericHID implements Sendable {
 

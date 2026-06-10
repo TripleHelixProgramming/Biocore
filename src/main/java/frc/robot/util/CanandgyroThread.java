@@ -8,8 +8,8 @@
 package frc.robot.util;
 
 import com.reduxrobotics.sensors.canandgyro.Canandgyro;
-import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.RobotController;
+import org.wpilib.wpilibj.Notifier;
+import org.wpilib.wpilibj.RobotController;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;

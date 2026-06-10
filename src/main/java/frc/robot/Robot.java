@@ -13,22 +13,22 @@ package frc.robot;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import com.ctre.phoenix6.SignalLogger;
-import edu.wpi.first.math.filter.LinearFilter;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
-import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.simulation.BatterySim;
-import edu.wpi.first.wpilibj.simulation.RoboRioSim;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import org.wpilib.math.filter.LinearFilter;
+import org.wpilib.networktables.NetworkTableInstance;
+import org.wpilib.wpilibj.DriverStation;
+import org.wpilib.wpilibj.DriverStation.Alliance;
+import org.wpilib.wpilibj.PowerDistribution.ModuleType;
+import org.wpilib.wpilibj.RobotBase;
+import org.wpilib.wpilibj.simulation.BatterySim;
+import org.wpilib.wpilibj.simulation.RoboRioSim;
+import org.wpilib.commandsv2.Command;
+import org.wpilib.commandsv2.CommandScheduler;
+import org.wpilib.commandsv2.Commands;
+import org.wpilib.commandsv2.InstantCommand;
+import org.wpilib.commandsv2.SubsystemBase;
+import org.wpilib.commandsv2.button.CommandGenericHID;
+import org.wpilib.commandsv2.button.CommandXboxController;
+import org.wpilib.commandsv2.button.Trigger;
 import frc.game.Field;
 import frc.game.GameState;
 import frc.lib.AllianceSelector;
@@ -217,7 +217,7 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     // Disable LiveWindow telemetry (subsystem motor sendables) — eliminates SmartDashboard overhead
-    edu.wpi.first.wpilibj.livewindow.LiveWindow.disableAllTelemetry();
+    org.wpilib.wpilibj.livewindow.LiveWindow.disableAllTelemetry();
 
     configureControlPanelBindings();
     configureAutoOptions();

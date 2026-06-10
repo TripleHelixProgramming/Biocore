@@ -7,10 +7,10 @@
 
 package frc.lib;
 
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.simulation.DoubleSolenoidSim;
-import edu.wpi.first.wpilibj.simulation.REVPHSim;
+import org.wpilib.wpilibj.DoubleSolenoid;
+import org.wpilib.wpilibj.DriverStation;
+import org.wpilib.wpilibj.simulation.DoubleSolenoidSim;
+import org.wpilib.wpilibj.simulation.REVPHSim;
 import org.littletonrobotics.junction.Logger;
 
 /**
