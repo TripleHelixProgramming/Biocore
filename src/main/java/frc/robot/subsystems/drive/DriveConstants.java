@@ -66,32 +66,33 @@ public class DriveConstants {
   public static final double WHEEL_RADIUS_METERS = WHEEL_RADIUS.in(Meters);
 
   public static enum Ratio {
-     SDS_MK5i_R1(1,2,3), 
-     SDS_MK5i_R2(1,2,3), 
-     SDS_MK5i_R3(1,2,3); 
+    SDS_MK5i_R1(1, 2, 3),
+    SDS_MK5i_R2(1, 2, 3),
+    SDS_MK5i_R3(1, 2, 3);
 
-private double firstStageReduction;
-private double secondStageReduction;
-private double thirdStageReduction;
+    private double firstStageReduction;
+    private double secondStageReduction;
+    private double thirdStageReduction;
 
-private Ratio(double firstStageReduction, double secondStageReduction, double ThirdStageReduction) {
-    this.firstStageReduction = firstStageReduction;
-    this.secondStageReduction = secondStageReduction;
-    this.thirdStageReduction = ThirdStageReduction;
-}
+    private Ratio(
+        double firstStageReduction, double secondStageReduction, double ThirdStageReduction) {
+      this.firstStageReduction = firstStageReduction;
+      this.secondStageReduction = secondStageReduction;
+      this.thirdStageReduction = ThirdStageReduction;
+    }
 
     public double getDriveMotorReduction() {
-        return firstStageReduction * secondStageReduction * thirdStageReduction;
+      return firstStageReduction * secondStageReduction * thirdStageReduction;
     }
 
     public double getCoupleRatio() {
-        return firstStageReduction;
+      return firstStageReduction;
     }
-}
+  }
 
   public static final Ratio selectedRatio = Ratio.SDS_MK5i_R1;
   public static final double DRIVE_MOTOR_REDUCTION = Ratio.SDS_MK5i_R1.getDriveMotorReduction();
-      // (54.0 / 14.0) * (25.0 / 32.0) * (30.0 / 15.0); // SDS MK5 R2
+  // (54.0 / 14.0) * (25.0 / 32.0) * (30.0 / 15.0); // SDS MK5 R2
   public static final DCMotor DRIVE_GEARBOX = DCMotor.getKrakenX60Foc(1);
   public static final LinearVelocity DRIVETRAIN_SPEED_LIMIT =
       MetersPerSecond.of(
