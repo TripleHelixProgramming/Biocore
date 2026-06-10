@@ -66,9 +66,9 @@ public class DriveConstants {
   public static final double WHEEL_RADIUS_METERS = WHEEL_RADIUS.in(Meters);
 
   public static enum Ratio {
-    SDS_MK5i_R1(1, 2, 3),
-    SDS_MK5i_R2(1, 2, 3),
-    SDS_MK5i_R3(1, 2, 3);
+    SDS_MK5i_R1(54.0 / 12.0, 25.0 / 32.0, 30.0 / 15.0),
+    SDS_MK5i_R2(54.0 / 14.0, 25.0 / 32.0, 30.0 / 15.0),
+    SDS_MK5i_R3(54.0 / 16.0, 25.0 / 32.0, 30.0 / 15.0);
 
     private double firstStageReduction;
     private double secondStageReduction;
@@ -85,14 +85,14 @@ public class DriveConstants {
       return firstStageReduction * secondStageReduction * thirdStageReduction;
     }
 
+    // Every 1 rotation of the azimuth results in COUPLE_RATIO drive motor turns
     public double getCoupleRatio() {
       return firstStageReduction;
     }
   }
 
-  public static final Ratio selectedRatio = Ratio.SDS_MK5i_R1;
-  public static final double DRIVE_MOTOR_REDUCTION = Ratio.SDS_MK5i_R1.getDriveMotorReduction();
-  // (54.0 / 14.0) * (25.0 / 32.0) * (30.0 / 15.0); // SDS MK5 R2
+  public static final Ratio SELECTED_RATIO = Ratio.SDS_MK5i_R2;
+  public static final double DRIVE_MOTOR_REDUCTION = SELECTED_RATIO.getDriveMotorReduction();
   public static final DCMotor DRIVE_GEARBOX = DCMotor.getKrakenX60Foc(1);
   public static final LinearVelocity DRIVETRAIN_SPEED_LIMIT =
       MetersPerSecond.of(
@@ -125,9 +125,7 @@ public class DriveConstants {
 
   // Turn motor configuration
   public static final boolean TURN_INVERTED = false;
-  public static final double TURN_MOTOR_REDUCTION = 26; // SDS MK5 R2
-  // Every 1 rotation of the azimuth results in COUPLE_RATIO drive motor turns
-  private static final double COUPLE_RATIO = (54.0 / 14.0); // SDS MK4 L2
+  public static final double TURN_MOTOR_REDUCTION = 26.0; // SDS MK5i
   public static final DCMotor TURN_GEARBOX = DCMotor.getKrakenX60Foc(1);
 
   // Absolute turn encoder configuration
@@ -241,7 +239,7 @@ public class DriveConstants {
                   TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>()
               .withDriveMotorGearRatio(DRIVE_MOTOR_REDUCTION)
               .withSteerMotorGearRatio(TURN_MOTOR_REDUCTION)
-              .withCouplingGearRatio(COUPLE_RATIO)
+              .withCouplingGearRatio(SELECTED_RATIO.getCoupleRatio())
               .withWheelRadius(WHEEL_RADIUS)
               .withSteerMotorGains(STEER_GAINS)
               .withDriveMotorGains(DRIVE_GAINS)
