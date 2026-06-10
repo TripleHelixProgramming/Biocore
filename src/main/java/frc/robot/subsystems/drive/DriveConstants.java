@@ -65,33 +65,31 @@ public class DriveConstants {
   public static final Distance WHEEL_RADIUS = Inches.of(2);
   public static final double WHEEL_RADIUS_METERS = WHEEL_RADIUS.in(Meters);
 
-  public static enum Ratio {
+  private static enum DriveGearRatio {
     SDS_MK5i_R1(54.0 / 12.0, 25.0 / 32.0, 30.0 / 15.0),
     SDS_MK5i_R2(54.0 / 14.0, 25.0 / 32.0, 30.0 / 15.0),
     SDS_MK5i_R3(54.0 / 16.0, 25.0 / 32.0, 30.0 / 15.0);
 
-    private double firstStageReduction;
-    private double secondStageReduction;
-    private double thirdStageReduction;
+    private final double[] reductions;
 
-    private Ratio(
-        double firstStageReduction, double secondStageReduction, double ThirdStageReduction) {
-      this.firstStageReduction = firstStageReduction;
-      this.secondStageReduction = secondStageReduction;
-      this.thirdStageReduction = ThirdStageReduction;
+    private DriveGearRatio(double... reductions) {
+      this.reductions = reductions;
     }
 
     public double getDriveMotorReduction() {
-      return firstStageReduction * secondStageReduction * thirdStageReduction;
+      double product = 1.0;
+      for (double r : reductions) product *= r;
+      return product;
     }
 
-    // Every 1 rotation of the azimuth results in COUPLE_RATIO drive motor turns
+    // Every 1 rotation of the azimuth results in getCoupleRatio() drive motor turns.
+    // reductions[0] is the first (bevel gear) stage, which couples azimuth to drive.
     public double getCoupleRatio() {
-      return firstStageReduction;
+      return reductions[0];
     }
   }
 
-  public static final Ratio SELECTED_RATIO = Ratio.SDS_MK5i_R2;
+  private static final DriveGearRatio SELECTED_RATIO = DriveGearRatio.SDS_MK5i_R2;
   public static final double DRIVE_MOTOR_REDUCTION = SELECTED_RATIO.getDriveMotorReduction();
   public static final DCMotor DRIVE_GEARBOX = DCMotor.getKrakenX60Foc(1);
   public static final LinearVelocity DRIVETRAIN_SPEED_LIMIT =
