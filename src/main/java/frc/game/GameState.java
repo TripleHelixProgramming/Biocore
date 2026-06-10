@@ -1,7 +1,5 @@
 package frc.game;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.Robot;
@@ -14,15 +12,10 @@ public class GameState {
   public enum GamePhase {
     None("0:00 - 0:00"),
     Autonomous("0:20 - 0:00"),
-    Transition("2:20 - 2:10"),
-    Shift1("2:10 - 1:45"),
-    Shift2("1:45 - 1:20"),
-    Shift3("1:20 - 0:55"),
-    Shift4("0:55 - 0:30"),
+    MidGame("2:20 - 0:30"),
     EndGame("0:30 - 0:00");
 
-    public static final List<GamePhase> TELEOP =
-        List.of(Transition, Shift1, Shift2, Shift3, Shift4, EndGame);
+    public static final List<GamePhase> TELEOP = List.of(MidGame, EndGame);
 
     final double countDownFrom;
     final double countDownUntil;
@@ -47,7 +40,6 @@ public class GameState {
     }
   }
 
-  private static Alliance autoWinner;
   private static Alliance myAlliance;
 
   public static GamePhase getCurrentPhase() {
@@ -75,39 +67,6 @@ public class GameState {
     return myAlliance;
   }
 
-  public static Optional<Alliance> getAutoWinner() {
-    if (autoWinner == null) {
-      var gameData = DriverStation.getGameSpecificMessage();
-      if (gameData.length() > 0) {
-        autoWinner =
-            switch (gameData.charAt(0)) {
-              case 'B' -> Alliance.Blue;
-              case 'R' -> Alliance.Red;
-              default -> null;
-            };
-      }
-    }
-    return Optional.ofNullable(autoWinner);
-  }
-
-  public static boolean isMyHubActive() {
-    switch (getCurrentPhase()) {
-      case None:
-      case Autonomous:
-      case Transition:
-      case EndGame:
-        return true;
-      case Shift1:
-      case Shift3:
-        return autoWinner != null && myAlliance != null && autoWinner != myAlliance;
-      case Shift2:
-      case Shift4:
-        return autoWinner != null && myAlliance != null && autoWinner == myAlliance;
-      default:
-        return false;
-    }
-  }
-
   public static double getMatchTime() {
     return DriverStation.getMatchTime();
   }
@@ -118,35 +77,13 @@ public class GameState {
 
   public static void logValues() {
     getMyAlliance();
-    getAutoWinner();
     Logger.recordOutput("GameState/IsDSAttached", DriverStation.isDSAttached());
     Logger.recordOutput("GameState/IsFMSAttached", DriverStation.isFMSAttached());
     Logger.recordOutput("GameState/MatchType", DriverStation.getMatchType());
     Logger.recordOutput("GameState/IsAutonomus", DriverStation.isAutonomous());
     Logger.recordOutput("GameState/MatchTime", DriverStation.getMatchTime());
-    Logger.recordOutput("GameState/AutoWinner", autoWinner);
     Logger.recordOutput("GameState/Alliance", myAlliance);
     Logger.recordOutput("GameState/GameData", DriverStation.getGameSpecificMessage());
     Logger.recordOutput("GameState/CurrentPhase", getCurrentPhase());
-    Logger.recordOutput("GameState/IsMyHubActive", isMyHubActive());
-  }
-
-  public static Pose3d getTarget(Pose2d robotPose) {
-    if (Robot.getAlliance() == Alliance.Red) {
-      if (robotPose.getMeasureX().gt(Field.redHubCenter.getMeasureX())) {
-        return Field.redHubCenter;
-      }
-      if (robotPose.getMeasureY().gt(Field.centerField_y_pos)) {
-        return Field.redLeftTarget;
-      }
-      return Field.redRightTarget;
-    }
-    if (robotPose.getMeasureX().lt(Field.blueHubCenter.getMeasureX())) {
-      return Field.blueHubCenter;
-    }
-    if (robotPose.getMeasureY().gt(Field.centerField_y_pos)) {
-      return Field.blueLeftTarget;
-    }
-    return Field.blueRightTarget;
   }
 }
