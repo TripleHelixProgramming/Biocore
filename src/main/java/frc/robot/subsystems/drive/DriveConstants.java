@@ -65,10 +65,49 @@ public class DriveConstants {
   public static final Distance WHEEL_RADIUS = Inches.of(2);
   public static final double WHEEL_RADIUS_METERS = WHEEL_RADIUS.in(Meters);
 
-  // public static enum DRIVE_MOTOR_REDUCTIONS { SDS_MK5_R1, SDS_MK5_R2, SDS_MK5_R3 }
+  private static enum DriveGearRatio {
+    SDS_MK5i_R1(1, 54.0 / 12.0, 25.0 / 32.0, 30.0 / 15.0),
+    SDS_MK5i_R2(1, 54.0 / 14.0, 25.0 / 32.0, 30.0 / 15.0),
+    SDS_MK5i_R3(1, 54.0 / 16.0, 25.0 / 32.0, 30.0 / 15.0);
 
-  public static final double DRIVE_MOTOR_REDUCTION =
-      (54.0 / 14.0) * (25.0 / 32.0) * (30.0 / 15.0); // SDS MK5 R2
+    private final int chassisStages;
+    private final double[] reductions;
+
+    /**
+     * @param chassisStages the number of leading reduction stages fixed to the chassis reference
+     *     frame; their product defines the couple ratio
+     * @param reductions all gear reduction stages in order, chassis-frame stages first followed by
+     *     azimuth-frame stages
+     */
+    private DriveGearRatio(int chassisStages, double... reductions) {
+      this.chassisStages = chassisStages;
+      this.reductions = reductions;
+    }
+
+    /**
+     * Returns the total gear reduction from the drive motor to the wheel, combining all stages
+     * regardless of reference frame. Used to convert drive motor rotations to wheel rotations.
+     */
+    public double getDriveMotorReduction() {
+      double product = 1.0;
+      for (double r : reductions) product *= r;
+      return product;
+    }
+
+    /**
+     * Returns the number of drive motor rotations per one full rotation of the steering azimuth,
+     * due to mechanical coupling. This is the product of all gear reduction stages that are fixed
+     * to the chassis reference frame (i.e., before the azimuth pivot). The swerve odometry uses
+     * this to compensate for the apparent wheel displacement caused by azimuth rotation.
+     */
+    public double getCoupleRatio() {
+      double product = 1.0;
+      for (int i = 0; i < chassisStages; i++) product *= reductions[i];
+      return product;
+    }
+  }
+
+  private static final DriveGearRatio SELECTED_RATIO = DriveGearRatio.SDS_MK5i_R2;
   public static final DCMotor DRIVE_GEARBOX = DCMotor.getKrakenX60Foc(1);
   public static final LinearVelocity DRIVETRAIN_SPEED_LIMIT =
       MetersPerSecond.of(
@@ -76,7 +115,7 @@ public class DriveConstants {
               * (WHEEL_RADIUS_METERS * 2.0 * Math.PI)
               * DRIVE_GEARBOX.freeSpeedRadPerSec
               / (2.0 * Math.PI)
-              / DRIVE_MOTOR_REDUCTION);
+              / SELECTED_RATIO.getDriveMotorReduction());
 
   // Chassis movement limits
   private static final LinearVelocity DRIVER_SPEED_LIMIT = MetersPerSecond.of(5);
@@ -101,9 +140,7 @@ public class DriveConstants {
 
   // Turn motor configuration
   public static final boolean TURN_INVERTED = false;
-  public static final double TURN_MOTOR_REDUCTION = 26; // SDS MK5 R2
-  // Every 1 rotation of the azimuth results in COUPLE_RATIO drive motor turns
-  private static final double COUPLE_RATIO = (54.0 / 14.0); // SDS MK4 L2
+  public static final double TURN_MOTOR_REDUCTION = 26.0; // SDS MK5i
   public static final DCMotor TURN_GEARBOX = DCMotor.getKrakenX60Foc(1);
 
   // Absolute turn encoder configuration
@@ -122,7 +159,7 @@ public class DriveConstants {
               WHEEL_RADIUS_METERS,
               DRIVETRAIN_SPEED_LIMIT.in(MetersPerSecond),
               WHEEL_COF,
-              DRIVE_GEARBOX.withReduction(DRIVE_MOTOR_REDUCTION),
+              DRIVE_GEARBOX.withReduction(SELECTED_RATIO.getDriveMotorReduction()),
               KrakenX60Constants.DEFAULT_SUPPLY_CURRENT_LIMIT,
               1),
           MODULE_TRANSLATIONS);
@@ -215,9 +252,9 @@ public class DriveConstants {
       CONSTANT_CREATOR =
           new SwerveModuleConstantsFactory<
                   TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>()
-              .withDriveMotorGearRatio(DRIVE_MOTOR_REDUCTION)
+              .withDriveMotorGearRatio(SELECTED_RATIO.getDriveMotorReduction())
               .withSteerMotorGearRatio(TURN_MOTOR_REDUCTION)
-              .withCouplingGearRatio(COUPLE_RATIO)
+              .withCouplingGearRatio(SELECTED_RATIO.getCoupleRatio())
               .withWheelRadius(WHEEL_RADIUS)
               .withSteerMotorGains(STEER_GAINS)
               .withDriveMotorGains(DRIVE_GAINS)
