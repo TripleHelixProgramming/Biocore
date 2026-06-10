@@ -90,7 +90,6 @@ public class DriveConstants {
   }
 
   private static final DriveGearRatio SELECTED_RATIO = DriveGearRatio.SDS_MK5i_R2;
-  public static final double DRIVE_MOTOR_REDUCTION = SELECTED_RATIO.getDriveMotorReduction();
   public static final DCMotor DRIVE_GEARBOX = DCMotor.getKrakenX60Foc(1);
   public static final LinearVelocity DRIVETRAIN_SPEED_LIMIT =
       MetersPerSecond.of(
@@ -98,7 +97,7 @@ public class DriveConstants {
               * (WHEEL_RADIUS_METERS * 2.0 * Math.PI)
               * DRIVE_GEARBOX.freeSpeedRadPerSec
               / (2.0 * Math.PI)
-              / DRIVE_MOTOR_REDUCTION);
+              / SELECTED_RATIO.getDriveMotorReduction());
 
   // Chassis movement limits
   private static final LinearVelocity DRIVER_SPEED_LIMIT = MetersPerSecond.of(5);
@@ -142,7 +141,7 @@ public class DriveConstants {
               WHEEL_RADIUS_METERS,
               DRIVETRAIN_SPEED_LIMIT.in(MetersPerSecond),
               WHEEL_COF,
-              DRIVE_GEARBOX.withReduction(DRIVE_MOTOR_REDUCTION),
+              DRIVE_GEARBOX.withReduction(SELECTED_RATIO.getDriveMotorReduction()),
               KrakenX60Constants.DEFAULT_SUPPLY_CURRENT_LIMIT,
               1),
           MODULE_TRANSLATIONS);
@@ -235,7 +234,7 @@ public class DriveConstants {
       CONSTANT_CREATOR =
           new SwerveModuleConstantsFactory<
                   TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>()
-              .withDriveMotorGearRatio(DRIVE_MOTOR_REDUCTION)
+              .withDriveMotorGearRatio(SELECTED_RATIO.getDriveMotorReduction())
               .withSteerMotorGearRatio(TURN_MOTOR_REDUCTION)
               .withCouplingGearRatio(SELECTED_RATIO.getCoupleRatio())
               .withWheelRadius(WHEEL_RADIUS)
