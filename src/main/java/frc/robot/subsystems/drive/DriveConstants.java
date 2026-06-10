@@ -49,8 +49,8 @@ public class DriveConstants {
   public static final String ZERO_ROTATION_KEY = "ZeroRotation";
 
   // Robot physical dimensions
-  public static final Distance WHEEL_BASE = Inches.of(22.5);
-  public static final Distance TRACK_WIDTH = Inches.of(19.5);
+  public static final Distance WHEEL_BASE = Inches.of(23.75);
+  public static final Distance TRACK_WIDTH = Inches.of(20.75);
   public static final Translation2d[] MODULE_TRANSLATIONS =
       new Translation2d[] {
         new Translation2d(WHEEL_BASE.div(2.0), TRACK_WIDTH.div(2.0)),
@@ -64,8 +64,11 @@ public class DriveConstants {
   // Drive motor configuration
   public static final Distance WHEEL_RADIUS = Inches.of(2);
   public static final double WHEEL_RADIUS_METERS = WHEEL_RADIUS.in(Meters);
+
+  // public static enum DRIVE_MOTOR_REDUCTIONS { SDS_MK5_R1, SDS_MK5_R2, SDS_MK5_R3 }
+
   public static final double DRIVE_MOTOR_REDUCTION =
-      (50.0 / 14.0) * (17.0 / 27.0) * (45.0 / 15.0); // SDS MK4 L2
+      (54.0 / 14.0) * (25.0 / 32.0) * (30.0 / 15.0); // SDS MK5 R2
   public static final DCMotor DRIVE_GEARBOX = DCMotor.getKrakenX60Foc(1);
   public static final LinearVelocity DRIVETRAIN_SPEED_LIMIT =
       MetersPerSecond.of(
@@ -98,17 +101,18 @@ public class DriveConstants {
 
   // Turn motor configuration
   public static final boolean TURN_INVERTED = false;
-  public static final double TURN_MOTOR_REDUCTION = (32.0 / 15.0) * (60.0 / 10.0); // SDS MK4
+  public static final double TURN_MOTOR_REDUCTION = 26; // SDS MK5 R2
   // Every 1 rotation of the azimuth results in COUPLE_RATIO drive motor turns
-  private static final double COUPLE_RATIO = (50.0 / 14.0); // SDS MK4 L2
+  private static final double COUPLE_RATIO = (54.0 / 14.0); // SDS MK4 L2
   public static final DCMotor TURN_GEARBOX = DCMotor.getKrakenX60Foc(1);
 
   // Absolute turn encoder configuration
   public static final boolean TURN_ENCODER_INVERTED = false;
 
   // PathPlanner configuration
-  public static final Mass ROBOT_MASS = Pounds.of(150);
-  public static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(6);
+  public static final Mass ROBOT_MASS = Pounds.of(35.4);
+  public static final MomentOfInertia ROBOT_MOI =
+      KilogramSquareMeters.of(2.5); // Mass*((Track_width/2)^2 + (Wheel_base/2)^2)
   public static final double WHEEL_COF = 1.2;
   public static final RobotConfig PP_CONFIG =
       new RobotConfig(
