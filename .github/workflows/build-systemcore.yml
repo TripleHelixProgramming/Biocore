@@ -1,17 +1,17 @@
-name: Build
+name: Build (SystemCore)
 
 on:
   push:
 
 jobs:
   build:
-    name: Build
+    name: Build (SystemCore)
     runs-on: ubuntu-latest
-    container: wpilib/roborio-cross-ubuntu:2024-22.04
+    container: wpilib/systemcore-cross-ubuntu-minimal:2027-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Grant execute permission
         run: chmod +x gradlew
       - name: Build robot code
-        run: ./gradlew build
+        run: ./gradlew assemble test
