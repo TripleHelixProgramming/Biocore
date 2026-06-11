@@ -74,7 +74,7 @@ public class DriveConstants {
       MetersPerSecond.of(
           0.9
               * (WHEEL_RADIUS_METERS * 2.0 * Math.PI)
-              * DRIVE_GEARBOX.freeSpeedRadPerSec
+              * DRIVE_GEARBOX.freeSpeed
               / (2.0 * Math.PI)
               / DRIVE_MOTOR_REDUCTION);
 
