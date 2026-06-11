@@ -27,6 +27,7 @@ public enum LEDStrip {
   private final int length;
   private AddressableLED led;
   private AddressableLEDBuffer buffer;
+
   LEDStrip(int port, int length) {
     this.port = port;
     this.length = length;

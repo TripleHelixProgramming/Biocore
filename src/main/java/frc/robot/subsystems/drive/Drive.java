@@ -191,8 +191,7 @@ public class Drive extends SubsystemBase {
         modulePositions[moduleIndex] = modules[moduleIndex].getOdometryPositions()[i];
         // Mutate pre-allocated delta objects to avoid allocations
         moduleDeltas[moduleIndex].distance =
-            modulePositions[moduleIndex].distance
-                - lastModulePositions[moduleIndex].distance;
+            modulePositions[moduleIndex].distance - lastModulePositions[moduleIndex].distance;
         moduleDeltas[moduleIndex].angle = modulePositions[moduleIndex].angle;
         lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
       }

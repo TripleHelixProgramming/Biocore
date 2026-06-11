@@ -77,8 +77,8 @@ public final class Constants {
   public static final class CANBusPorts {
 
     /**
-     * SystemCore CAN bus 0 — low-speed bus for support/sensing devices.
-     * Supports the power distribution and gyro.
+     * SystemCore CAN bus 0 — low-speed bus for support/sensing devices. Supports the power
+     * distribution and gyro.
      */
     public static final class SC0 {
       public static final String NAME = "SC0";
@@ -93,8 +93,8 @@ public final class Constants {
     }
 
     /**
-     * SystemCore CAN bus 1 — high-speed bus for swerve drivetrain devices.
-     * Supports TalonFX motor controllers and CANcoders.
+     * SystemCore CAN bus 1 — high-speed bus for swerve drivetrain devices. Supports TalonFX motor
+     * controllers and CANcoders.
      */
     public static final class SC1 {
       public static final String NAME = "SC1";
