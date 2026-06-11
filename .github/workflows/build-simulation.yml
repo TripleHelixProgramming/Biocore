@@ -19,9 +19,4 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
       - name: Build simulation
-        run: |
-          setsid ./gradlew simulateJavaRelease &>/tmp/sim.log &
-          GRADLE_PID=$!
-          tail -f /tmp/sim.log | grep -m1 "Robot program startup complete"
-          kill -- -$GRADLE_PID 2>/dev/null || true
-          cat /tmp/sim.log
+        run: ./gradlew assemble test
