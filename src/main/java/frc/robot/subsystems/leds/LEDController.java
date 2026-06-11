@@ -47,9 +47,7 @@ public class LEDController extends SubsystemBase {
     return instance;
   }
 
-  private LEDController() {
-    LEDStrip.startAll();
-  }
+  private LEDController() {}
 
   /** Pushes LED buffer data to all physical strips each cycle. */
   @Override
