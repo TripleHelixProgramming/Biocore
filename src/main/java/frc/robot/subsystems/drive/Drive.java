@@ -265,7 +265,7 @@ public class Drive extends SubsystemBase {
     ChassisSpeeds limitedSpeeds = kinematics.toChassisSpeeds(states);
 
     // 4: Now discretize the LIMITED speeds
-    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(limitedSpeeds, 0.02);
+    ChassisSpeeds discreteSpeeds = limitedSpeeds.discretize(0.02);
 
     // 5: Convert discretized speeds back to module states
     SwerveModuleState[] finalStates = kinematics.toSwerveModuleStates(discreteSpeeds);
@@ -297,7 +297,7 @@ public class Drive extends SubsystemBase {
                 + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
 
     // Apply the generated speeds
-    runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, pose.getRotation()));
+    runVelocity(speeds.toRobotRelative(pose.getRotation()));
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
