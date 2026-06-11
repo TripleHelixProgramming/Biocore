@@ -216,9 +216,6 @@ public class Robot extends LoggedRobot {
     // Start AdvantageKit logger
     Logger.start();
 
-    // Disable LiveWindow telemetry (subsystem motor sendables) — eliminates SmartDashboard overhead
-    edu.wpi.first.wpilibj.livewindow.LiveWindow.disableAllTelemetry();
-
     configureControlPanelBindings();
     configureAutoOptions();
 
