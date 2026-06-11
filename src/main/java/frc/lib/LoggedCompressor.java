@@ -7,8 +7,15 @@ import org.littletonrobotics.junction.Logger;
 public class LoggedCompressor extends Compressor {
   private final String key;
 
-  public LoggedCompressor(PneumaticsModuleType moduleType, String logKey) {
-    super(moduleType);
+  /**
+   * Creates a logged compressor.
+   *
+   * @param busId the CAN bus ID (SystemCore transceiver number)
+   * @param moduleType the type of pneumatics module
+   * @param logKey the AdvantageKit log key prefix
+   */
+  public LoggedCompressor(int busId, PneumaticsModuleType moduleType, String logKey) {
+    super(busId, moduleType);
     this.key = logKey;
   }
 

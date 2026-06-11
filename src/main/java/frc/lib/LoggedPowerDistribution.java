@@ -6,8 +6,16 @@ import org.littletonrobotics.junction.Logger;
 public class LoggedPowerDistribution extends PowerDistribution {
   private final String key;
 
-  public LoggedPowerDistribution(int module, ModuleType moduleType, String logKey) {
-    super(module, moduleType);
+  /**
+   * Creates a logged power distribution module.
+   *
+   * @param busId the CAN bus ID (SystemCore transceiver number)
+   * @param module the CAN device ID of the power distribution module
+   * @param moduleType the type of power distribution module
+   * @param logKey the AdvantageKit log key prefix
+   */
+  public LoggedPowerDistribution(int busId, int module, ModuleType moduleType, String logKey) {
+    super(busId, module, moduleType);
     this.key = logKey;
   }
 

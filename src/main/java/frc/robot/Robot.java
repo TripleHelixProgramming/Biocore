@@ -40,7 +40,7 @@ import frc.lib.ControllerSelector.DriverConfig;
 import frc.lib.ControllerSelector.DriverController;
 import frc.lib.ControllerSelector.OperatorConfig;
 import frc.lib.LoggedPowerDistribution;
-import frc.robot.Constants.CANBusPorts.CAN2;
+import frc.robot.Constants.CANBusPorts.SC0;
 import frc.robot.Constants.DIOPorts;
 import frc.robot.Constants.FeatureFlags;
 import frc.robot.commands.DriveCommands;
@@ -93,7 +93,7 @@ public class Robot extends LoggedRobot {
   public static final AutoSelector autoSelector =
       new AutoSelector(DIOPorts.AUTONOMOUS_MODE_SELECTOR, allianceSelector::getAllianceColor);
   public final LoggedPowerDistribution powerDistribution =
-      new LoggedPowerDistribution(CAN2.PD, ModuleType.kRev, "PD");
+      new LoggedPowerDistribution(SC0.BUS_ID, SC0.PD, ModuleType.kRev, "PD");
 
   private final java.util.Set<String> activeCommands = new java.util.LinkedHashSet<>();
 
@@ -246,8 +246,8 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().run();
     long t1 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
-    logCANBus("CAN2", Constants.CANBusPorts.CAN2.BUS);
-    logCANBus("CANHD", Constants.CANBusPorts.CANHD.BUS);
+    logCANBus(Constants.CANBusPorts.SC0.NAME, Constants.CANBusPorts.SC0.BUS);
+    logCANBus(Constants.CANBusPorts.SC1.NAME, Constants.CANBusPorts.SC1.BUS);
     powerDistribution.log();
     logHIDs();
     logScheduler();

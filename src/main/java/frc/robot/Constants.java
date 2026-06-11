@@ -76,8 +76,14 @@ public final class Constants {
 
   public static final class CANBusPorts {
 
-    public static final class CAN2 {
-      public static final CANBus BUS = CANBus.roboRIO();
+    /**
+     * SystemCore CAN bus 0 — low-speed bus for support/sensing devices.
+     * Supports the power distribution and gyro.
+     */
+    public static final class SC0 {
+      public static final String NAME = "SC0";
+      public static final int BUS_ID = 0;
+      public static final CANBus BUS = CANBus.systemCore(BUS_ID);
 
       // Power distribution
       public static final int PD = 1;
@@ -86,10 +92,14 @@ public final class Constants {
       public static final int GYRO = 0;
     }
 
-    public static final class CANHD {
-      // CAN bus that the devices are located on;
-      // All swerve devices must share the same CAN bus
-      public static final CANBus BUS = new CANBus("canivore");
+    /**
+     * SystemCore CAN bus 1 — high-speed bus for swerve drivetrain devices.
+     * Supports TalonFX motor controllers and CANcoders.
+     */
+    public static final class SC1 {
+      public static final String NAME = "SC1";
+      public static final int BUS_ID = 1;
+      public static final CANBus BUS = CANBus.systemCore(BUS_ID);
 
       // Drivetrain
       public static final int BACK_LEFT_DRIVE = 10;
