@@ -20,8 +20,6 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
-import edu.wpi.first.hal.FRCNetComm.tInstances;
-import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
@@ -110,7 +108,8 @@ public class Drive extends SubsystemBase {
     modules[3] = new Module(brModuleIO, "BackRight");
 
     // Usage reporting for swerve template
-    HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
+    // TODO: update instance string to match the official 2027 AKit template when released.
+    HAL.reportUsage("RobotDrive", "SwerveAdvantageKit");
 
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
