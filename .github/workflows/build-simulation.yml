@@ -20,8 +20,8 @@ jobs:
         run: chmod +x gradlew
       - name: Build simulation
         run: |
-          ./gradlew simulateJavaRelease &>/tmp/sim.log &
+          setsid ./gradlew simulateJavaRelease &>/tmp/sim.log &
           GRADLE_PID=$!
           tail -f /tmp/sim.log | grep -m1 "Robot program startup complete"
-          kill -- -$(ps -o pgid= "$GRADLE_PID" | tr -d ' ') 2>/dev/null || kill "$GRADLE_PID" 2>/dev/null || true
+          kill -- -$GRADLE_PID 2>/dev/null || true
           cat /tmp/sim.log
