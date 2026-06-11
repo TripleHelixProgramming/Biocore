@@ -10,7 +10,7 @@ jobs:
     container: wpilib/roborio-cross-ubuntu:2027_alpha5-22.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Add repository to git safe directories
         run: git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: Grant execute permission
