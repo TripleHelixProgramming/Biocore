@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.event.BooleanEvent;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,8 +73,8 @@ public class AutoSelector implements Supplier<Optional<AutoOption>> {
 
   /** Schedules the command corresponding to the selected autonomous mode */
   public void scheduleAuto() {
-    // TODO: schedule() in Command has been deprecated and marked for removal
-    currentAutoOption.ifPresent(ao -> ao.getAutoCommand().ifPresent(Command::schedule));
+    currentAutoOption.ifPresent(
+        ao -> ao.getAutoCommand().ifPresent(CommandScheduler.getInstance()::schedule));
   }
 
   /** Deschedules the command corresponding to the selected autonomous mode */
