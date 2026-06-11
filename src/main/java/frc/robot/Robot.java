@@ -538,8 +538,8 @@ public class Robot extends LoggedRobot {
       for (int i = 0; i < buttonCount; i++) buttons[i] = DriverStation.getStickButton(port, i + 1);
       Logger.recordOutput(prefix + "/Buttons", buttons);
       int povCount = DriverStation.getStickPOVCount(port);
-      long[] povs = new long[povCount];
-      for (int i = 0; i < povCount; i++) povs[i] = DriverStation.getStickPOV(port, i);
+      String[] povs = new String[povCount];
+      for (int i = 0; i < povCount; i++) povs[i] = DriverStation.getStickPOV(port, i).name();
       Logger.recordOutput(prefix + "/POVs", povs);
     }
   }
