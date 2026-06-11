@@ -58,6 +58,12 @@ task(replayWatch, type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
 }
 
+// The @AutoLog annotation processor (akit-autolog) doesn't generate classes during the Gradle
+// build due to a class-loading issue in Gradle's Java compilation infrastructure. As a workaround,
+// classes are pre-generated into build/generated/sources/annotationProcessor/java/main/ and that
+// directory is explicitly added here so Gradle picks them up.
+sourceSets.main.java.srcDir("${buildDir}/generated/sources/annotationProcessor/java/main")
+
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 4.
 dependencies {
@@ -84,6 +90,10 @@ dependencies {
 
     def akitJson = new groovy.json.JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
     annotationProcessor "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
+    // javapoet is declared as runtime-only in akit-autolog's Gradle module metadata, so Gradle's
+    // annotationProcessor config (java-api usage) doesn't pull it in automatically.
+    // Explicitly adding it ensures the @AutoLog processor can instantiate correctly.
+    annotationProcessor "com.squareup:javapoet:1.13.0"
 }
 
 test {
