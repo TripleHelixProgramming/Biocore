@@ -24,7 +24,6 @@ import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -226,13 +225,20 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().onCommandFinish(cmd -> activeCommands.remove(cmd.getName()));
     CommandScheduler.getInstance().onCommandInterrupt(cmd -> activeCommands.remove(cmd.getName()));
 
-    new Trigger(
-            NetworkTableInstance.getDefault()
-                    .getTable("Triggers")
-                    .getBooleanTopic("Align Encoders")
-                    .subscribe(false)
-                ::get)
-        .onTrue(new InstantCommand(drive::zeroAbsoluteEncoders).ignoringDisable(true));
+    var alignEncodersEntry =
+        NetworkTableInstance.getDefault()
+            .getTable("Triggers")
+            .getBooleanTopic("Align Encoders")
+            .getEntry(false);
+    alignEncodersEntry.set(false);
+    new Trigger(alignEncodersEntry::get)
+        .onTrue(
+            Commands.runOnce(
+                    () -> {
+                      drive.zeroAbsoluteEncoders();
+                      alignEncodersEntry.set(false);
+                    })
+                .ignoringDisable(true));
     Field.plotRegions();
   }
 
