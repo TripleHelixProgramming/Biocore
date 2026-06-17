@@ -24,7 +24,6 @@ import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -226,7 +225,7 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().onCommandFinish(cmd -> activeCommands.remove(cmd.getName()));
     CommandScheduler.getInstance().onCommandInterrupt(cmd -> activeCommands.remove(cmd.getName()));
 
-     var alignEncodersEntry =
+    var alignEncodersEntry =
         NetworkTableInstance.getDefault()
             .getTable("Triggers")
             .getBooleanTopic("Align Encoders")
@@ -242,7 +241,6 @@ public class Robot extends LoggedRobot {
                 .ignoringDisable(true));
     Field.plotRegions();
   }
-
 
   /** This function is called periodically during all modes. */
   @Override
