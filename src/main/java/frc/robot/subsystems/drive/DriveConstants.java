@@ -16,6 +16,10 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -220,6 +224,60 @@ public class DriveConstants {
         LinearSystemId.createDCMotorSystem(
             TURN_GEARBOX, STEER_INERTIA.in(KilogramSquareMeters), TURN_MOTOR_REDUCTION),
         TURN_GEARBOX);
+  }
+
+  public static TalonFXConfiguration buildDriveConfig(
+      SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+          constants) {
+    var config = constants.DriveMotorInitialConfigs;
+    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    config.Slot0 = constants.DriveMotorGains;
+    config.Feedback.SensorToMechanismRatio = constants.DriveMotorGearRatio;
+    config.MotorOutput.Inverted =
+        constants.DriveMotorInverted
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
+    return config;
+  }
+
+  public static TalonFXConfiguration buildTurnConfig(
+      SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+          constants) {
+    var config = constants.SteerMotorInitialConfigs;
+    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    config.Slot0 = constants.SteerMotorGains;
+    config.Feedback.FeedbackRemoteSensorID = constants.EncoderId;
+    config.Feedback.FeedbackSensorSource =
+        switch (constants.FeedbackSource) {
+          case RemoteCANcoder -> FeedbackSensorSourceValue.RemoteCANcoder;
+          case FusedCANcoder -> FeedbackSensorSourceValue.FusedCANcoder;
+          case SyncCANcoder -> FeedbackSensorSourceValue.SyncCANcoder;
+          default ->
+              throw new RuntimeException(
+                  "You are using an unsupported swerve configuration, which this template does not support without manual customization. The 2025 release of Phoenix supports some swerve configurations which were not available during 2025 beta testing, preventing any development and support from the AdvantageKit developers.");
+        };
+    config.Feedback.RotorToSensorRatio = constants.SteerMotorGearRatio;
+    config.MotionMagic.MotionMagicCruiseVelocity = 100.0 / constants.SteerMotorGearRatio;
+    config.MotionMagic.MotionMagicAcceleration =
+        config.MotionMagic.MotionMagicCruiseVelocity / 0.100;
+    config.MotionMagic.MotionMagicExpo_kV = 0.12 * constants.SteerMotorGearRatio;
+    config.MotionMagic.MotionMagicExpo_kA = 0.1;
+    config.ClosedLoopGeneral.ContinuousWrap = true;
+    config.MotorOutput.Inverted =
+        constants.SteerMotorInverted
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
+    return config;
+  }
+
+  public static void configureCANcoder(
+      CANcoderConfiguration config,
+      SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+          constants) {
+    config.MagnetSensor.SensorDirection =
+        constants.EncoderInverted
+            ? SensorDirectionValue.Clockwise_Positive
+            : SensorDirectionValue.CounterClockwise_Positive;
   }
 
   public static final SwerveDrivetrainConstants DRIVETRAIN_CONSTANTS =

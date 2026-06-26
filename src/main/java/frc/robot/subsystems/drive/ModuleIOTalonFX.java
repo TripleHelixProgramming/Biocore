@@ -22,10 +22,6 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import frc.robot.Constants.CANBusPorts.SC1;
 import java.util.Queue;
@@ -101,52 +97,19 @@ public class ModuleIOTalonFX implements ModuleIO {
     cancoder = new CANcoder(constants.EncoderId, SC1.BUS);
 
     // Configure drive motor
-    var driveConfig = constants.DriveMotorInitialConfigs;
-    driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    driveConfig.Slot0 = constants.DriveMotorGains;
-    driveConfig.Feedback.SensorToMechanismRatio = constants.DriveMotorGearRatio;
-    driveConfig.MotorOutput.Inverted =
-        constants.DriveMotorInverted
-            ? InvertedValue.Clockwise_Positive
-            : InvertedValue.CounterClockwise_Positive;
-    tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+    tryUntilOk(
+        5,
+        () -> driveTalon.getConfigurator().apply(DriveConstants.buildDriveConfig(constants), 0.25));
     tryUntilOk(5, () -> driveTalon.setPosition(0.0, 0.25));
 
     // Configure turn motor
-    var turnConfig = constants.SteerMotorInitialConfigs;
-    turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    turnConfig.Slot0 = constants.SteerMotorGains;
-    turnConfig.Feedback.FeedbackRemoteSensorID = constants.EncoderId;
-    turnConfig.Feedback.FeedbackSensorSource =
-        switch (constants.FeedbackSource) {
-          case RemoteCANcoder -> FeedbackSensorSourceValue.RemoteCANcoder;
-          case FusedCANcoder -> FeedbackSensorSourceValue.FusedCANcoder;
-          case SyncCANcoder -> FeedbackSensorSourceValue.SyncCANcoder;
-          default ->
-              throw new RuntimeException(
-                  "You are using an unsupported swerve configuration, which this template does not support without manual customization. The 2025 release of Phoenix supports some swerve configurations which were not available during 2025 beta testing, preventing any development and support from the AdvantageKit developers.");
-        };
-    turnConfig.Feedback.RotorToSensorRatio = constants.SteerMotorGearRatio;
-    turnConfig.MotionMagic.MotionMagicCruiseVelocity = 100.0 / constants.SteerMotorGearRatio;
-    turnConfig.MotionMagic.MotionMagicAcceleration =
-        turnConfig.MotionMagic.MotionMagicCruiseVelocity / 0.100;
-    turnConfig.MotionMagic.MotionMagicExpo_kV = 0.12 * constants.SteerMotorGearRatio;
-    turnConfig.MotionMagic.MotionMagicExpo_kA = 0.1;
-    turnConfig.ClosedLoopGeneral.ContinuousWrap = true;
-    turnConfig.MotorOutput.Inverted =
-        constants.SteerMotorInverted
-            ? InvertedValue.Clockwise_Positive
-            : InvertedValue.CounterClockwise_Positive;
-    tryUntilOk(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
+    tryUntilOk(
+        5,
+        () -> turnTalon.getConfigurator().apply(DriveConstants.buildTurnConfig(constants), 0.25));
 
-    // Configure CANCoder
-    // CANcoderConfiguration cancoderConfig = constants.EncoderInitialConfigs;
-    // cancoderConfig.MagnetSensor.MagnetOffset = constants.EncoderOffset;
+    // Configure CANcoder
     cancoder.getConfigurator().refresh(cancoderConfig);
-    cancoderConfig.MagnetSensor.SensorDirection =
-        constants.EncoderInverted
-            ? SensorDirectionValue.Clockwise_Positive
-            : SensorDirectionValue.CounterClockwise_Positive;
+    DriveConstants.configureCANcoder(cancoderConfig, constants);
     cancoder.getConfigurator().apply(cancoderConfig);
 
     // Create timestamp queue
