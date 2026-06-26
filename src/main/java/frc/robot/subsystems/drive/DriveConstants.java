@@ -35,6 +35,7 @@ import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.simulation.DCMotorSim;
 import org.wpilib.units.measure.AngularAcceleration;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
@@ -173,7 +174,7 @@ public class DriveConstants {
   // since steering requires minimal torque compared to driving.
   static final int STEER_STATOR_CURRENT_LIMIT = 60;
 
-  private static final TalonFXConfiguration DRIVE_INITIAL_CONFIGS =
+  public static final TalonFXConfiguration DRIVE_INITIAL_CONFIGS =
       new TalonFXConfiguration()
           .withTorqueCurrent(
               new TorqueCurrentConfigs()
@@ -188,7 +189,7 @@ public class DriveConstants {
 
   // Azimuth does not require much torque; keep stator limit low to reduce brownout risk
   // since steering requires minimal torque compared to driving.
-  private static final TalonFXConfiguration TURN_INITIAL_CONFIGS =
+  public static final TalonFXConfiguration TURN_INITIAL_CONFIGS =
       new TalonFXConfiguration()
           .withCurrentLimits(
               new CurrentLimitsConfigs()
@@ -206,6 +207,20 @@ public class DriveConstants {
   // Simulated voltage necessary to overcome friction
   private static final Voltage STEER_FRICTION_VOLTAGE = Volts.of(0.2);
   private static final Voltage DRIVE_FRICTION_VOLTAGE = Volts.of(0.2);
+
+  public static DCMotorSim createDriveSim() {
+    return new DCMotorSim(
+        LinearSystemId.createDCMotorSystem(
+            DRIVE_GEARBOX, DRIVE_INERTIA.in(KilogramSquareMeters), DRIVE_MOTOR_REDUCTION),
+        DRIVE_GEARBOX);
+  }
+
+  public static DCMotorSim createTurnSim() {
+    return new DCMotorSim(
+        LinearSystemId.createDCMotorSystem(
+            TURN_GEARBOX, STEER_INERTIA.in(KilogramSquareMeters), TURN_MOTOR_REDUCTION),
+        TURN_GEARBOX);
+  }
 
   public static final SwerveDrivetrainConstants DRIVETRAIN_CONSTANTS =
       new SwerveDrivetrainConstants().withCANBusName(SC1.BUS.getName());

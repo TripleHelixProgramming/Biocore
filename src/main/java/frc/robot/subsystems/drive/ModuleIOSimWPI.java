@@ -12,7 +12,6 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.system.Models;
 import org.wpilib.math.util.Units;
 import org.wpilib.simulation.DCMotorSim;
 import org.wpilib.simulation.RoboRioSim;
@@ -44,18 +43,8 @@ public class ModuleIOSimWPI implements ModuleIO {
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
           constants) {
     // Create drive and turn sim models
-    driveSim =
-        new DCMotorSim(
-            Models.singleJointedArmFromPhysicalConstants(
-                DriveConstants.DRIVE_GEARBOX,
-                constants.DriveInertia,
-                constants.DriveMotorGearRatio),
-            DriveConstants.DRIVE_GEARBOX);
-    turnSim =
-        new DCMotorSim(
-            Models.singleJointedArmFromPhysicalConstants(
-                DriveConstants.TURN_GEARBOX, constants.SteerInertia, constants.SteerMotorGearRatio),
-            DriveConstants.TURN_GEARBOX);
+    driveSim = DriveConstants.createDriveSim();
+    turnSim = DriveConstants.createTurnSim();
 
     // Enable wrapping for turn PID
     turnController.enableContinuousInput(-Math.PI, Math.PI);
