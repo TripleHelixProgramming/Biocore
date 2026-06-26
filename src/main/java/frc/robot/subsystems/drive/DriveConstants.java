@@ -219,6 +219,19 @@ public class DriveConstants {
         TURN_GEARBOX);
   }
 
+  private static SwerveModuleConstants<
+          TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+      configureModule(
+          SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+              constants) {
+    constants.DriveMotorInitialConfigs.MotorOutput.Inverted =
+        constants.DriveMotorInverted
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
+    constants.SteerMotorInitialConfigs.Feedback.FeedbackRemoteSensorID = constants.EncoderId;
+    return constants;
+  }
+
   public static final SwerveDrivetrainConstants DRIVETRAIN_CONSTANTS =
       new SwerveDrivetrainConstants().withCANBusName(SC1.BUS.getName());
 
@@ -292,55 +305,59 @@ public class DriveConstants {
   public static final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       FRONT_LEFT =
-          CONSTANT_CREATOR.createModuleConstants(
-              SC1.FRONT_LEFT_TURN,
-              SC1.FRONT_LEFT_DRIVE,
-              SC1.FRONT_LEFT_TURN_ABS_ENC,
-              Rotations.of(0),
-              WHEEL_BASE.div(2.0),
-              TRACK_WIDTH.div(2.0),
-              INVERT_LEFT_SIDE,
-              TURN_INVERTED,
-              TURN_ENCODER_INVERTED);
+          configureModule(
+              CONSTANT_CREATOR.createModuleConstants(
+                  SC1.FRONT_LEFT_TURN,
+                  SC1.FRONT_LEFT_DRIVE,
+                  SC1.FRONT_LEFT_TURN_ABS_ENC,
+                  Rotations.of(0),
+                  WHEEL_BASE.div(2.0),
+                  TRACK_WIDTH.div(2.0),
+                  INVERT_LEFT_SIDE,
+                  TURN_INVERTED,
+                  TURN_ENCODER_INVERTED));
   public static final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       FRONT_RIGHT =
-          CONSTANT_CREATOR.createModuleConstants(
-              SC1.FRONT_RIGHT_TURN,
-              SC1.FRONT_RIGHT_DRIVE,
-              SC1.FRONT_RIGHT_TURN_ABS_ENC,
-              Rotations.of(0),
-              WHEEL_BASE.div(2.0),
-              TRACK_WIDTH.div(-2.0),
-              INVERT_RIGHT_SIDE,
-              TURN_INVERTED,
-              TURN_ENCODER_INVERTED);
+          configureModule(
+              CONSTANT_CREATOR.createModuleConstants(
+                  SC1.FRONT_RIGHT_TURN,
+                  SC1.FRONT_RIGHT_DRIVE,
+                  SC1.FRONT_RIGHT_TURN_ABS_ENC,
+                  Rotations.of(0),
+                  WHEEL_BASE.div(2.0),
+                  TRACK_WIDTH.div(-2.0),
+                  INVERT_RIGHT_SIDE,
+                  TURN_INVERTED,
+                  TURN_ENCODER_INVERTED));
   public static final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       BACK_LEFT =
-          CONSTANT_CREATOR.createModuleConstants(
-              SC1.BACK_LEFT_TURN,
-              SC1.BACK_LEFT_DRIVE,
-              SC1.BACK_LEFT_TURN_ABS_ENC,
-              Rotations.of(0),
-              WHEEL_BASE.div(-2.0),
-              TRACK_WIDTH.div(2.0),
-              INVERT_LEFT_SIDE,
-              TURN_INVERTED,
-              TURN_ENCODER_INVERTED);
+          configureModule(
+              CONSTANT_CREATOR.createModuleConstants(
+                  SC1.BACK_LEFT_TURN,
+                  SC1.BACK_LEFT_DRIVE,
+                  SC1.BACK_LEFT_TURN_ABS_ENC,
+                  Rotations.of(0),
+                  WHEEL_BASE.div(-2.0),
+                  TRACK_WIDTH.div(2.0),
+                  INVERT_LEFT_SIDE,
+                  TURN_INVERTED,
+                  TURN_ENCODER_INVERTED));
   public static final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       BACK_RIGHT =
-          CONSTANT_CREATOR.createModuleConstants(
-              SC1.BACK_RIGHT_TURN,
-              SC1.BACK_RIGHT_DRIVE,
-              SC1.BACK_RIGHT_TURN_ABS_ENC,
-              Rotations.of(0),
-              WHEEL_BASE.div(-2.0),
-              TRACK_WIDTH.div(-2.0),
-              INVERT_RIGHT_SIDE,
-              TURN_INVERTED,
-              TURN_ENCODER_INVERTED);
+          configureModule(
+              CONSTANT_CREATOR.createModuleConstants(
+                  SC1.BACK_RIGHT_TURN,
+                  SC1.BACK_RIGHT_DRIVE,
+                  SC1.BACK_RIGHT_TURN_ABS_ENC,
+                  Rotations.of(0),
+                  WHEEL_BASE.div(-2.0),
+                  TRACK_WIDTH.div(-2.0),
+                  INVERT_RIGHT_SIDE,
+                  TURN_INVERTED,
+                  TURN_ENCODER_INVERTED));
 
   /** Swerve Drive class utilizing CTR Electronics' Phoenix 6 API with the selected device types. */
   public static class TunerSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> {

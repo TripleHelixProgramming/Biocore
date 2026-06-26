@@ -24,7 +24,6 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -75,17 +74,11 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
     turnTalon = new TalonFX(constants.SteerMotorId, SC1.BUS);
     cancoder = new CANcoder(constants.EncoderId, SC1.BUS);
 
-    var driveConfig = constants.DriveMotorInitialConfigs;
-    driveConfig.MotorOutput.Inverted =
-        constants.DriveMotorInverted
-            ? InvertedValue.Clockwise_Positive
-            : InvertedValue.CounterClockwise_Positive;
-    tryUntilOk(5, () -> driveTalon.getConfigurator().apply(driveConfig, 0.25));
+    tryUntilOk(
+        5, () -> driveTalon.getConfigurator().apply(constants.DriveMotorInitialConfigs, 0.25));
     tryUntilOk(5, () -> driveTalon.setPosition(0.0, 0.25));
-
-    var turnConfig = constants.SteerMotorInitialConfigs;
-    turnConfig.Feedback.FeedbackRemoteSensorID = constants.EncoderId;
-    tryUntilOk(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
+    tryUntilOk(
+        5, () -> turnTalon.getConfigurator().apply(constants.SteerMotorInitialConfigs, 0.25));
 
     cancoder.getConfigurator().refresh(cancoderConfig);
     cancoderConfig.MagnetSensor.SensorDirection =
