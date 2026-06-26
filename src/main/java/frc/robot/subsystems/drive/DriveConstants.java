@@ -206,7 +206,9 @@ public class DriveConstants {
   static DCMotorSim createDriveSim() {
     return new DCMotorSim(
         LinearSystemId.createDCMotorSystem(
-            DRIVE_GEARBOX, DRIVE_INERTIA.in(KilogramSquareMeters), DRIVE_MOTOR_REDUCTION),
+            DRIVE_GEARBOX,
+            DRIVE_INERTIA.in(KilogramSquareMeters),
+            SELECTED_RATIO.getDriveMotorReduction()),
         DRIVE_GEARBOX);
   }
 
@@ -244,7 +246,8 @@ public class DriveConstants {
                           new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
                       .withSlot0(DRIVE_GAINS)
                       .withFeedback(
-                          new FeedbackConfigs().withSensorToMechanismRatio(DRIVE_MOTOR_REDUCTION))
+                          new FeedbackConfigs()
+                              .withSensorToMechanismRatio(SELECTED_RATIO.getDriveMotorReduction()))
                       .withTorqueCurrent(
                           new TorqueCurrentConfigs()
                               .withPeakForwardTorqueCurrent(SLIP_CURRENT)
