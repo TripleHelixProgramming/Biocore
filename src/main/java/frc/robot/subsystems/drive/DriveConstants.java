@@ -151,79 +151,13 @@ public class DriveConstants {
   private static final Slot0Configs DRIVE_GAINS =
       new Slot0Configs().withKP(10).withKI(0).withKD(0).withKS(0).withKV(0.124);
 
-  // The closed-loop output type to use for the steer motors;
-  // This affects the PID/FF gains for the steer motors
-  private static final ClosedLoopOutputType STEER_CLOSED_LOOP_OUTPUT =
-      ClosedLoopOutputType.TorqueCurrentFOC;
-  // The closed-loop output type to use for the drive motors;
-  // This affects the PID/FF gains for the drive motors
-  private static final ClosedLoopOutputType DRIVE_CLOSED_LOOP_OUTPUT =
-      ClosedLoopOutputType.TorqueCurrentFOC;
-
-  // The type of motor used for the drive motor
-  private static final DriveMotorArrangement DRIVE_MOTOR_TYPE =
-      DriveMotorArrangement.TalonFX_Integrated;
-  // The type of motor used for the steer motor
-  private static final SteerMotorArrangement STEER_MOTOR_TYPE =
-      SteerMotorArrangement.TalonFX_Integrated;
-
-  // The remote sensor feedback type to use for the steer motors
-  private static final SteerFeedbackType STEER_FEEDBACK_TYPE = SteerFeedbackType.FusedCANcoder;
-
   // TorqueCurrent peak at which the wheels start to slip; used for slip detection in
   // TorqueCurrentFOC control mode. This needs to be tuned to your individual robot.
   private static final int SLIP_CURRENT = 120;
 
-  // Hardware stator current limit for drive motors
-  private static final int DRIVE_STATOR_CURRENT_LIMIT =
-      KrakenX60Constants.DEFAULT_STATOR_CURRENT_LIMIT;
-
   // Stator current limit for azimuth (steer) motors; lower than drive to reduce brownout risk
   // since steering requires minimal torque compared to driving.
   private static final int STEER_STATOR_CURRENT_LIMIT = 60;
-
-  private static final TalonFXConfiguration DRIVE_INITIAL_CONFIGS =
-      new TalonFXConfiguration()
-          .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
-          .withSlot0(DRIVE_GAINS)
-          .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(DRIVE_MOTOR_REDUCTION))
-          .withTorqueCurrent(
-              new TorqueCurrentConfigs()
-                  .withPeakForwardTorqueCurrent(SLIP_CURRENT)
-                  .withPeakReverseTorqueCurrent(-SLIP_CURRENT))
-          .withCurrentLimits(
-              new CurrentLimitsConfigs()
-                  .withStatorCurrentLimit(DRIVE_STATOR_CURRENT_LIMIT)
-                  .withStatorCurrentLimitEnable(true)
-                  .withSupplyCurrentLimit(KrakenX60Constants.DEFAULT_SUPPLY_CURRENT_LIMIT)
-                  .withSupplyCurrentLimitEnable(true));
-
-  // Azimuth does not require much torque; keep stator limit low to reduce brownout risk
-  // since steering requires minimal torque compared to driving.
-  private static final TalonFXConfiguration TURN_INITIAL_CONFIGS =
-      new TalonFXConfiguration()
-          .withMotorOutput(
-              new MotorOutputConfigs()
-                  .withNeutralMode(NeutralModeValue.Brake)
-                  .withInverted(InvertedValue.CounterClockwise_Positive))
-          .withSlot0(STEER_GAINS)
-          .withFeedback(
-              new FeedbackConfigs()
-                  .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
-                  .withRotorToSensorRatio(TURN_MOTOR_REDUCTION))
-          .withMotionMagic(
-              new MotionMagicConfigs()
-                  .withMotionMagicCruiseVelocity(100.0 / TURN_MOTOR_REDUCTION)
-                  .withMotionMagicAcceleration(100.0 / TURN_MOTOR_REDUCTION / 0.100)
-                  .withMotionMagicExpo_kV(0.12 * TURN_MOTOR_REDUCTION)
-                  .withMotionMagicExpo_kA(0.1))
-          .withClosedLoopGeneral(new ClosedLoopGeneralConfigs().withContinuousWrap(true))
-          .withCurrentLimits(
-              new CurrentLimitsConfigs()
-                  .withStatorCurrentLimit(STEER_STATOR_CURRENT_LIMIT)
-                  .withStatorCurrentLimitEnable(true)
-                  .withSupplyCurrentLimit(KrakenX60Constants.DEFAULT_SUPPLY_CURRENT_LIMIT)
-                  .withSupplyCurrentLimitEnable(true));
 
   private static final boolean INVERT_LEFT_SIDE = false;
   private static final boolean INVERT_RIGHT_SIDE = false;
@@ -231,9 +165,6 @@ public class DriveConstants {
   // These are only used for simulation
   private static final MomentOfInertia STEER_INERTIA = KilogramSquareMeters.of(0.004);
   private static final MomentOfInertia DRIVE_INERTIA = KilogramSquareMeters.of(0.025);
-  // Simulated voltage necessary to overcome friction
-  private static final Voltage STEER_FRICTION_VOLTAGE = Volts.of(0.2);
-  private static final Voltage DRIVE_FRICTION_VOLTAGE = Volts.of(0.2);
 
   static DCMotorSim createDriveSim() {
     return new DCMotorSim(
@@ -263,19 +194,60 @@ public class DriveConstants {
               .withWheelRadius(WHEEL_RADIUS)
               .withSteerMotorGains(STEER_GAINS)
               .withDriveMotorGains(DRIVE_GAINS)
-              .withSteerMotorClosedLoopOutput(STEER_CLOSED_LOOP_OUTPUT)
-              .withDriveMotorClosedLoopOutput(DRIVE_CLOSED_LOOP_OUTPUT)
+              .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
+              .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
               .withSlipCurrent(Amps.of(SLIP_CURRENT))
               .withSpeedAt12Volts(DRIVETRAIN_SPEED_LIMIT)
-              .withDriveMotorType(DRIVE_MOTOR_TYPE)
-              .withSteerMotorType(STEER_MOTOR_TYPE)
-              .withFeedbackSource(STEER_FEEDBACK_TYPE)
-              .withDriveMotorInitialConfigs(DRIVE_INITIAL_CONFIGS)
-              .withSteerMotorInitialConfigs(TURN_INITIAL_CONFIGS)
+              .withDriveMotorType(DriveMotorArrangement.TalonFX_Integrated)
+              .withSteerMotorType(SteerMotorArrangement.TalonFX_Integrated)
+              .withFeedbackSource(SteerFeedbackType.FusedCANcoder)
+              .withDriveMotorInitialConfigs(
+                  new TalonFXConfiguration()
+                      .withMotorOutput(
+                          new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
+                      .withSlot0(DRIVE_GAINS)
+                      .withFeedback(
+                          new FeedbackConfigs().withSensorToMechanismRatio(DRIVE_MOTOR_REDUCTION))
+                      .withTorqueCurrent(
+                          new TorqueCurrentConfigs()
+                              .withPeakForwardTorqueCurrent(SLIP_CURRENT)
+                              .withPeakReverseTorqueCurrent(-SLIP_CURRENT))
+                      .withCurrentLimits(
+                          new CurrentLimitsConfigs()
+                              .withStatorCurrentLimit(
+                                  KrakenX60Constants.DEFAULT_STATOR_CURRENT_LIMIT)
+                              .withStatorCurrentLimitEnable(true)
+                              .withSupplyCurrentLimit(
+                                  KrakenX60Constants.DEFAULT_SUPPLY_CURRENT_LIMIT)
+                              .withSupplyCurrentLimitEnable(true)))
+              .withSteerMotorInitialConfigs(
+                  new TalonFXConfiguration()
+                      .withMotorOutput(
+                          new MotorOutputConfigs()
+                              .withNeutralMode(NeutralModeValue.Brake)
+                              .withInverted(InvertedValue.CounterClockwise_Positive))
+                      .withSlot0(STEER_GAINS)
+                      .withFeedback(
+                          new FeedbackConfigs()
+                              .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
+                              .withRotorToSensorRatio(TURN_MOTOR_REDUCTION))
+                      .withMotionMagic(
+                          new MotionMagicConfigs()
+                              .withMotionMagicCruiseVelocity(100.0 / TURN_MOTOR_REDUCTION)
+                              .withMotionMagicAcceleration(100.0 / TURN_MOTOR_REDUCTION / 0.100)
+                              .withMotionMagicExpo_kV(0.12 * TURN_MOTOR_REDUCTION)
+                              .withMotionMagicExpo_kA(0.1))
+                      .withClosedLoopGeneral(
+                          new ClosedLoopGeneralConfigs().withContinuousWrap(true))
+                      .withCurrentLimits(
+                          new CurrentLimitsConfigs()
+                              .withStatorCurrentLimit(STEER_STATOR_CURRENT_LIMIT)
+                              .withStatorCurrentLimitEnable(true)
+                              .withSupplyCurrentLimit(
+                                  KrakenX60Constants.DEFAULT_SUPPLY_CURRENT_LIMIT)
+                              .withSupplyCurrentLimitEnable(true)))
               .withSteerInertia(STEER_INERTIA)
-              .withDriveInertia(DRIVE_INERTIA)
-              .withSteerFrictionVoltage(STEER_FRICTION_VOLTAGE)
-              .withDriveFrictionVoltage(DRIVE_FRICTION_VOLTAGE);
+              .withDriveInertia(DRIVE_INERTIA);
 
   public static final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
