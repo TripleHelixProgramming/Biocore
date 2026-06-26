@@ -10,7 +10,11 @@ package frc.robot.subsystems.drive;
 import static org.wpilib.units.Units.*;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.ClosedLoopGeneralConfigs;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
@@ -19,7 +23,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -169,17 +172,21 @@ public class DriveConstants {
 
   // TorqueCurrent peak at which the wheels start to slip; used for slip detection in
   // TorqueCurrentFOC control mode. This needs to be tuned to your individual robot.
-  static final int SLIP_CURRENT = 120;
+  private static final int SLIP_CURRENT = 120;
 
   // Hardware stator current limit for drive motors
-  static final int DRIVE_STATOR_CURRENT_LIMIT = KrakenX60Constants.DEFAULT_STATOR_CURRENT_LIMIT;
+  private static final int DRIVE_STATOR_CURRENT_LIMIT =
+      KrakenX60Constants.DEFAULT_STATOR_CURRENT_LIMIT;
 
   // Stator current limit for azimuth (steer) motors; lower than drive to reduce brownout risk
   // since steering requires minimal torque compared to driving.
-  static final int STEER_STATOR_CURRENT_LIMIT = 60;
+  private static final int STEER_STATOR_CURRENT_LIMIT = 60;
 
-  public static final TalonFXConfiguration DRIVE_INITIAL_CONFIGS =
+  private static final TalonFXConfiguration DRIVE_INITIAL_CONFIGS =
       new TalonFXConfiguration()
+          .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
+          .withSlot0(DRIVE_GAINS)
+          .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(DRIVE_MOTOR_REDUCTION))
           .withTorqueCurrent(
               new TorqueCurrentConfigs()
                   .withPeakForwardTorqueCurrent(SLIP_CURRENT)
@@ -193,8 +200,24 @@ public class DriveConstants {
 
   // Azimuth does not require much torque; keep stator limit low to reduce brownout risk
   // since steering requires minimal torque compared to driving.
-  public static final TalonFXConfiguration TURN_INITIAL_CONFIGS =
+  private static final TalonFXConfiguration TURN_INITIAL_CONFIGS =
       new TalonFXConfiguration()
+          .withMotorOutput(
+              new MotorOutputConfigs()
+                  .withNeutralMode(NeutralModeValue.Brake)
+                  .withInverted(InvertedValue.CounterClockwise_Positive))
+          .withSlot0(STEER_GAINS)
+          .withFeedback(
+              new FeedbackConfigs()
+                  .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
+                  .withRotorToSensorRatio(TURN_MOTOR_REDUCTION))
+          .withMotionMagic(
+              new MotionMagicConfigs()
+                  .withMotionMagicCruiseVelocity(100.0 / TURN_MOTOR_REDUCTION)
+                  .withMotionMagicAcceleration(100.0 / TURN_MOTOR_REDUCTION / 0.100)
+                  .withMotionMagicExpo_kV(0.12 * TURN_MOTOR_REDUCTION)
+                  .withMotionMagicExpo_kA(0.1))
+          .withClosedLoopGeneral(new ClosedLoopGeneralConfigs().withContinuousWrap(true))
           .withCurrentLimits(
               new CurrentLimitsConfigs()
                   .withStatorCurrentLimit(STEER_STATOR_CURRENT_LIMIT)
@@ -212,72 +235,18 @@ public class DriveConstants {
   private static final Voltage STEER_FRICTION_VOLTAGE = Volts.of(0.2);
   private static final Voltage DRIVE_FRICTION_VOLTAGE = Volts.of(0.2);
 
-  public static DCMotorSim createDriveSim() {
+  static DCMotorSim createDriveSim() {
     return new DCMotorSim(
         LinearSystemId.createDCMotorSystem(
             DRIVE_GEARBOX, DRIVE_INERTIA.in(KilogramSquareMeters), DRIVE_MOTOR_REDUCTION),
         DRIVE_GEARBOX);
   }
 
-  public static DCMotorSim createTurnSim() {
+  static DCMotorSim createTurnSim() {
     return new DCMotorSim(
         LinearSystemId.createDCMotorSystem(
             TURN_GEARBOX, STEER_INERTIA.in(KilogramSquareMeters), TURN_MOTOR_REDUCTION),
         TURN_GEARBOX);
-  }
-
-  public static TalonFXConfiguration buildDriveConfig(
-      SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-          constants) {
-    var config = constants.DriveMotorInitialConfigs;
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.Slot0 = constants.DriveMotorGains;
-    config.Feedback.SensorToMechanismRatio = constants.DriveMotorGearRatio;
-    config.MotorOutput.Inverted =
-        constants.DriveMotorInverted
-            ? InvertedValue.Clockwise_Positive
-            : InvertedValue.CounterClockwise_Positive;
-    return config;
-  }
-
-  public static TalonFXConfiguration buildTurnConfig(
-      SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-          constants) {
-    var config = constants.SteerMotorInitialConfigs;
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.Slot0 = constants.SteerMotorGains;
-    config.Feedback.FeedbackRemoteSensorID = constants.EncoderId;
-    config.Feedback.FeedbackSensorSource =
-        switch (constants.FeedbackSource) {
-          case RemoteCANcoder -> FeedbackSensorSourceValue.RemoteCANcoder;
-          case FusedCANcoder -> FeedbackSensorSourceValue.FusedCANcoder;
-          case SyncCANcoder -> FeedbackSensorSourceValue.SyncCANcoder;
-          default ->
-              throw new RuntimeException(
-                  "You are using an unsupported swerve configuration, which this template does not support without manual customization. The 2025 release of Phoenix supports some swerve configurations which were not available during 2025 beta testing, preventing any development and support from the AdvantageKit developers.");
-        };
-    config.Feedback.RotorToSensorRatio = constants.SteerMotorGearRatio;
-    config.MotionMagic.MotionMagicCruiseVelocity = 100.0 / constants.SteerMotorGearRatio;
-    config.MotionMagic.MotionMagicAcceleration =
-        config.MotionMagic.MotionMagicCruiseVelocity / 0.100;
-    config.MotionMagic.MotionMagicExpo_kV = 0.12 * constants.SteerMotorGearRatio;
-    config.MotionMagic.MotionMagicExpo_kA = 0.1;
-    config.ClosedLoopGeneral.ContinuousWrap = true;
-    config.MotorOutput.Inverted =
-        constants.SteerMotorInverted
-            ? InvertedValue.Clockwise_Positive
-            : InvertedValue.CounterClockwise_Positive;
-    return config;
-  }
-
-  public static void configureCANcoder(
-      CANcoderConfiguration config,
-      SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-          constants) {
-    config.MagnetSensor.SensorDirection =
-        constants.EncoderInverted
-            ? SensorDirectionValue.Clockwise_Positive
-            : SensorDirectionValue.CounterClockwise_Positive;
   }
 
   public static final SwerveDrivetrainConstants DRIVETRAIN_CONSTANTS =
@@ -360,15 +329,6 @@ public class DriveConstants {
               INVERT_RIGHT_SIDE,
               TURN_INVERTED,
               TURN_ENCODER_INVERTED);
-
-  /**
-   * Creates a CommandSwerveDrivetrain instance. This should only be called once in your robot
-   * program,.
-   */
-  //   public static CommandSwerveDrivetrain createDrivetrain() {
-  //     return new CommandSwerveDrivetrain(
-  //         DRIVETRAIN_CONSTANTS, FRONT_LEFT, FRONT_RIGHT, BACK_LEFT, BACK_RIGHT);
-  //   }
 
   /** Swerve Drive class utilizing CTR Electronics' Phoenix 6 API with the selected device types. */
   public static class TunerSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> {
