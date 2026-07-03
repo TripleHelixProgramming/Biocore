@@ -7,6 +7,7 @@ import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.CommandScheduler;
 import org.wpilib.driverstation.GenericHID;
+import org.wpilib.driverstation.internal.DriverStationBackend;
 
 /**
  * Manages the selection and binding of controllers for driver and operator roles as a singleton.
@@ -171,7 +172,7 @@ public class ControllerSelector {
     }
   }
 
-  private static final int NUM_CONTROLLER_PORTS = 6;
+  private static final int NUM_CONTROLLER_PORTS = DriverStationBackend.JOYSTICK_PORTS;
 
   private final ControllerConfig[] controllerConfigs;
   private final GenericHID[] controllers;
