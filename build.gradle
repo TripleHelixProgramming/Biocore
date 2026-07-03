@@ -194,10 +194,7 @@ spotless {
             include "**/*.java"
             exclude "**/build/**", "**/build-*/**"
         }
-        googleJavaFormat('1.24.0')
-        suppressLintsFor {
-            setStep 'google-java-format'
-        }
+        googleJavaFormat('1.35.0')
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
