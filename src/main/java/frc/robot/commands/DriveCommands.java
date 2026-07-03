@@ -120,8 +120,7 @@ public class DriveCommands {
               // Convert to field relative speeds
               if (fieldRelativeSupplier.getAsBoolean()) {
                 speeds =
-                    ChassisSpeeds.fromFieldRelativeSpeeds(
-                        speeds,
+                    speeds.toRobotRelative(
                         getDriverRelativeHeading(drive, fieldRotatedSupplier.getAsBoolean()));
               }
 
@@ -159,8 +158,7 @@ public class DriveCommands {
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega * drive.getMaxAngularSpeedRadPerSec());
               drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
+                  speeds.toRobotRelative(
                       getDriverRelativeHeading(drive, fieldRotatedSupplier.getAsBoolean())));
             },
             drive)
@@ -239,8 +237,7 @@ public class DriveCommands {
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega);
               drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
+                  speeds.toRobotRelative(
                       getDriverRelativeHeading(drive, fieldRotatedSupplier.getAsBoolean())));
             },
             drive)
@@ -286,7 +283,7 @@ public class DriveCommands {
                       linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega);
-              drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, driverHeading));
+              drive.runVelocity(speeds.toRobotRelative(driverHeading));
             },
             drive)
         .withName("Forward Orientated Joystick Drive")
@@ -326,8 +323,7 @@ public class DriveCommands {
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds = new ChassisSpeeds(0, 0, omega);
               drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
+                  speeds.toRobotRelative(
                       getDriverRelativeHeading(drive, fieldRotatedSupplier.getAsBoolean())));
             },
             drive)
@@ -436,7 +432,7 @@ public class DriveCommands {
         // Measurement sequence
         Commands.sequence(
             // Wait for modules to fully orient before starting measurement
-            Commands.waitSeconds(1.0),
+            Commands.waitTime(Seconds.of(1.0)),
 
             // Record starting measurement
             Commands.runOnce(

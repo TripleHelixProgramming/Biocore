@@ -20,8 +20,6 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
-import org.wpilib.hal.FRCNetComm.tInstances;
-import org.wpilib.hal.FRCNetComm.tResourceType;
 import org.wpilib.hal.HAL;
 import org.wpilib.math.Matrix;
 import org.wpilib.math.controller.PIDController;
@@ -110,7 +108,8 @@ public class Drive extends SubsystemBase {
     modules[3] = new Module(brModuleIO, "BackRight");
 
     // Usage reporting for swerve template
-    HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
+    // TODO: update instance string to match the official 2027 AKit template when released.
+    HAL.reportUsage("RobotDrive", "SwerveAdvantageKit");
 
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
@@ -191,9 +190,8 @@ public class Drive extends SubsystemBase {
       for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
         modulePositions[moduleIndex] = modules[moduleIndex].getOdometryPositions()[i];
         // Mutate pre-allocated delta objects to avoid allocations
-        moduleDeltas[moduleIndex].distanceMeters =
-            modulePositions[moduleIndex].distanceMeters
-                - lastModulePositions[moduleIndex].distanceMeters;
+        moduleDeltas[moduleIndex].distance =
+            modulePositions[moduleIndex].distance - lastModulePositions[moduleIndex].distance;
         moduleDeltas[moduleIndex].angle = modulePositions[moduleIndex].angle;
         lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
       }
@@ -265,7 +263,7 @@ public class Drive extends SubsystemBase {
     ChassisSpeeds limitedSpeeds = kinematics.toChassisSpeeds(states);
 
     // 4: Now discretize the LIMITED speeds
-    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(limitedSpeeds, 0.02);
+    ChassisSpeeds discreteSpeeds = limitedSpeeds.discretize(0.02);
 
     // 5: Convert discretized speeds back to module states
     SwerveModuleState[] finalStates = kinematics.toSwerveModuleStates(discreteSpeeds);
@@ -297,7 +295,7 @@ public class Drive extends SubsystemBase {
                 + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
 
     // Apply the generated speeds
-    runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, pose.getRotation()));
+    runVelocity(speeds.toRobotRelative(pose.getRotation()));
   }
 
   /** Runs the drive in a straight line with the specified drive output. */

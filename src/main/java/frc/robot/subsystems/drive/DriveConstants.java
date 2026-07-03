@@ -41,7 +41,7 @@ import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.units.measure.Mass;
 import org.wpilib.units.measure.MomentOfInertia;
 import org.wpilib.units.measure.Voltage;
-import frc.robot.Constants.CANBusPorts.CANHD;
+import frc.robot.Constants.CANBusPorts.SC1;
 import frc.robot.Constants.MotorConstants.KrakenX60Constants;
 
 public class DriveConstants {
@@ -74,7 +74,7 @@ public class DriveConstants {
       MetersPerSecond.of(
           0.9
               * (WHEEL_RADIUS_METERS * 2.0 * Math.PI)
-              * DRIVE_GEARBOX.freeSpeedRadPerSec
+              * DRIVE_GEARBOX.freeSpeed
               / (2.0 * Math.PI)
               / DRIVE_MOTOR_REDUCTION);
 
@@ -208,7 +208,7 @@ public class DriveConstants {
   private static final Voltage DRIVE_FRICTION_VOLTAGE = Volts.of(0.2);
 
   public static final SwerveDrivetrainConstants DRIVETRAIN_CONSTANTS =
-      new SwerveDrivetrainConstants().withCANBusName(CANHD.BUS.getName());
+      new SwerveDrivetrainConstants().withCANBusName(SC1.BUS.getName());
 
   private static final SwerveModuleConstantsFactory<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
@@ -239,9 +239,9 @@ public class DriveConstants {
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       FRONT_LEFT =
           CONSTANT_CREATOR.createModuleConstants(
-              CANHD.FRONT_LEFT_TURN,
-              CANHD.FRONT_LEFT_DRIVE,
-              CANHD.FRONT_LEFT_TURN_ABS_ENC,
+              SC1.FRONT_LEFT_TURN,
+              SC1.FRONT_LEFT_DRIVE,
+              SC1.FRONT_LEFT_TURN_ABS_ENC,
               Rotations.of(0),
               WHEEL_BASE.div(2.0),
               TRACK_WIDTH.div(2.0),
@@ -252,9 +252,9 @@ public class DriveConstants {
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       FRONT_RIGHT =
           CONSTANT_CREATOR.createModuleConstants(
-              CANHD.FRONT_RIGHT_TURN,
-              CANHD.FRONT_RIGHT_DRIVE,
-              CANHD.FRONT_RIGHT_TURN_ABS_ENC,
+              SC1.FRONT_RIGHT_TURN,
+              SC1.FRONT_RIGHT_DRIVE,
+              SC1.FRONT_RIGHT_TURN_ABS_ENC,
               Rotations.of(0),
               WHEEL_BASE.div(2.0),
               TRACK_WIDTH.div(-2.0),
@@ -265,9 +265,9 @@ public class DriveConstants {
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       BACK_LEFT =
           CONSTANT_CREATOR.createModuleConstants(
-              CANHD.BACK_LEFT_TURN,
-              CANHD.BACK_LEFT_DRIVE,
-              CANHD.BACK_LEFT_TURN_ABS_ENC,
+              SC1.BACK_LEFT_TURN,
+              SC1.BACK_LEFT_DRIVE,
+              SC1.BACK_LEFT_TURN_ABS_ENC,
               Rotations.of(0),
               WHEEL_BASE.div(-2.0),
               TRACK_WIDTH.div(2.0),
@@ -278,9 +278,9 @@ public class DriveConstants {
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       BACK_RIGHT =
           CONSTANT_CREATOR.createModuleConstants(
-              CANHD.BACK_RIGHT_TURN,
-              CANHD.BACK_RIGHT_DRIVE,
-              CANHD.BACK_RIGHT_TURN_ABS_ENC,
+              SC1.BACK_RIGHT_TURN,
+              SC1.BACK_RIGHT_DRIVE,
+              SC1.BACK_RIGHT_TURN_ABS_ENC,
               Rotations.of(0),
               WHEEL_BASE.div(-2.0),
               TRACK_WIDTH.div(-2.0),
