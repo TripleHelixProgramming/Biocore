@@ -19,10 +19,10 @@ import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Transform2d;
 import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.units.measure.Distance;
-import org.wpilib.wpilibj.DriverStation;
-import org.wpilib.commandsv2.Command;
-import org.wpilib.commandsv2.Commands;
-import org.wpilib.commandsv2.DeferredCommand;
+import org.wpilib.driverstation.DriverStationErrors;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
+import org.wpilib.command2.DeferredCommand;
 import frc.robot.subsystems.drive.Drive;
 import java.util.List;
 import java.util.Set;
@@ -150,7 +150,7 @@ public class PathCommands {
       // Create a path following command using AutoBuilder. This will also trigger event markers.
       return AutoBuilder.followPath(path);
     } catch (Exception e) {
-      DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
+      DriverStationErrors.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
       return Commands.none();
     }
   }

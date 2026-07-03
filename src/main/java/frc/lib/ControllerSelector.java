@@ -1,8 +1,7 @@
 package frc.lib;
 
-import org.wpilib.wpilibj.DriverStation;
-import org.wpilib.wpilibj.GenericHID;
-import org.wpilib.commandsv2.CommandScheduler;
+import org.wpilib.driverstation.GenericHID;
+import org.wpilib.command2.CommandScheduler;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import java.util.Objects;
@@ -172,7 +171,7 @@ public class ControllerSelector {
     }
   }
 
-  private static final int NUM_CONTROLLER_PORTS = DriverStation.kJoystickPorts;
+  private static final int NUM_CONTROLLER_PORTS = 6;
 
   private final ControllerConfig[] controllerConfigs;
   private final GenericHID[] controllers;
