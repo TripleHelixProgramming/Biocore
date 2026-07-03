@@ -1,6 +1,6 @@
 package frc.lib;
 
-import org.wpilib.wpilibj.PowerDistribution;
+import org.wpilib.hardware.power.PowerDistribution;
 import org.littletonrobotics.junction.Logger;
 
 public class LoggedPowerDistribution extends PowerDistribution {

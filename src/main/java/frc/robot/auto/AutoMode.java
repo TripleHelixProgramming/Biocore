@@ -12,7 +12,7 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import choreo.trajectory.SwerveSample;
 import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.commandsv2.Command;
+import org.wpilib.command2.Command;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import java.util.Optional;

@@ -7,7 +7,7 @@
 
 package frc.robot.util;
 
-import org.wpilib.wpilibj.RobotBase;
+import org.wpilib.framework.RobotBase;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;

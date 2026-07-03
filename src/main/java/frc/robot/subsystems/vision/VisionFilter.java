@@ -9,7 +9,7 @@ package frc.robot.subsystems.vision;
 
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
-import org.wpilib.math.MathUtil;
+import org.wpilib.math.util.MathUtil;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rectangle2d;
 import org.wpilib.math.geometry.Rotation2d;

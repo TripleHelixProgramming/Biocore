@@ -7,10 +7,10 @@
 
 package frc.robot.subsystems.leds;
 
-import org.wpilib.wpilibj.AddressableLEDBufferView;
-import org.wpilib.wpilibj.LEDPattern;
-import org.wpilib.wpilibj.LEDReader;
-import org.wpilib.wpilibj.LEDWriter;
+import org.wpilib.hardware.led.AddressableLEDBufferView;
+import org.wpilib.hardware.led.LEDPattern;
+import org.wpilib.hardware.led.LEDReader;
+import org.wpilib.hardware.led.LEDWriter;
 
 /**
  * Defines logical LED groups on the robot. Each group can span multiple physical strips, composed

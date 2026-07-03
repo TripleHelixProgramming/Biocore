@@ -7,9 +7,9 @@
 
 package frc.robot.subsystems.leds;
 
-import org.wpilib.wpilibj.AddressableLED;
-import org.wpilib.wpilibj.AddressableLEDBuffer;
-import org.wpilib.wpilibj.AddressableLEDBufferView;
+import org.wpilib.hardware.led.AddressableLED;
+import org.wpilib.hardware.led.AddressableLEDBuffer;
+import org.wpilib.hardware.led.AddressableLEDBufferView;
 
 /**
  * Defines the physical LED strips on the robot. Each strip is connected to a PWM port and has a

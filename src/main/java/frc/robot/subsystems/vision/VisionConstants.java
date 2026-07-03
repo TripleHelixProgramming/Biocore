@@ -9,13 +9,13 @@ package frc.robot.subsystems.vision;
 
 import static org.wpilib.units.Units.*;
 
-import org.wpilib.apriltag.AprilTagFields;
+import org.wpilib.vision.apriltag.AprilTagFields;
 import org.wpilib.math.geometry.Quaternion;
 import org.wpilib.math.geometry.Rotation3d;
 import org.wpilib.math.geometry.Transform3d;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.Distance;
-import org.wpilib.wpilibj.Filesystem;
+import org.wpilib.system.Filesystem;
 import frc.robot.subsystems.drive.DriveConstants;
 
 public class VisionConstants {

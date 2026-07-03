@@ -1,12 +1,12 @@
 package frc.lib;
 
 import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.wpilibj.DriverStation.Alliance;
-import org.wpilib.wpilibj.event.BooleanEvent;
-import org.wpilib.wpilibj.event.EventLoop;
-import org.wpilib.commandsv2.Command;
-import org.wpilib.commandsv2.CommandScheduler;
-import org.wpilib.commandsv2.button.Trigger;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.event.BooleanEvent;
+import org.wpilib.event.EventLoop;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.CommandScheduler;
+import org.wpilib.command2.button.Trigger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
