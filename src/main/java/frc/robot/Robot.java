@@ -15,20 +15,20 @@ import static frc.robot.subsystems.vision.VisionConstants.*;
 import com.ctre.phoenix6.SignalLogger;
 import org.wpilib.math.filter.LinearFilter;
 import org.wpilib.networktables.NetworkTableInstance;
-import org.wpilib.wpilibj.DriverStation;
-import org.wpilib.wpilibj.DriverStation.Alliance;
-import org.wpilib.wpilibj.PowerDistribution.ModuleType;
-import org.wpilib.wpilibj.RobotBase;
-import org.wpilib.wpilibj.simulation.BatterySim;
-import org.wpilib.wpilibj.simulation.RoboRioSim;
-import org.wpilib.commandsv2.Command;
-import org.wpilib.commandsv2.CommandScheduler;
-import org.wpilib.commandsv2.Commands;
-import org.wpilib.commandsv2.InstantCommand;
-import org.wpilib.commandsv2.SubsystemBase;
-import org.wpilib.commandsv2.button.CommandGenericHID;
-import org.wpilib.commandsv2.button.CommandXboxController;
-import org.wpilib.commandsv2.button.Trigger;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.GenericHID;
+import org.wpilib.hardware.power.PowerDistribution.ModuleType;
+import org.wpilib.framework.RobotBase;
+import org.wpilib.simulation.BatterySim;
+import org.wpilib.simulation.RoboRioSim;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.CommandScheduler;
+import org.wpilib.command2.Commands;
+import org.wpilib.command2.InstantCommand;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.command2.button.CommandGenericHID;
+import org.wpilib.command2.button.CommandNiDsXboxController;
+import org.wpilib.command2.button.Trigger;
 import frc.game.Field;
 import frc.game.GameState;
 import frc.lib.AllianceSelector;
@@ -93,7 +93,7 @@ public class Robot extends LoggedRobot {
   public static final AutoSelector autoSelector =
       new AutoSelector(DIOPorts.AUTONOMOUS_MODE_SELECTOR, allianceSelector::getAllianceColor);
   public final LoggedPowerDistribution powerDistribution =
-      new LoggedPowerDistribution(SC0.BUS_ID, SC0.PD, ModuleType.kRev, "PD");
+      new LoggedPowerDistribution(SC0.BUS_ID, SC0.PD, ModuleType.REV, "PD");
 
   private final java.util.Set<String> activeCommands = new java.util.LinkedHashSet<>();
 
@@ -335,7 +335,7 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when test mode is enabled. */
   @Override
-  public void testInit() {
+  public void utilityInit() {
     // Cancels all running commands at the start of test mode.
     CommandScheduler.getInstance().cancelAll();
     if (leds != null) leds.clear();
@@ -343,7 +343,7 @@ public class Robot extends LoggedRobot {
 
   /** This function is called periodically during test mode. */
   @Override
-  public void testPeriodic() {}
+  public void utilityPeriodic() {}
 
   /** This function is called once when the robot is first started up. */
   @Override
@@ -420,7 +420,7 @@ public class Robot extends LoggedRobot {
   }
 
   public DriverController bindXboxDriver(int port) {
-    var xboxDriver = new CommandXboxController(port);
+    var xboxDriver = new CommandNiDsXboxController(port);
 
     var controller =
         new DriverController() {
@@ -522,21 +522,22 @@ public class Robot extends LoggedRobot {
   }
 
   private static void logHIDs() {
-    for (int port = 0; port < DriverStation.kJoystickPorts; port++) {
-      if (!DriverStation.isJoystickConnected(port)) continue;
+    for (int port = 0; port < 6; port++) {
+      var hid = new GenericHID(port);
+      if (!hid.isConnected()) continue;
       String prefix = "HID/Port" + port;
-      Logger.recordOutput(prefix + "/Name", DriverStation.getJoystickName(port));
-      int axisCount = DriverStation.getStickAxisCount(port);
+      Logger.recordOutput(prefix + "/Name", hid.getName());
+      int axisCount = hid.getAxesAvailable();
       double[] axes = new double[axisCount];
-      for (int i = 0; i < axisCount; i++) axes[i] = DriverStation.getStickAxis(port, i);
+      for (int i = 0; i < axisCount; i++) axes[i] = hid.getRawAxis(i);
       Logger.recordOutput(prefix + "/Axes", axes);
-      int buttonCount = DriverStation.getStickButtonCount(port);
+      int buttonCount = hid.getButtonsMaximumIndex();
       boolean[] buttons = new boolean[buttonCount];
-      for (int i = 0; i < buttonCount; i++) buttons[i] = DriverStation.getStickButton(port, i + 1);
+      for (int i = 0; i < buttonCount; i++) buttons[i] = hid.getRawButton(i + 1);
       Logger.recordOutput(prefix + "/Buttons", buttons);
-      int povCount = DriverStation.getStickPOVCount(port);
+      int povCount = hid.getPOVsAvailable();
       String[] povs = new String[povCount];
-      for (int i = 0; i < povCount; i++) povs[i] = DriverStation.getStickPOV(port, i).name();
+      for (int i = 0; i < povCount; i++) povs[i] = hid.getPOV(i).name();
       Logger.recordOutput(prefix + "/POVs", povs);
     }
   }
