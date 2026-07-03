@@ -7,11 +7,11 @@
 
 package frc.lib;
 
-import org.wpilib.hardware.pneumatic.DoubleSolenoid;
+import org.littletonrobotics.junction.Logger;
 import org.wpilib.driverstation.RobotState;
+import org.wpilib.hardware.pneumatic.DoubleSolenoid;
 import org.wpilib.simulation.DoubleSolenoidSim;
 import org.wpilib.simulation.REVPHSim;
-import org.littletonrobotics.junction.Logger;
 
 /**
  * Physics-based simulation of the robot's pneumatic system (Viair 90C + 2× Clippard AVT-PP-35).

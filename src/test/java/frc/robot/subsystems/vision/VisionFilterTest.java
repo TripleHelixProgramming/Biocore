@@ -2,10 +2,6 @@ package frc.robot.subsystems.vision;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.math.geometry.Pose3d;
-import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.geometry.Rotation3d;
 import frc.robot.subsystems.vision.VisionFilter.FusedObservation;
 import frc.robot.subsystems.vision.VisionFilter.Test;
 import frc.robot.subsystems.vision.VisionFilter.TestContext;
@@ -17,6 +13,10 @@ import java.util.EnumSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Pose3d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Rotation3d;
 
 class VisionFilterTest {
 

@@ -11,12 +11,12 @@ import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase;
-import org.wpilib.system.Notifier;
-import org.wpilib.system.RobotController;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.DoubleSupplier;
+import org.wpilib.system.Notifier;
+import org.wpilib.system.RobotController;
 
 /**
  * Provides an interface for asynchronously reading SparkMax/SparkFlex inputs on a background

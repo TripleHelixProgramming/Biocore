@@ -10,8 +10,8 @@
 
 package frc.robot.subsystems.drive;
 
-import static org.wpilib.units.Units.*;
 import static frc.robot.subsystems.drive.DriveConstants.*;
+import static org.wpilib.units.Units.*;
 
 import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.CANBus;
@@ -20,8 +20,22 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
+import frc.robot.Constants;
+import frc.robot.Constants.FeatureFlags;
+import frc.robot.Constants.Mode;
+import frc.robot.util.LocalADStarAK;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.command2.sysid.SysIdRoutine;
+import org.wpilib.driverstation.Alert;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchState;
+import org.wpilib.driverstation.RobotState;
 import org.wpilib.hardware.hal.HAL;
-import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.estimator.SwerveDrivePoseEstimator;
 import org.wpilib.math.geometry.Pose2d;
@@ -31,23 +45,9 @@ import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.math.kinematics.SwerveDriveKinematics;
 import org.wpilib.math.kinematics.SwerveModulePosition;
 import org.wpilib.math.kinematics.SwerveModuleVelocity;
+import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
-import org.wpilib.driverstation.Alert;
-import org.wpilib.driverstation.Alliance;
-import org.wpilib.driverstation.MatchState;
-import org.wpilib.driverstation.RobotState;
-import org.wpilib.command2.Command;
-import org.wpilib.command2.SubsystemBase;
-import org.wpilib.command2.sysid.SysIdRoutine;
-import frc.robot.Constants;
-import frc.robot.Constants.FeatureFlags;
-import frc.robot.Constants.Mode;
-import frc.robot.util.LocalADStarAK;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.Logger;
 
 public class Drive extends SubsystemBase {
   static final double ODOMETRY_FREQUENCY =
@@ -256,7 +256,9 @@ public class Drive extends SubsystemBase {
     Logger.recordOutput("SwerveStates/Setpoints", states);
 
     // 2: Desaturate (apply wheel limits FIRST)
-    states = SwerveDriveKinematics.desaturateWheelVelocities(states, DRIVETRAIN_SPEED_LIMIT.in(MetersPerSecond));
+    states =
+        SwerveDriveKinematics.desaturateWheelVelocities(
+            states, DRIVETRAIN_SPEED_LIMIT.in(MetersPerSecond));
 
     // 3: Reconstruct the ACTUAL chassis speeds after limiting
     ChassisVelocities limitedSpeeds = kinematics.toChassisVelocities(states);
@@ -269,8 +271,9 @@ public class Drive extends SubsystemBase {
 
     // (Optional but usually unnecessary)
     // desaturate again for safety
-    finalStates = SwerveDriveKinematics.desaturateWheelVelocities(
-        finalStates, DRIVETRAIN_SPEED_LIMIT.in(MetersPerSecond));
+    finalStates =
+        SwerveDriveKinematics.desaturateWheelVelocities(
+            finalStates, DRIVETRAIN_SPEED_LIMIT.in(MetersPerSecond));
 
     // 6: Send to modules
     for (int i = 0; i < 4; i++) {

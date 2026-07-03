@@ -11,11 +11,11 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import choreo.trajectory.SwerveSample;
-import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.command2.Command;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import java.util.Optional;
+import org.wpilib.command2.Command;
+import org.wpilib.math.geometry.Pose2d;
 
 public abstract class AutoMode {
   private final AutoFactory autoFactory;

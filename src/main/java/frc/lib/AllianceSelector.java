@@ -1,10 +1,10 @@
 package frc.lib;
 
+import org.littletonrobotics.junction.Logger;
+import org.wpilib.command2.button.Trigger;
 import org.wpilib.driverstation.Alliance;
 import org.wpilib.event.BooleanEvent;
 import org.wpilib.event.EventLoop;
-import org.wpilib.command2.button.Trigger;
-import org.littletonrobotics.junction.Logger;
 
 public class AllianceSelector {
 

@@ -28,8 +28,10 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.path.PathConstraints;
-import org.wpilib.math.linalg.Matrix;
+import frc.robot.Constants.CANBusPorts.SC1;
+import frc.robot.Constants.MotorConstants.KrakenX60Constants;
 import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
 import org.wpilib.math.system.DCMotor;
@@ -41,8 +43,6 @@ import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.units.measure.Mass;
 import org.wpilib.units.measure.MomentOfInertia;
 import org.wpilib.units.measure.Voltage;
-import frc.robot.Constants.CANBusPorts.SC1;
-import frc.robot.Constants.MotorConstants.KrakenX60Constants;
 
 public class DriveConstants {
 

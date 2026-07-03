@@ -7,13 +7,13 @@
 
 package frc.robot.subsystems.leds;
 
+import frc.robot.Robot;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 import org.wpilib.driverstation.Alliance;
 import org.wpilib.hardware.led.LEDPattern;
 import org.wpilib.system.Timer;
 import org.wpilib.util.Color;
-import frc.robot.Robot;
-import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
 
 /**
  * Custom LED patterns for the robot. These patterns follow the WPILib LEDPattern design: stateless
@@ -148,8 +148,7 @@ public final class LEDCustomPattern {
       }
 
       // Blink in urgent mode
-      boolean showFill =
-          !urgent || ((int) (Timer.getTimestamp() / blinkPeriodSeconds)) % 2 == 0;
+      boolean showFill = !urgent || ((int) (Timer.getTimestamp() / blinkPeriodSeconds)) % 2 == 0;
 
       int filledLeds = (int) Math.ceil(length * Math.max(0, Math.min(1, progress)));
       Color fillColor = showFill ? colorSupplier.get() : backgroundColor;

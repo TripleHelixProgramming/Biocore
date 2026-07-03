@@ -10,17 +10,17 @@ package frc.robot.subsystems.leds;
 import static org.wpilib.units.Units.Centimeters;
 import static org.wpilib.units.Units.Seconds;
 
-import org.wpilib.math.util.MathUtil;
-import org.wpilib.math.geometry.Pose2d;
+import frc.game.GameState;
+import frc.robot.Robot;
+import java.util.function.Supplier;
+import org.wpilib.command2.SubsystemBase;
 import org.wpilib.driverstation.Alliance;
 import org.wpilib.driverstation.MatchState;
 import org.wpilib.driverstation.RobotState;
 import org.wpilib.hardware.led.LEDPattern;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.util.MathUtil;
 import org.wpilib.util.Color;
-import org.wpilib.command2.SubsystemBase;
-import frc.game.GameState;
-import frc.robot.Robot;
-import java.util.function.Supplier;
 
 /**
  * A subsystem to control the LEDs on the robot.

@@ -8,11 +8,11 @@
 package frc.robot.util;
 
 import com.reduxrobotics.sensors.canandgyro.Canandgyro;
-import org.wpilib.system.Notifier;
-import org.wpilib.system.RobotController;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
+import org.wpilib.system.Notifier;
+import org.wpilib.system.RobotController;
 
 /**
  * Provides an interface for asynchronously reading Canandgyro inputs on a background thread,

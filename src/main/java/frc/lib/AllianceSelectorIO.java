@@ -1,10 +1,10 @@
 package frc.lib;
 
-import org.wpilib.hardware.discrete.DigitalInput;
-import org.wpilib.driverstation.Alliance;
-import org.wpilib.driverstation.MatchState;
 import java.util.Optional;
 import org.littletonrobotics.junction.AutoLog;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchState;
+import org.wpilib.hardware.discrete.DigitalInput;
 
 public class AllianceSelectorIO {
 

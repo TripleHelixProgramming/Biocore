@@ -13,22 +13,6 @@ package frc.robot;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import com.ctre.phoenix6.SignalLogger;
-import org.wpilib.math.filter.LinearFilter;
-import org.wpilib.networktables.NetworkTableInstance;
-import org.wpilib.driverstation.Alliance;
-import org.wpilib.driverstation.GenericHID;
-import org.wpilib.hardware.power.PowerDistribution.ModuleType;
-import org.wpilib.framework.RobotBase;
-import org.wpilib.simulation.BatterySim;
-import org.wpilib.simulation.RoboRioSim;
-import org.wpilib.command2.Command;
-import org.wpilib.command2.CommandScheduler;
-import org.wpilib.command2.Commands;
-import org.wpilib.command2.InstantCommand;
-import org.wpilib.command2.SubsystemBase;
-import org.wpilib.command2.button.CommandGenericHID;
-import org.wpilib.command2.button.CommandNiDsXboxController;
-import org.wpilib.command2.button.Trigger;
 import frc.game.Field;
 import frc.game.GameState;
 import frc.lib.AllianceSelector;
@@ -66,6 +50,22 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.CommandScheduler;
+import org.wpilib.command2.Commands;
+import org.wpilib.command2.InstantCommand;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.command2.button.CommandGenericHID;
+import org.wpilib.command2.button.CommandNiDsXboxController;
+import org.wpilib.command2.button.Trigger;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.GenericHID;
+import org.wpilib.framework.RobotBase;
+import org.wpilib.hardware.power.PowerDistribution.ModuleType;
+import org.wpilib.math.filter.LinearFilter;
+import org.wpilib.networktables.NetworkTableInstance;
+import org.wpilib.simulation.BatterySim;
+import org.wpilib.simulation.RoboRioSim;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to

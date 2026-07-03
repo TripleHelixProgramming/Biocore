@@ -14,9 +14,9 @@ import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.system.Models;
 import org.wpilib.math.util.Units;
-import org.wpilib.system.Timer;
 import org.wpilib.simulation.DCMotorSim;
 import org.wpilib.simulation.RoboRioSim;
+import org.wpilib.system.Timer;
 
 /** Physics sim implementation of module IO. */
 public class ModuleIOSimWPI implements ModuleIO {

@@ -1,12 +1,12 @@
 package frc.lib;
 
-import org.wpilib.driverstation.GenericHID;
-import org.wpilib.command2.CommandScheduler;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import java.util.Objects;
 import java.util.Set;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.command2.CommandScheduler;
+import org.wpilib.driverstation.GenericHID;
 
 /**
  * Manages the selection and binding of controllers for driver and operator roles as a singleton.

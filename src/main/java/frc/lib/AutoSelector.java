@@ -1,17 +1,17 @@
 package frc.lib;
 
-import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.driverstation.Alliance;
-import org.wpilib.event.BooleanEvent;
-import org.wpilib.event.EventLoop;
-import org.wpilib.command2.Command;
-import org.wpilib.command2.CommandScheduler;
-import org.wpilib.command2.button.Trigger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.CommandScheduler;
+import org.wpilib.command2.button.Trigger;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.event.BooleanEvent;
+import org.wpilib.event.EventLoop;
+import org.wpilib.math.geometry.Pose2d;
 
 public class AutoSelector implements Supplier<Optional<AutoOption>> {
 
