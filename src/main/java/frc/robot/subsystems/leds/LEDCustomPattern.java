@@ -7,10 +7,10 @@
 
 package frc.robot.subsystems.leds;
 
-import org.wpilib.wpilibj.DriverStation.Alliance;
-import org.wpilib.wpilibj.LEDPattern;
-import org.wpilib.wpilibj.Timer;
-import org.wpilib.wpilibj.util.Color;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.hardware.led.LEDPattern;
+import org.wpilib.system.Timer;
+import org.wpilib.util.Color;
 import frc.robot.Robot;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -33,7 +33,7 @@ public final class LEDCustomPattern {
    * @return the stacked blocks pattern
    */
   public static LEDPattern stackedBlocks(Color color, int blockSize, int gapSize) {
-    return stackedBlocks(color, blockSize, gapSize, Color.kBlack);
+    return stackedBlocks(color, blockSize, gapSize, Color.BLACK);
   }
 
   /**
@@ -89,7 +89,7 @@ public final class LEDCustomPattern {
    */
   public static LEDPattern scrollingBlocks(Color color, int blockSize, int gapSize) {
     return stackedBlocks(color, blockSize, gapSize)
-        .scrollAtRelativeSpeed(org.wpilib.units.Units.Hertz.of(2));
+        .scrollAtRelativeVelocity(org.wpilib.units.Units.Hertz.of(2));
   }
 
   /**
@@ -149,7 +149,7 @@ public final class LEDCustomPattern {
 
       // Blink in urgent mode
       boolean showFill =
-          !urgent || ((int) (Timer.getFPGATimestamp() / blinkPeriodSeconds)) % 2 == 0;
+          !urgent || ((int) (Timer.getTimestamp() / blinkPeriodSeconds)) % 2 == 0;
 
       int filledLeds = (int) Math.ceil(length * Math.max(0, Math.min(1, progress)));
       Color fillColor = showFill ? colorSupplier.get() : backgroundColor;
@@ -201,7 +201,7 @@ public final class LEDCustomPattern {
         if (i < maxLed && (i % period) < blockSize) {
           writer.setLED(i, color);
         } else {
-          writer.setLED(i, Color.kBlack);
+          writer.setLED(i, Color.BLACK);
         }
       }
     };
@@ -225,7 +225,7 @@ public final class LEDCustomPattern {
       int halfLength = length / 2;
 
       // Triangle wave for ping-pong motion (0 to 1 to 0)
-      double time = Timer.getFPGATimestamp();
+      double time = Timer.getTimestamp();
       double phase = time * cyclesPerSecond;
       double sawtooth = phase % 1.0; // 0 -> 1
       double triangleWave = Math.abs(sawtooth * 2 - 1); // 0 -> 1 -> 0
@@ -265,7 +265,7 @@ public final class LEDCustomPattern {
               i,
               new Color(color.red * brightness, color.green * brightness, color.blue * brightness));
         } else {
-          writer.setLED(i, Color.kBlack);
+          writer.setLED(i, Color.BLACK);
         }
       }
     };
@@ -302,7 +302,7 @@ public final class LEDCustomPattern {
   public static LEDPattern allianceColor() {
     if (allianceColorPattern == null) {
       allianceColorPattern =
-          solidIf(() -> Robot.getAlliance() == Alliance.Blue, Color.kBlue, Color.kRed);
+          solidIf(() -> Robot.getAlliance() == Alliance.BLUE, Color.BLUE, Color.RED);
     }
     return allianceColorPattern;
   }

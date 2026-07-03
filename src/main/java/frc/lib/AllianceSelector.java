@@ -1,9 +1,9 @@
 package frc.lib;
 
-import org.wpilib.wpilibj.DriverStation.Alliance;
-import org.wpilib.wpilibj.event.BooleanEvent;
-import org.wpilib.wpilibj.event.EventLoop;
-import org.wpilib.commandsv2.button.Trigger;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.event.BooleanEvent;
+import org.wpilib.event.EventLoop;
+import org.wpilib.command2.button.Trigger;
 import org.littletonrobotics.junction.Logger;
 
 public class AllianceSelector {
@@ -26,7 +26,7 @@ public class AllianceSelector {
    * @return Whether the field is rotated from the driver's perspective
    */
   public boolean fieldRotated() {
-    return inputs.allianceFromSwitch.equals(Alliance.Red);
+    return inputs.allianceFromSwitch.equals(Alliance.RED);
   }
 
   /**
