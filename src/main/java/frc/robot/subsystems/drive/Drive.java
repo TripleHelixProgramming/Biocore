@@ -20,27 +20,26 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
-import org.wpilib.hal.HAL;
-import org.wpilib.math.Matrix;
+import org.wpilib.hardware.hal.HAL;
+import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.estimator.SwerveDrivePoseEstimator;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Twist2d;
-import org.wpilib.math.kinematics.ChassisSpeeds;
+import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.math.kinematics.SwerveDriveKinematics;
 import org.wpilib.math.kinematics.SwerveModulePosition;
-import org.wpilib.math.kinematics.SwerveModuleState;
+import org.wpilib.math.kinematics.SwerveModuleVelocity;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
-import org.wpilib.wpilibj.Alert;
-import org.wpilib.wpilibj.Alert.AlertType;
-import org.wpilib.wpilibj.DriverStation;
-import org.wpilib.wpilibj.DriverStation.Alliance;
-import org.wpilib.wpilibj.RobotState;
-import org.wpilib.commandsv2.Command;
-import org.wpilib.commandsv2.SubsystemBase;
-import org.wpilib.commandsv2.sysid.SysIdRoutine;
+import org.wpilib.driverstation.Alert;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchState;
+import org.wpilib.driverstation.RobotState;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.command2.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.FeatureFlags;
 import frc.robot.Constants.Mode;
@@ -60,7 +59,7 @@ public class Drive extends SubsystemBase {
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final SysIdRoutine sysId;
   private final Alert gyroDisconnectedAlert =
-      new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
+      new Alert("Disconnected gyro, using kinematics as fallback.", Alert.Level.HIGH);
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(MODULE_TRANSLATIONS);
   private Rotation2d rawGyroRotation = Rotation2d.kZero;
@@ -76,10 +75,10 @@ public class Drive extends SubsystemBase {
   private boolean firstVisionEstimate = true;
   private boolean poseInitialized = false;
 
-  private static final ChassisSpeeds ZERO_SPEEDS = new ChassisSpeeds();
-  private final SwerveModuleState[] emptyModuleStates = new SwerveModuleState[] {};
+  private static final ChassisVelocities ZERO_SPEEDS = new ChassisVelocities();
+  private final SwerveModuleVelocity[] emptyModuleStates = new SwerveModuleVelocity[] {};
   // Pre-allocated for getModuleStates()/getModulePositions() to avoid array allocation each call
-  private final SwerveModuleState[] measuredStates = new SwerveModuleState[4];
+  private final SwerveModuleVelocity[] measuredStates = new SwerveModuleVelocity[4];
   private final SwerveModulePosition[] measuredPositions = new SwerveModulePosition[4];
   private SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
   // Pre-allocated to avoid allocations in odometry loop - fields are mutated in place
@@ -88,7 +87,7 @@ public class Drive extends SubsystemBase {
         new SwerveModulePosition(), new SwerveModulePosition(),
         new SwerveModulePosition(), new SwerveModulePosition()
       };
-  private ChassisSpeeds chassisSpeeds;
+  private ChassisVelocities chassisSpeeds;
 
   // PID controllers for following Choreo trajectories
   private final PIDController xController = new PIDController(8.01, 0.0, 0.0);
@@ -118,12 +117,12 @@ public class Drive extends SubsystemBase {
     AutoBuilder.configure(
         this::getPose,
         this::setPose,
-        this::getRobotRelativeChassisSpeeds,
+        this::getRobotRelativeChassisVelocities,
         this::runVelocity,
         new PPHolonomicDriveController(
             new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
         PP_CONFIG,
-        () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+        () -> MatchState.getAlliance().orElse(Alliance.BLUE) == Alliance.RED,
         this);
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback(
@@ -167,14 +166,14 @@ public class Drive extends SubsystemBase {
     ODOMETRY_LOCK.unlock();
 
     // Stop moving when disabled
-    if (DriverStation.isDisabled()) {
+    if (RobotState.isDisabled()) {
       for (var module : modules) {
         module.stop();
       }
     }
 
     // Log empty setpoint states when disabled
-    if (DriverStation.isDisabled()) {
+    if (RobotState.isDisabled()) {
       Logger.recordOutput("SwerveStates/Setpoints", emptyModuleStates);
       Logger.recordOutput("SwerveStates/SetpointsOptimized", emptyModuleStates);
     }
@@ -209,7 +208,7 @@ public class Drive extends SubsystemBase {
       // Apply update
       visionPose.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
 
-      chassisSpeeds = kinematics.toChassisSpeeds(getModuleStates());
+      chassisSpeeds = kinematics.toChassisVelocities(getModuleStates());
     }
     long t6 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
@@ -247,30 +246,30 @@ public class Drive extends SubsystemBase {
    *
    * @param speeds Speeds in meters/sec
    */
-  public void runVelocity(ChassisSpeeds speeds) {
+  public void runVelocity(ChassisVelocities speeds) {
 
     // 1️: Convert continuous speeds to module states
-    SwerveModuleState[] states = kinematics.toSwerveModuleStates(speeds);
+    SwerveModuleVelocity[] states = kinematics.toSwerveModuleVelocities(speeds);
 
     // Log unoptimized setpoints
-    Logger.recordOutput("SwerveChassisSpeeds/Setpoints", speeds);
+    Logger.recordOutput("SwerveChassisVelocities/Setpoints", speeds);
     Logger.recordOutput("SwerveStates/Setpoints", states);
 
     // 2: Desaturate (apply wheel limits FIRST)
-    SwerveDriveKinematics.desaturateWheelSpeeds(states, DRIVETRAIN_SPEED_LIMIT.in(MetersPerSecond));
+    states = SwerveDriveKinematics.desaturateWheelVelocities(states, DRIVETRAIN_SPEED_LIMIT.in(MetersPerSecond));
 
     // 3: Reconstruct the ACTUAL chassis speeds after limiting
-    ChassisSpeeds limitedSpeeds = kinematics.toChassisSpeeds(states);
+    ChassisVelocities limitedSpeeds = kinematics.toChassisVelocities(states);
 
     // 4: Now discretize the LIMITED speeds
-    ChassisSpeeds discreteSpeeds = limitedSpeeds.discretize(0.02);
+    ChassisVelocities discreteSpeeds = limitedSpeeds.discretize(0.02);
 
     // 5: Convert discretized speeds back to module states
-    SwerveModuleState[] finalStates = kinematics.toSwerveModuleStates(discreteSpeeds);
+    SwerveModuleVelocity[] finalStates = kinematics.toSwerveModuleVelocities(discreteSpeeds);
 
     // (Optional but usually unnecessary)
     // desaturate again for safety
-    SwerveDriveKinematics.desaturateWheelSpeeds(
+    finalStates = SwerveDriveKinematics.desaturateWheelVelocities(
         finalStates, DRIVETRAIN_SPEED_LIMIT.in(MetersPerSecond));
 
     // 6: Send to modules
@@ -287,8 +286,8 @@ public class Drive extends SubsystemBase {
     Pose2d pose = getPose();
 
     // Generate the next speeds for the robot
-    ChassisSpeeds speeds =
-        new ChassisSpeeds(
+    ChassisVelocities speeds =
+        new ChassisVelocities(
             sample.vx + xController.calculate(pose.getX(), sample.x),
             sample.vy + yController.calculate(pose.getY(), sample.y),
             sample.omega
@@ -337,7 +336,7 @@ public class Drive extends SubsystemBase {
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */
   @AutoLogOutput(key = "SwerveStates/Measured")
-  private SwerveModuleState[] getModuleStates() {
+  private SwerveModuleVelocity[] getModuleStates() {
     for (int i = 0; i < 4; i++) {
       measuredStates[i] = modules[i].getState();
     }
@@ -353,8 +352,8 @@ public class Drive extends SubsystemBase {
   }
 
   /** Returns the measured chassis speeds of the robot. */
-  @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
-  public ChassisSpeeds getRobotRelativeChassisSpeeds() {
+  @AutoLogOutput(key = "SwerveChassisVelocities/Measured")
+  public ChassisVelocities getRobotRelativeChassisVelocities() {
     return chassisSpeeds;
   }
 

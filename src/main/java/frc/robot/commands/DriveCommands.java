@@ -13,19 +13,19 @@ package frc.robot.commands;
 import static org.wpilib.units.Units.*;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
-import org.wpilib.math.MathUtil;
+import org.wpilib.math.util.MathUtil;
 import org.wpilib.math.controller.ProfiledPIDController;
 import org.wpilib.math.filter.SlewRateLimiter;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Transform2d;
 import org.wpilib.math.geometry.Translation2d;
-import org.wpilib.math.kinematics.ChassisSpeeds;
+import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.math.trajectory.TrapezoidProfile;
 import org.wpilib.math.util.Units;
-import org.wpilib.wpilibj.Timer;
-import org.wpilib.commandsv2.Command;
-import org.wpilib.commandsv2.Commands;
+import org.wpilib.system.Timer;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
 import frc.robot.subsystems.drive.Drive;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -111,8 +111,8 @@ public class DriveCommands {
               // Square rotation value for more precise control
               omega = Math.copySign(omega * omega, omega);
 
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
+              ChassisVelocities speeds =
+                  new ChassisVelocities(
                       linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega * drive.getMaxAngularSpeedRadPerSec());
@@ -152,8 +152,8 @@ public class DriveCommands {
               omega = Math.copySign(omega * omega, omega);
 
               // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
+              ChassisVelocities speeds =
+                  new ChassisVelocities(
                       linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega * drive.getMaxAngularSpeedRadPerSec());
@@ -185,8 +185,8 @@ public class DriveCommands {
               // Square rotation value for more precise control
               omega = Math.copySign(omega * omega, omega);
 
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
+              ChassisVelocities speeds =
+                  new ChassisVelocities(
                       linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega * drive.getMaxAngularSpeedRadPerSec());
@@ -231,8 +231,8 @@ public class DriveCommands {
                       rotationSupplier.get().getRadians());
 
               // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
+              ChassisVelocities speeds =
+                  new ChassisVelocities(
                       linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega);
@@ -278,8 +278,8 @@ public class DriveCommands {
                       driverHeading.getRadians(), linearVelocity.getAngle().getRadians());
 
               // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
+              ChassisVelocities speeds =
+                  new ChassisVelocities(
                       linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega);
@@ -321,7 +321,7 @@ public class DriveCommands {
               double omega = angleController.calculate(yawErrorSupplier.get().getRadians(), 0);
 
               // Convert to field relative speeds & send command
-              ChassisSpeeds speeds = new ChassisSpeeds(0, 0, omega);
+              ChassisVelocities speeds = new ChassisVelocities(0, 0, omega);
               drive.runVelocity(
                   speeds.toRobotRelative(
                       getDriverRelativeHeading(drive, fieldRotatedSupplier.getAsBoolean())));
@@ -425,7 +425,7 @@ public class DriveCommands {
             Commands.run(
                 () -> {
                   double speed = limiter.calculate(WHEEL_RADIUS_MAX_VELOCITY);
-                  drive.runVelocity(new ChassisSpeeds(0.0, 0.0, speed));
+                  drive.runVelocity(new ChassisVelocities(0.0, 0.0, speed));
                 },
                 drive)),
 
