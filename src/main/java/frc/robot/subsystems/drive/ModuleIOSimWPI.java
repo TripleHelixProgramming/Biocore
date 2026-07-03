@@ -77,8 +77,8 @@ public class ModuleIOSimWPI implements ModuleIO {
 
     // Update simulation state
     double busVoltage = RoboRioSim.getVInVoltage();
-    driveSim.setInputVoltage(Math.max(-busVoltage, Math.min(busVoltage, driveAppliedVolts)));
-    turnSim.setInputVoltage(Math.max(-busVoltage, Math.min(busVoltage, turnAppliedVolts)));
+    driveSim.setInputVoltage(Math.clamp(driveAppliedVolts, -busVoltage, busVoltage));
+    turnSim.setInputVoltage(Math.clamp(turnAppliedVolts, -busVoltage, busVoltage));
     driveSim.update(0.02);
     turnSim.update(0.02);
 
