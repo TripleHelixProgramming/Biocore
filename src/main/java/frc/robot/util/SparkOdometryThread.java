@@ -11,8 +11,8 @@ import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase;
-import org.wpilib.wpilibj.Notifier;
-import org.wpilib.wpilibj.RobotController;
+import org.wpilib.system.Notifier;
+import org.wpilib.system.RobotController;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
@@ -84,9 +84,9 @@ public class SparkOdometryThread {
         ok = false;
       }
 
-      double output = spark.getAppliedOutput();
+      double output = spark.getAppliedOutput().get(0.0);
       boolean outputOk = spark.getLastError() == REVLibError.kOk;
-      double voltage = spark.getBusVoltage();
+      double voltage = spark.getBusVoltage().get(0.0);
       boolean voltageOk = spark.getLastError() == REVLibError.kOk;
       if (outputOk && voltageOk) {
         appliedVolts = output * voltage;
@@ -94,7 +94,7 @@ public class SparkOdometryThread {
         ok = false;
       }
 
-      double current = spark.getOutputCurrent();
+      double current = spark.getOutputCurrent().get(0.0);
       if (spark.getLastError() == REVLibError.kOk) {
         outputCurrent = current;
       } else {
@@ -110,7 +110,7 @@ public class SparkOdometryThread {
         }
       }
 
-      timestamp = RobotController.getFPGATime() / 1e6;
+      timestamp = RobotController.getTime() / 1e6;
       connected = ok;
     }
 
@@ -173,7 +173,11 @@ public class SparkOdometryThread {
   public SparkInputs registerSpark(
       SparkBase spark, RelativeEncoder encoder, DoubleSupplier... additionalSuppliers) {
     SparkInputs inputs =
-        new SparkInputs(spark, encoder::getPosition, encoder::getVelocity, additionalSuppliers);
+        new SparkInputs(
+            spark,
+            () -> encoder.getPosition().get(0.0),
+            () -> encoder.getVelocity().get(0.0),
+            additionalSuppliers);
     lock.lock();
     try {
       registeredInputs.add(inputs);
@@ -194,7 +198,11 @@ public class SparkOdometryThread {
   public SparkInputs registerSpark(
       SparkBase spark, AbsoluteEncoder encoder, DoubleSupplier... additionalSuppliers) {
     SparkInputs inputs =
-        new SparkInputs(spark, encoder::getPosition, encoder::getVelocity, additionalSuppliers);
+        new SparkInputs(
+            spark,
+            () -> encoder.getPosition().get(0.0),
+            () -> encoder.getVelocity().get(0.0),
+            additionalSuppliers);
     lock.lock();
     try {
       registeredInputs.add(inputs);
