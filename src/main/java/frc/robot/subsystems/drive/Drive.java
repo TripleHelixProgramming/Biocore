@@ -75,7 +75,7 @@ public class Drive extends SubsystemBase {
   private boolean firstVisionEstimate = true;
   private boolean poseInitialized = false;
 
-  private static final ChassisVelocities ZERO_SPEEDS = new ChassisVelocities();
+  private static final ChassisVelocities ZERO_VELOCITIES = new ChassisVelocities();
   private final SwerveModuleVelocity[] emptyModuleStates = new SwerveModuleVelocity[] {};
   // Pre-allocated for getModuleStates()/getModulePositions() to avoid array allocation each call
   private final SwerveModuleVelocity[] measuredStates = new SwerveModuleVelocity[4];
@@ -87,7 +87,7 @@ public class Drive extends SubsystemBase {
         new SwerveModulePosition(), new SwerveModulePosition(),
         new SwerveModulePosition(), new SwerveModulePosition()
       };
-  private ChassisVelocities chassisSpeeds;
+  private ChassisVelocities chassisVelocities;
 
   // PID controllers for following Choreo trajectories
   private final PIDController xController = new PIDController(8.01, 0.0, 0.0);
@@ -208,7 +208,7 @@ public class Drive extends SubsystemBase {
       // Apply update
       visionPose.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
 
-      chassisSpeeds = kinematics.toChassisVelocities(getModuleStates());
+      chassisVelocities = kinematics.toChassisVelocities(getModuleStates());
     }
     long t6 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
@@ -244,15 +244,15 @@ public class Drive extends SubsystemBase {
   /**
    * Runs the drive at the desired velocity.
    *
-   * @param speeds Speeds in meters/sec
+   * @param velocities Velocities in meters/sec
    */
-  public void runVelocity(ChassisVelocities speeds) {
+  public void runVelocity(ChassisVelocities velocities) {
 
-    // 1️: Convert continuous speeds to module states
-    SwerveModuleVelocity[] states = kinematics.toSwerveModuleVelocities(speeds);
+    // 1️: Convert continuous velocities to module states
+    SwerveModuleVelocity[] states = kinematics.toSwerveModuleVelocities(velocities);
 
     // Log unoptimized setpoints
-    Logger.recordOutput("SwerveChassisVelocities/Setpoints", speeds);
+    Logger.recordOutput("SwerveChassisVelocities/Setpoints", velocities);
     Logger.recordOutput("SwerveStates/Setpoints", states);
 
     // 2: Desaturate (apply wheel limits FIRST)
@@ -260,14 +260,14 @@ public class Drive extends SubsystemBase {
         SwerveDriveKinematics.desaturateWheelVelocities(
             states, DRIVETRAIN_SPEED_LIMIT.in(MetersPerSecond));
 
-    // 3: Reconstruct the ACTUAL chassis speeds after limiting
-    ChassisVelocities limitedSpeeds = kinematics.toChassisVelocities(states);
+    // 3: Reconstruct the ACTUAL chassis velocities after limiting
+    ChassisVelocities limitedVelocities = kinematics.toChassisVelocities(states);
 
-    // 4: Now discretize the LIMITED speeds
-    ChassisVelocities discreteSpeeds = limitedSpeeds.discretize(0.02);
+    // 4: Now discretize the LIMITED velocities
+    ChassisVelocities discreteVelocities = limitedVelocities.discretize(0.02);
 
-    // 5: Convert discretized speeds back to module states
-    SwerveModuleVelocity[] finalStates = kinematics.toSwerveModuleVelocities(discreteSpeeds);
+    // 5: Convert discretized velocities back to module states
+    SwerveModuleVelocity[] finalStates = kinematics.toSwerveModuleVelocities(discreteVelocities);
 
     // (Optional but usually unnecessary)
     // desaturate again for safety
@@ -288,16 +288,16 @@ public class Drive extends SubsystemBase {
     // Get the current pose of the robot
     Pose2d pose = getPose();
 
-    // Generate the next speeds for the robot
-    ChassisVelocities speeds =
+    // Generate the next velocities for the robot
+    ChassisVelocities velocities =
         new ChassisVelocities(
             sample.vx + xController.calculate(pose.getX(), sample.x),
             sample.vy + yController.calculate(pose.getY(), sample.y),
             sample.omega
                 + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
 
-    // Apply the generated speeds
-    runVelocity(speeds.toRobotRelative(pose.getRotation()));
+    // Apply the generated velocities
+    runVelocity(velocities.toRobotRelative(pose.getRotation()));
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
@@ -309,7 +309,7 @@ public class Drive extends SubsystemBase {
 
   /** Stops the drive. */
   public void stop() {
-    runVelocity(ZERO_SPEEDS);
+    runVelocity(ZERO_VELOCITIES);
   }
 
   /**
@@ -354,10 +354,10 @@ public class Drive extends SubsystemBase {
     return measuredPositions;
   }
 
-  /** Returns the measured chassis speeds of the robot. */
+  /** Returns the measured chassis velocities of the robot. */
   @AutoLogOutput(key = "SwerveChassisVelocities/Measured")
   public ChassisVelocities getRobotRelativeChassisVelocities() {
-    return chassisSpeeds;
+    return chassisVelocities;
   }
 
   /** Returns the position of each module in radians. */
@@ -418,13 +418,13 @@ public class Drive extends SubsystemBase {
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
   }
 
-  /** Returns the maximum linear speed in meters per sec. */
-  public double getMaxLinearSpeedMetersPerSec() {
+  /** Returns the maximum linear velocity in meters per sec. */
+  public double getMaxLinearVelocityMetersPerSec() {
     return MAX_CHASSIS_VELOCITY.in(MetersPerSecond);
   }
 
-  /** Returns the maximum angular speed in radians per sec. */
-  public double getMaxAngularSpeedRadPerSec() {
+  /** Returns the maximum angular velocity in radians per sec. */
+  public double getMaxAngularVelocityRadPerSec() {
     return MAX_CHASSIS_ANGULAR_VELOCITY.in(RadiansPerSecond);
   }
 
