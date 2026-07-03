@@ -17,7 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.wpilib.system.Notifier;
-import org.wpilib.system.RobotController;
+import org.wpilib.system.Timer;
 
 /**
  * Provides an interface for asynchronously reading SparkMax/SparkFlex inputs on a background
@@ -104,7 +104,7 @@ public class SparkOdometryThread {
         additionalValues[i] = additionalSuppliers[i].getAsDouble();
       }
 
-      timestamp = RobotController.getTime() / 1e6;
+      timestamp = Timer.getTimestamp();
       connected = ok;
     }
 

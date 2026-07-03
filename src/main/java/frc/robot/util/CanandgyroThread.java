@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import org.wpilib.system.Notifier;
-import org.wpilib.system.RobotController;
+import org.wpilib.system.Timer;
 
 /**
  * Provides an interface for asynchronously reading Canandgyro inputs on a background thread,
@@ -47,7 +47,7 @@ public class CanandgyroThread {
       calibrating = gyro.isCalibrating();
       yaw = gyro.getYaw();
       angularVelocityYaw = gyro.getAngularVelocityYaw();
-      timestamp = RobotController.getTime() / 1e6;
+      timestamp = Timer.getTimestamp();
     }
 
     // Getters for cached values (called from main thread)
