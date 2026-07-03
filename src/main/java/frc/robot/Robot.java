@@ -60,6 +60,7 @@ import org.wpilib.command2.button.CommandNiDsXboxController;
 import org.wpilib.command2.button.Trigger;
 import org.wpilib.driverstation.Alliance;
 import org.wpilib.driverstation.GenericHID;
+import org.wpilib.driverstation.internal.DriverStationBackend;
 import org.wpilib.framework.RobotBase;
 import org.wpilib.hardware.power.PowerDistribution.ModuleType;
 import org.wpilib.math.filter.LinearFilter;
@@ -522,7 +523,7 @@ public class Robot extends LoggedRobot {
   }
 
   private static void logHIDs() {
-    for (int port = 0; port < 6; port++) {
+    for (int port = 0; port < DriverStationBackend.JOYSTICK_PORTS; port++) {
       var hid = new GenericHID(port);
       if (!hid.isConnected()) continue;
       String prefix = "HID/Port" + port;

@@ -7,6 +7,8 @@
 
 package frc.robot.subsystems.leds;
 
+import static org.wpilib.units.Units.Hertz;
+
 import frc.robot.Robot;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -88,8 +90,7 @@ public final class LEDCustomPattern {
    * @return a scrolling stacked blocks pattern
    */
   public static LEDPattern scrollingBlocks(Color color, int blockSize, int gapSize) {
-    return stackedBlocks(color, blockSize, gapSize)
-        .scrollAtRelativeVelocity(org.wpilib.units.Units.Hertz.of(2));
+    return stackedBlocks(color, blockSize, gapSize).scrollAtRelativeVelocity(Hertz.of(2));
   }
 
   /**
