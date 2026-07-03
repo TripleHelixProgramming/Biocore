@@ -11,7 +11,7 @@
 package frc.robot;
 
 import com.ctre.phoenix6.CANBus;
-import org.wpilib.wpilibj.RobotBase;
+import org.wpilib.framework.RobotBase;
 
 /**
  * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running
@@ -83,7 +83,7 @@ public final class Constants {
     public static final class SC0 {
       public static final String NAME = "SC0";
       public static final int BUS_ID = 0;
-      public static final CANBus BUS = CANBus.systemCore(BUS_ID);
+      public static final CANBus BUS = CANBus.systemcore(BUS_ID);
 
       // Power distribution
       public static final int PD = 1;
@@ -99,7 +99,7 @@ public final class Constants {
     public static final class SC1 {
       public static final String NAME = "SC1";
       public static final int BUS_ID = 1;
-      public static final CANBus BUS = CANBus.systemCore(BUS_ID);
+      public static final CANBus BUS = CANBus.systemcore(BUS_ID);
 
       // Drivetrain
       public static final int BACK_LEFT_DRIVE = 10;

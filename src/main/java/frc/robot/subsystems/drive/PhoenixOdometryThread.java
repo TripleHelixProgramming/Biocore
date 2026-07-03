@@ -13,7 +13,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import org.wpilib.units.measure.Angle;
-import org.wpilib.wpilibj.RobotController;
+import org.wpilib.system.RobotController;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -133,7 +133,7 @@ public class PhoenixOdometryThread extends Thread {
         // Sample timestamp is current FPGA time minus average CAN latency
         //     Default timestamps from Phoenix are NOT compatible with
         //     FPGA timestamps, this solution is imperfect but close
-        double timestamp = RobotController.getFPGATime() / 1e6;
+        double timestamp = RobotController.getTime() / 1e6;
         double totalLatency = 0.0;
         for (BaseStatusSignal signal : phoenixSignals) {
           totalLatency += signal.getTimestamp().getLatency();

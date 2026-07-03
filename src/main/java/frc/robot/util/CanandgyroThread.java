@@ -8,8 +8,8 @@
 package frc.robot.util;
 
 import com.reduxrobotics.sensors.canandgyro.Canandgyro;
-import org.wpilib.wpilibj.Notifier;
-import org.wpilib.wpilibj.RobotController;
+import org.wpilib.system.Notifier;
+import org.wpilib.system.RobotController;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
@@ -47,7 +47,7 @@ public class CanandgyroThread {
       calibrating = gyro.isCalibrating();
       yaw = gyro.getYaw();
       angularVelocityYaw = gyro.getAngularVelocityYaw();
-      timestamp = RobotController.getFPGATime() / 1e6;
+      timestamp = RobotController.getTime() / 1e6;
     }
 
     // Getters for cached values (called from main thread)

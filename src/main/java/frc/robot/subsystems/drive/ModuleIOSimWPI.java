@@ -10,14 +10,13 @@ package frc.robot.subsystems.drive;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
-import org.wpilib.math.MathUtil;
 import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.system.plant.LinearSystemId;
+import org.wpilib.math.system.Models;
 import org.wpilib.math.util.Units;
-import org.wpilib.wpilibj.Timer;
-import org.wpilib.wpilibj.simulation.DCMotorSim;
-import org.wpilib.wpilibj.simulation.RoboRioSim;
+import org.wpilib.system.Timer;
+import org.wpilib.simulation.DCMotorSim;
+import org.wpilib.simulation.RoboRioSim;
 
 /** Physics sim implementation of module IO. */
 public class ModuleIOSimWPI implements ModuleIO {
@@ -47,14 +46,14 @@ public class ModuleIOSimWPI implements ModuleIO {
     // Create drive and turn sim models
     driveSim =
         new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(
+            Models.singleJointedArmFromPhysicalConstants(
                 DriveConstants.DRIVE_GEARBOX,
                 constants.DriveInertia,
                 constants.DriveMotorGearRatio),
             DriveConstants.DRIVE_GEARBOX);
     turnSim =
         new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(
+            Models.singleJointedArmFromPhysicalConstants(
                 DriveConstants.TURN_GEARBOX, constants.SteerInertia, constants.SteerMotorGearRatio),
             DriveConstants.TURN_GEARBOX);
 
@@ -78,8 +77,8 @@ public class ModuleIOSimWPI implements ModuleIO {
 
     // Update simulation state
     double busVoltage = RoboRioSim.getVInVoltage();
-    driveSim.setInputVoltage(MathUtil.clamp(driveAppliedVolts, -busVoltage, busVoltage));
-    turnSim.setInputVoltage(MathUtil.clamp(turnAppliedVolts, -busVoltage, busVoltage));
+    driveSim.setInputVoltage(Math.max(-busVoltage, Math.min(busVoltage, driveAppliedVolts)));
+    turnSim.setInputVoltage(Math.max(-busVoltage, Math.min(busVoltage, turnAppliedVolts)));
     driveSim.update(0.02);
     turnSim.update(0.02);
 
@@ -100,7 +99,7 @@ public class ModuleIOSimWPI implements ModuleIO {
     inputs.turnCurrentAmps = Math.abs(turnSim.getCurrentDraw());
 
     // Update odometry inputs (50Hz because high-frequency odometry in sim doesn't matter)
-    inputs.odometryTimestamps = new double[] {Timer.getFPGATimestamp()};
+    inputs.odometryTimestamps = new double[] {Timer.getTimestamp()};
     inputs.odometryDrivePositionsRad = new double[] {inputs.drivePositionRad};
     inputs.odometryTurnPositions = new Rotation2d[] {inputs.turnPosition};
   }
