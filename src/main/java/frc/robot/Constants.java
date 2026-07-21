@@ -92,20 +92,20 @@ public final class Constants {
       public static final CANBus BUS = new CANBus("canivore");
 
       // Drivetrain
-      public static final int BACK_LEFT_DRIVE = 10;
-      public static final int BACK_RIGHT_DRIVE = 18;
-      public static final int FRONT_RIGHT_DRIVE = 20;
-      public static final int FRONT_LEFT_DRIVE = 28;
+      public static final int BACK_LEFT_DRIVE = 3;
+      public static final int BACK_RIGHT_DRIVE = 12;
+      public static final int FRONT_RIGHT_DRIVE = 9;
+      public static final int FRONT_LEFT_DRIVE = 6;
 
-      public static final int BACK_LEFT_TURN = 11;
-      public static final int BACK_RIGHT_TURN = 19;
-      public static final int FRONT_RIGHT_TURN = 21;
-      public static final int FRONT_LEFT_TURN = 29;
+      public static final int BACK_LEFT_TURN = 1;
+      public static final int BACK_RIGHT_TURN = 10;
+      public static final int FRONT_RIGHT_TURN = 7;
+      public static final int FRONT_LEFT_TURN = 4;
 
-      public static final int BACK_RIGHT_TURN_ABS_ENC = 31;
-      public static final int FRONT_RIGHT_TURN_ABS_ENC = 33;
-      public static final int FRONT_LEFT_TURN_ABS_ENC = 43;
-      public static final int BACK_LEFT_TURN_ABS_ENC = 45;
+      public static final int BACK_RIGHT_TURN_ABS_ENC = 11;
+      public static final int FRONT_RIGHT_TURN_ABS_ENC = 8;
+      public static final int FRONT_LEFT_TURN_ABS_ENC = 5;
+      public static final int BACK_LEFT_TURN_ABS_ENC = 2;
     }
   }
 }
