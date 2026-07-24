@@ -28,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.game.Field;
 import frc.game.GameState;
 import frc.lib.AllianceSelector;
@@ -58,6 +57,7 @@ import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.CanandgyroThread;
 import frc.robot.util.KernelLogMonitor;
+import frc.robot.util.RobotStats;
 import frc.robot.util.SparkOdometryThread;
 import frc.robot.util.VisionThread;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -96,6 +96,8 @@ public class Robot extends LoggedRobot {
       new LoggedPowerDistribution(CAN2.PD, ModuleType.kRev, "PD");
 
   private final java.util.Set<String> activeCommands = new java.util.LinkedHashSet<>();
+
+  private RobotStats robotStats;
 
   // Subsystems
   private Drive drive;
@@ -216,6 +218,8 @@ public class Robot extends LoggedRobot {
     // Start AdvantageKit logger
     Logger.start();
 
+    robotStats = new RobotStats(Robot.defaultPeriodSecs, drive::getTotalDistanceTraveledMeters);
+
     // Disable LiveWindow telemetry (subsystem motor sendables) — eliminates SmartDashboard overhead
     edu.wpi.first.wpilibj.livewindow.LiveWindow.disableAllTelemetry();
 
@@ -226,20 +230,6 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().onCommandFinish(cmd -> activeCommands.remove(cmd.getName()));
     CommandScheduler.getInstance().onCommandInterrupt(cmd -> activeCommands.remove(cmd.getName()));
 
-    var alignEncodersEntry =
-        NetworkTableInstance.getDefault()
-            .getTable("Triggers")
-            .getBooleanTopic("Align Encoders")
-            .getEntry(false);
-    alignEncodersEntry.set(false);
-    new Trigger(alignEncodersEntry::get)
-        .onTrue(
-            Commands.runOnce(
-                    () -> {
-                      drive.zeroAbsoluteEncoders();
-                      alignEncodersEntry.set(false);
-                    })
-                .ignoringDisable(true));
     Field.plotRegions();
   }
 
@@ -265,6 +255,7 @@ public class Robot extends LoggedRobot {
     logHIDs();
     logScheduler();
     GameState.logValues();
+    robotStats.update();
 
     Logger.recordOutput("USB/FreeSpaceMB", getUSBStorageFreeSpace() / 1024 / 1024);
     long t2 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
@@ -302,6 +293,7 @@ public class Robot extends LoggedRobot {
   /** This function is called once when the robot is disabled. */
   @Override
   public void disabledInit() {
+    robotStats.onDisabled();
     if (leds != null) leds.clear();
   }
 
@@ -325,6 +317,7 @@ public class Robot extends LoggedRobot {
   /** This function is called once when autonomous mode is enabled. */
   @Override
   public void autonomousInit() {
+    robotStats.onAutonEnabled();
     drive.setDefaultCommand(Commands.runOnce(drive::stop, drive).withName("Stop"));
     autoSelector.scheduleAuto();
     if (leds != null) leds.clear();
@@ -337,6 +330,7 @@ public class Robot extends LoggedRobot {
   /** This function is called once when teleop mode is enabled. */
   @Override
   public void teleopInit() {
+    robotStats.onTeleopEnabled();
     autoSelector.cancelAuto();
     ControllerSelector.getInstance().scan(true);
     if (leds != null) leds.clear();

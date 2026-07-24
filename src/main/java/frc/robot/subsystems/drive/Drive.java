@@ -101,6 +101,8 @@ public class Drive extends SubsystemBase {
   // PathPlanner trajectory logging (stored each loop for AKit compatibility)
   private Pose2d[] lastTrajectory = new Pose2d[0];
 
+  private double totalDistanceTraveledMeters = 0.0;
+
   // PID controllers for following Choreo trajectories
   private final PIDController xController = new PIDController(8.01, 0.0, 0.0);
   private final PIDController yController = new PIDController(8.01, 0.0, 0.0);
@@ -209,6 +211,9 @@ public class Drive extends SubsystemBase {
         moduleDeltas[moduleIndex].angle = modulePositions[moduleIndex].angle;
         lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
       }
+
+      Twist2d centerTwist = kinematics.toTwist2d(moduleDeltas);
+      totalDistanceTraveledMeters += Math.hypot(centerTwist.dx, centerTwist.dy);
 
       // Update gyro angle
       if (gyroInputs.connected) {
@@ -452,9 +457,14 @@ public class Drive extends SubsystemBase {
     return total;
   }
 
+  public double getTotalDistanceTraveledMeters() {
+    return totalDistanceTraveledMeters;
+  }
+
   public void zeroAbsoluteEncoders() {
     for (var module : modules) {
       module.setTurnZero();
     }
+    alignEncodersPub.set(false);
   }
 }
