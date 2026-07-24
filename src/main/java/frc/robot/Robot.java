@@ -528,15 +528,15 @@ public class Robot extends LoggedRobot {
       if (!hid.isConnected()) continue;
       String prefix = "HID/Port" + port;
       Logger.recordOutput(prefix + "/Name", hid.getName());
-      int axisCount = hid.getAxesAvailable();
+      int axisCount = hid.getAxesMaximumIndex();
       double[] axes = new double[axisCount];
       for (int i = 0; i < axisCount; i++) axes[i] = hid.getRawAxis(i);
       Logger.recordOutput(prefix + "/Axes", axes);
       int buttonCount = hid.getButtonsMaximumIndex();
       boolean[] buttons = new boolean[buttonCount];
-      for (int i = 0; i < buttonCount; i++) buttons[i] = hid.getRawButton(i + 1);
+      for (int i = 0; i < buttonCount; i++) buttons[i] = hid.getRawButton(i);
       Logger.recordOutput(prefix + "/Buttons", buttons);
-      int povCount = hid.getPOVsAvailable();
+      int povCount = hid.getPOVsMaximumIndex();
       String[] povs = new String[povCount];
       for (int i = 0; i < povCount; i++) povs[i] = hid.getPOV(i).name();
       Logger.recordOutput(prefix + "/POVs", povs);
