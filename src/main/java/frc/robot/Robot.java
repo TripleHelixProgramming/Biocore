@@ -65,6 +65,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import edu.wpi.first.wpilibj.event.EventLoop;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -253,6 +254,9 @@ public class Robot extends LoggedRobot {
     // This must be called from the robot's periodic block in order for anything in
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
+    // Controller button bindings live on their own EventLoop (see ControllerSelector) so that
+    // re-scanning for controller changes never clears Triggers registered elsewhere.
+    ControllerSelector.getInstance().getBindingLoop().poll();
     long t1 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
     logCANBus("CAN2", Constants.CANBusPorts.CAN2.BUS);
@@ -386,7 +390,7 @@ public class Robot extends LoggedRobot {
         new DriverConfig(ControllerType.KEYBOARD, this::bindKeyboardDriver, Constants.Mode.SIM));
   }
 
-  public DriverController bindZorroDriver(int port) {
+  public DriverController bindZorroDriver(int port, EventLoop loop) {
     var zorroDriver = new CommandZorroController(port);
 
     var controller =
@@ -421,14 +425,14 @@ public class Robot extends LoggedRobot {
 
     // Reset gyro to 0° when button G is pressed
     zorroDriver
-        .GIn()
+        .GIn(loop)
         .onTrue(
             Commands.runOnce(() -> DriveCommands.resetDriverForward(drive)).ignoringDisable(true));
 
     return controller;
   }
 
-  public DriverController bindXboxDriver(int port) {
+  public DriverController bindXboxDriver(int port, EventLoop loop) {
     var xboxDriver = new CommandXboxController(port);
 
     var controller =
@@ -463,14 +467,14 @@ public class Robot extends LoggedRobot {
 
     // Reset gyro to 0° when B button is pressed
     xboxDriver
-        .b()
+        .b(loop)
         .onTrue(
             Commands.runOnce(() -> DriveCommands.resetDriverForward(drive)).ignoringDisable(true));
 
     return controller;
   }
 
-  public DriverController bindKeyboardDriver(int port) {
+  public DriverController bindKeyboardDriver(int port, EventLoop loop) {
     var keyboard = new CommandGenericHID(port);
 
     // WPILib sim keyboard axis layout:
@@ -509,14 +513,14 @@ public class Robot extends LoggedRobot {
 
     // Reset heading to 0° when Z (button 1) is pressed
     keyboard
-        .button(1)
+        .button(1, loop)
         .onTrue(
             Commands.runOnce(() -> DriveCommands.resetDriverForward(drive)).ignoringDisable(true));
 
     return controller;
   }
 
-  public void bindXboxOperator(int port, DriverController driver) {}
+  public void bindXboxOperator(int port, DriverController driver, EventLoop loop) {}
 
   public void configureAutoOptions() {}
 
