@@ -28,7 +28,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
+import org.wpilib.command2.button.Trigger;
 import org.wpilib.command2.sysid.SysIdRoutine;
 import org.wpilib.driverstation.Alert;
 import org.wpilib.driverstation.Alliance;
@@ -48,7 +50,6 @@ import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
 import org.wpilib.networktables.BooleanPublisher;
-import org.wpilib.networktables.BooleanSubscriber;
 import org.wpilib.networktables.NetworkTableInstance;
 
 public class Drive extends SubsystemBase {
@@ -63,9 +64,7 @@ public class Drive extends SubsystemBase {
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", Alert.Level.HIGH);
 
-  private final BooleanSubscriber alignEncodersSub;
   private final BooleanPublisher alignEncodersPub;
-  private boolean lastAlignEncodersState = false;
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(MODULE_TRANSLATIONS);
   private Rotation2d rawGyroRotation = Rotation2d.kZero;
@@ -156,9 +155,11 @@ public class Drive extends SubsystemBase {
 
     var alignEncodersTopic =
         NetworkTableInstance.getDefault().getTable("Triggers").getBooleanTopic("Align Encoders");
-    alignEncodersSub = alignEncodersTopic.subscribe(false);
+    var alignEncodersSub = alignEncodersTopic.subscribe(false);
     alignEncodersPub = alignEncodersTopic.publish();
     alignEncodersPub.set(false);
+    new Trigger(alignEncodersSub::get)
+        .onTrue(Commands.runOnce(this::zeroAbsoluteEncoders, this).ignoringDisable(true));
   }
 
   @Override
@@ -183,13 +184,6 @@ public class Drive extends SubsystemBase {
         module.stop();
       }
     }
-
-    // Poll align encoders trigger directly to ensure it fires in all robot states
-    boolean alignState = alignEncodersSub.get();
-    if (alignState && !lastAlignEncodersState) {
-      zeroAbsoluteEncoders();
-    }
-    lastAlignEncodersState = alignState;
 
     // Log empty setpoint states when disabled
     if (RobotState.isDisabled()) {

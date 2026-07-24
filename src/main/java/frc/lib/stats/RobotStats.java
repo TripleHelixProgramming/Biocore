@@ -9,8 +9,9 @@ package frc.lib.stats;
 
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.command2.Commands;
+import org.wpilib.command2.button.Trigger;
 import org.wpilib.networktables.BooleanPublisher;
-import org.wpilib.networktables.BooleanSubscriber;
 import org.wpilib.networktables.NetworkTableInstance;
 import org.wpilib.system.Timer;
 import org.wpilib.util.Preferences;
@@ -46,9 +47,7 @@ public final class RobotStats {
 
   private final double periodSecs;
   private final DoubleSupplier driveDistanceSupplier;
-  private final BooleanSubscriber clearStatsSub;
   private final BooleanPublisher clearStatsPub;
-  private boolean lastClearState = false;
 
   public RobotStats(double periodSecs, DoubleSupplier driveDistanceSupplier) {
     this.periodSecs = periodSecs;
@@ -73,18 +72,13 @@ public final class RobotStats {
 
     var clearStatsTopic =
         NetworkTableInstance.getDefault().getTable("Triggers").getBooleanTopic("Clear Robot Stats");
-    clearStatsSub = clearStatsTopic.subscribe(false);
+    var clearStatsSub = clearStatsTopic.subscribe(false);
     clearStatsPub = clearStatsTopic.publish();
     clearStatsPub.set(false);
+    new Trigger(clearStatsSub::get).onTrue(Commands.runOnce(this::resetAll).ignoringDisable(true));
   }
 
   public void update() {
-    boolean clearState = clearStatsSub.get();
-    if (clearState && !lastClearState) {
-      resetAll();
-    }
-    lastClearState = clearState;
-
     powerOnSecs += periodSecs;
     if (mode == Mode.AUTON) autonSecs += periodSecs;
     if (mode == Mode.TELEOP) teleopSecs += periodSecs;

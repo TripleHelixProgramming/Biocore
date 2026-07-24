@@ -12,9 +12,9 @@ import frc.robot.Constants.Mode;
 import java.util.Objects;
 import java.util.Set;
 import org.littletonrobotics.junction.Logger;
-import org.wpilib.command2.CommandScheduler;
 import org.wpilib.driverstation.GenericHID;
 import org.wpilib.driverstation.internal.DriverStationBackend;
+import org.wpilib.event.EventLoop;
 
 /**
  * Manages the selection and binding of controllers for driver and operator roles as a singleton.
@@ -36,6 +36,11 @@ import org.wpilib.driverstation.internal.DriverStationBackend;
  *
  * <p>2. Periodically call {@code ControllerSelector.getInstance().scan()} from a loop in your robot
  * code (e.g., using a Notifier or from {@code disabledPeriodic()}) to handle controller changes.
+ *
+ * <p>3. Call {@code ControllerSelector.getInstance().getBindingLoop().poll()} once per cycle (e.g.
+ * from {@code robotPeriodic()}) so that controller button bindings actually fire. This uses a
+ * dedicated EventLoop rather than the CommandScheduler's shared default button loop so that
+ * re-scanning never clears Triggers registered elsewhere in the robot code.
  */
 public class ControllerSelector {
 
@@ -51,12 +56,12 @@ public class ControllerSelector {
 
   @FunctionalInterface
   public interface DriverBinding {
-    DriverController bind(int port);
+    DriverController bind(int port, EventLoop loop);
   }
 
   @FunctionalInterface
   public interface OperatorBinding {
-    void bind(int port, DriverController driverController);
+    void bind(int port, DriverController driverController, EventLoop loop);
   }
 
   private static ControllerSelector instance;
@@ -185,7 +190,22 @@ public class ControllerSelector {
   private final GenericHID[] controllers;
   private final String[] controllerNames;
 
+  // Owns controller button bindings exclusively so that re-scanning (which clears and rebinds
+  // controls when the connected controllers change) never touches Triggers registered elsewhere
+  // in the robot code via the shared CommandScheduler default button loop.
+  private final EventLoop bindingLoop = new EventLoop();
+
   private DriverController activeDriverController = null;
+
+  /**
+   * Returns the EventLoop that controller button bindings are registered to. Must be polled once
+   * per cycle (e.g. from robotPeriodic()) for those bindings to take effect.
+   *
+   * @return The controller binding EventLoop.
+   */
+  public EventLoop getBindingLoop() {
+    return bindingLoop;
+  }
 
   /**
    * Constructs a new ControllerSelector object. This is private to enforce the singleton pattern.
@@ -265,8 +285,8 @@ public class ControllerSelector {
       return;
     }
 
-    // Clear all button bindings to prepare for rebinding
-    CommandScheduler.getInstance().getDefaultButtonLoop().clear();
+    // Clear controller button bindings to prepare for rebinding
+    bindingLoop.clear();
 
     int driverPort = -1;
     int operatorPort = -1;
@@ -292,7 +312,7 @@ public class ControllerSelector {
           driverPort = port;
           driverName = controllerName;
           driverType = config.controllerType.name();
-          DriverController driverController = config.driverBinding.bind(driverPort);
+          DriverController driverController = config.driverBinding.bind(driverPort, bindingLoop);
           activeDriverController = driverController;
           break; // Found a match, stop searching ports
         }
@@ -325,7 +345,7 @@ public class ControllerSelector {
           operatorPort = port;
           operatorName = controllerName;
           operatorType = config.controllerType.name();
-          config.operatorBinding.bind(operatorPort, activeDriverController);
+          config.operatorBinding.bind(operatorPort, activeDriverController, bindingLoop);
           break; // Found a match, stop searching ports
         }
       }
