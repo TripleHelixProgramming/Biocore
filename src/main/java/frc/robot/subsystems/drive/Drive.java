@@ -13,7 +13,6 @@ package frc.robot.subsystems.drive;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 import static org.wpilib.units.Units.*;
 
-import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.CANBus;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -23,6 +22,7 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import frc.robot.Constants;
 import frc.robot.Constants.FeatureFlags;
 import frc.robot.Constants.Mode;
+import frc.robot.auto.SwerveSample;
 import frc.robot.util.LocalADStarAK;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -291,10 +291,10 @@ public class Drive extends SubsystemBase {
     // Generate the next velocities for the robot
     ChassisVelocities velocities =
         new ChassisVelocities(
-            sample.vx + xController.calculate(pose.getX(), sample.x),
-            sample.vy + yController.calculate(pose.getY(), sample.y),
-            sample.omega
-                + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
+            sample.vx() + xController.calculate(pose.getX(), sample.x()),
+            sample.vy() + yController.calculate(pose.getY(), sample.y()),
+            sample.omega()
+                + headingController.calculate(pose.getRotation().getRadians(), sample.heading()));
 
     // Apply the generated velocities
     runVelocity(velocities.toRobotRelative(pose.getRotation()));

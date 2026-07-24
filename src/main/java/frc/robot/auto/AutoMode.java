@@ -7,10 +7,6 @@
 
 package frc.robot.auto;
 
-import choreo.auto.AutoFactory;
-import choreo.auto.AutoRoutine;
-import choreo.auto.AutoTrajectory;
-import choreo.trajectory.SwerveSample;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import java.util.Optional;
@@ -18,37 +14,22 @@ import org.wpilib.command2.Command;
 import org.wpilib.math.geometry.Pose2d;
 
 public abstract class AutoMode {
-  private final AutoFactory autoFactory;
   protected final Drive drive;
 
   public AutoMode(Drive drivetrain) {
     this.drive = drivetrain;
-    autoFactory =
-        new AutoFactory(
-            drivetrain::getPose,
-            drivetrain::setPose,
-            drivetrain::followTrajectory,
-            false,
-            drivetrain);
   }
 
-  public AutoFactory getAutoFactory() {
-    return this.autoFactory;
-  }
-
-  public abstract AutoRoutine getAutoRoutine();
-
-  protected abstract AutoTrajectory getInitialTrajectory();
+  public abstract Command getAutoCommand();
 
   public abstract String getName();
 
   public Optional<Pose2d> getInitialPose() {
-    return getInitialTrajectory().getInitialPose();
+    return Optional.empty();
   }
 
   public SwerveSample[] getLoggableTrajectory() {
-    SwerveSample[] trajArray = new SwerveSample[0];
-    return getInitialTrajectory().getRawTrajectory().samples().toArray(trajArray);
+    return new SwerveSample[0];
   }
 
   protected Command stopDrive() {

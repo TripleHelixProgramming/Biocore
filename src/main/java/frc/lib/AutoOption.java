@@ -1,11 +1,13 @@
 package frc.lib;
 
-import choreo.trajectory.SwerveSample;
 import frc.robot.auto.AutoMode;
+import frc.robot.auto.SwerveSample;
+import java.util.Arrays;
 import java.util.Optional;
 import org.wpilib.command2.Command;
 import org.wpilib.driverstation.Alliance;
 import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.util.Color;
 
 public class AutoOption {
@@ -61,15 +63,21 @@ public class AutoOption {
    * @return The command which runs the selected autonomous mode
    */
   public synchronized Optional<Command> getAutoCommand() {
-    return (autoMode == null) ? Optional.empty() : Optional.of(autoMode.getAutoRoutine().cmd());
+    return (autoMode == null) ? Optional.empty() : Optional.of(autoMode.getAutoCommand());
   }
 
   public Optional<Pose2d> getInitialPose() {
     return (autoMode == null) ? Optional.empty() : autoMode.getInitialPose();
   }
 
-  public Optional<SwerveSample[]> getInitialTrajectory() {
-    return (autoMode == null) ? Optional.empty() : Optional.of(autoMode.getLoggableTrajectory());
+  public Optional<Pose2d[]> getInitialTrajectory() {
+    if (autoMode == null) return Optional.empty();
+    SwerveSample[] samples = autoMode.getLoggableTrajectory();
+    Pose2d[] poses =
+        Arrays.stream(samples)
+            .map(s -> new Pose2d(s.x(), s.y(), Rotation2d.fromRadians(s.heading())))
+            .toArray(Pose2d[]::new);
+    return Optional.of(poses);
   }
 
   public synchronized String getName() {
