@@ -1,4 +1,4 @@
-package frc.lib;
+package frc.lib.autoselect;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,6 @@ public class AutoSelector implements Supplier<Optional<AutoOption>> {
    *
    * @param ports An array of DIO ports for selecting an autonomous mode
    * @param allianceColorSupplier A method that supplies the current alliance color
-   * @param autoOptions An array of autonomous mode options
    */
   public AutoSelector(int[] ports, Supplier<Alliance> allianceColorSupplier) {
     this.allianceColorSupplier = allianceColorSupplier;

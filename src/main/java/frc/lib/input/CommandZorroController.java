@@ -1,4 +1,4 @@
-package frc.lib;
+package frc.lib.input;
 
 import org.wpilib.command2.CommandScheduler;
 import org.wpilib.command2.button.CommandGenericHID;

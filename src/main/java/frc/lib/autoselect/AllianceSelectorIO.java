@@ -1,4 +1,4 @@
-package frc.lib;
+package frc.lib.autoselect;
 
 import java.util.Optional;
 import org.littletonrobotics.junction.AutoLog;

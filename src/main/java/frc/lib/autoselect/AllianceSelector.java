@@ -1,4 +1,4 @@
-package frc.lib;
+package frc.lib.autoselect;
 
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.button.Trigger;

@@ -1,4 +1,4 @@
-package frc.lib;
+package frc.lib.input;
 
 import org.wpilib.driverstation.GenericHID;
 import org.wpilib.util.sendable.Sendable;

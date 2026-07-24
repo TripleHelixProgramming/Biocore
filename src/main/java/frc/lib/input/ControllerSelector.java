@@ -1,4 +1,4 @@
-package frc.lib;
+package frc.lib.input;
 
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;

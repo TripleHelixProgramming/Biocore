@@ -1,28 +1,25 @@
-package frc.lib;
+package frc.lib.autoselect;
 
-import frc.robot.auto.AutoMode;
-import frc.robot.auto.SwerveSample;
-import java.util.Arrays;
+import frc.lib.Util;
 import java.util.Optional;
 import org.wpilib.command2.Command;
 import org.wpilib.driverstation.Alliance;
 import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.util.Color;
 
 public class AutoOption {
   private final Alliance allianceColor;
   private final int switchNumber;
-  private final AutoMode autoMode;
+  private final NamedAuto autoMode;
 
   /**
    * Constructs a selectable autonomous mode option
    *
    * @param color Alliance for which the option is valid
    * @param option Selector switch index for which the option is valid
-   * @param autoSupplier Supplies command which runs the autonomous mode
+   * @param autoMode The autonomous mode to run
    */
-  public AutoOption(Alliance color, int option, AutoMode autoMode) {
+  public AutoOption(Alliance color, int option, NamedAuto autoMode) {
     this.allianceColor = color;
     this.switchNumber = option;
     this.autoMode = autoMode;
@@ -71,13 +68,7 @@ public class AutoOption {
   }
 
   public Optional<Pose2d[]> getInitialTrajectory() {
-    if (autoMode == null) return Optional.empty();
-    SwerveSample[] samples = autoMode.getLoggableTrajectory();
-    Pose2d[] poses =
-        Arrays.stream(samples)
-            .map(s -> new Pose2d(s.x(), s.y(), Rotation2d.fromRadians(s.heading())))
-            .toArray(Pose2d[]::new);
-    return Optional.of(poses);
+    return (autoMode == null) ? Optional.empty() : Optional.of(autoMode.getLoggableTrajectory());
   }
 
   public synchronized String getName() {

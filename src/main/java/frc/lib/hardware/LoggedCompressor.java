@@ -1,4 +1,4 @@
-package frc.lib;
+package frc.lib.hardware;
 
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.hardware.pneumatic.Compressor;

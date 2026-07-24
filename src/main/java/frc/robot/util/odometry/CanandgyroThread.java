@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file
 // at the root directory of this project.
 
-package frc.robot.util;
+package frc.robot.util.odometry;
 
 import com.reduxrobotics.sensors.canandgyro.Canandgyro;
 import java.util.ArrayList;

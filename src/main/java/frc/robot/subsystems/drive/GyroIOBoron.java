@@ -9,8 +9,8 @@ package frc.robot.subsystems.drive;
 
 import com.reduxrobotics.sensors.canandgyro.Canandgyro;
 import frc.robot.Constants.CANBusPorts.SC0;
-import frc.robot.util.CanandgyroThread;
-import frc.robot.util.CanandgyroThread.GyroInputs;
+import frc.robot.util.odometry.CanandgyroThread;
+import frc.robot.util.odometry.CanandgyroThread.GyroInputs;
 import java.util.Queue;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.util.Units;

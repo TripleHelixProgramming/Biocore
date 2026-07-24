@@ -1,4 +1,4 @@
-package frc.lib;
+package frc.lib.autoselect;
 
 import org.littletonrobotics.junction.AutoLog;
 import org.wpilib.hardware.discrete.DigitalInput;
