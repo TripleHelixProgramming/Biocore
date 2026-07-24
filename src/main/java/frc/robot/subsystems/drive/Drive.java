@@ -223,8 +223,7 @@ public class Drive extends SubsystemBase {
         rawGyroRotation = gyroInputs.odometryYawPositions[i];
       } else {
         // Use the angle delta from the kinematics and module deltas
-        Twist2d twist = kinematics.toTwist2d(moduleDeltas);
-        rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
+        rawGyroRotation = rawGyroRotation.plus(new Rotation2d(centerTwist.dtheta));
       }
 
       // Apply update

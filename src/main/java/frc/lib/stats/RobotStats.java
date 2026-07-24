@@ -5,13 +5,14 @@
 // license that can be found in the LICENSE file
 // at the root directory of this project.
 
-package frc.robot.util;
+package frc.lib.stats;
 
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.networktables.BooleanPublisher;
 import org.wpilib.networktables.BooleanSubscriber;
 import org.wpilib.networktables.NetworkTableInstance;
+import org.wpilib.system.Timer;
 import org.wpilib.util.Preferences;
 
 /**
@@ -20,6 +21,12 @@ import org.wpilib.util.Preferences;
  * method. Toggle the "Triggers/Clear Robot Stats" NT entry to reset all stats from the dashboard.
  */
 public final class RobotStats {
+  private enum Mode {
+    DISABLED,
+    AUTON,
+    TELEOP
+  }
+
   private static final String KEY_BOOT_COUNT = "Stats/BootCount";
   private static final String KEY_POWER_ON_SECS = "Stats/PowerOnSecs";
   private static final String KEY_AUTON_SECS = "Stats/AutonSecs";
@@ -34,9 +41,8 @@ public final class RobotStats {
   private double distanceMeters;
   private double lastDriveDistanceMeters;
 
-  private boolean inAuton = false;
-  private boolean inTeleop = false;
-  private double saveTimer = 0.0;
+  private Mode mode = Mode.DISABLED;
+  private final Timer saveTimer = new Timer();
 
   private final double periodSecs;
   private final DoubleSupplier driveDistanceSupplier;
@@ -63,6 +69,7 @@ public final class RobotStats {
     distanceMeters = Preferences.getDouble(KEY_DISTANCE_M, 0.0);
 
     lastDriveDistanceMeters = driveDistanceSupplier.getAsDouble();
+    saveTimer.start();
 
     var clearStatsTopic =
         NetworkTableInstance.getDefault().getTable("Triggers").getBooleanTopic("Clear Robot Stats");
@@ -79,37 +86,32 @@ public final class RobotStats {
     lastClearState = clearState;
 
     powerOnSecs += periodSecs;
-    if (inAuton) autonSecs += periodSecs;
-    if (inTeleop) teleopSecs += periodSecs;
+    if (mode == Mode.AUTON) autonSecs += periodSecs;
+    if (mode == Mode.TELEOP) teleopSecs += periodSecs;
 
     double current = driveDistanceSupplier.getAsDouble();
     distanceMeters += current - lastDriveDistanceMeters;
     lastDriveDistanceMeters = current;
 
-    saveTimer += periodSecs;
-    if (saveTimer >= SAVE_INTERVAL_SECS) {
+    if (saveTimer.advanceIfElapsed(SAVE_INTERVAL_SECS)) {
       save();
-      saveTimer = 0.0;
     }
 
     logValues();
   }
 
   public void onAutonEnabled() {
-    inAuton = true;
-    inTeleop = false;
+    mode = Mode.AUTON;
     save();
   }
 
   public void onTeleopEnabled() {
-    inTeleop = true;
-    inAuton = false;
+    mode = Mode.TELEOP;
     save();
   }
 
   public void onDisabled() {
-    inAuton = false;
-    inTeleop = false;
+    mode = Mode.DISABLED;
     save();
   }
 

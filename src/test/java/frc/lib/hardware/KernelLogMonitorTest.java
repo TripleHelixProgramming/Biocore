@@ -1,8 +1,7 @@
-package frc.robot.util;
+package frc.lib.hardware;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import frc.lib.hardware.KernelLogMonitor;
 import frc.lib.hardware.KernelLogMonitor.EventPattern;
 import frc.lib.hardware.KernelLogMonitor.KernelEvent;
 import java.lang.reflect.Method;
