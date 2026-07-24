@@ -15,13 +15,12 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import frc.robot.Robot;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.util.Units;
+import org.wpilib.simulation.DCMotorSim;
+import org.wpilib.simulation.RoboRioSim;
+import org.wpilib.system.Timer;
 
 /**
  * Module IO implementation using Phoenix 6 TalonFX sim layer for hardware-in-the-loop style
@@ -58,10 +57,8 @@ public class ModuleIOSimTalonFX extends ModuleIOTalonFXBase {
     cancoderSimState.setSupplyVoltage(busVoltage);
 
     // Drive physics: Phoenix output voltage → DCMotorSim → rotor state back to Phoenix
-    driveSim.setInputVoltage(
-        MathUtil.clamp(driveSimState.getMotorVoltage(), -busVoltage, busVoltage));
-    turnSim.setInputVoltage(
-        MathUtil.clamp(turnSimState.getMotorVoltage(), -busVoltage, busVoltage));
+    driveSim.setInputVoltage(Math.clamp(driveSimState.getMotorVoltage(), -busVoltage, busVoltage));
+    turnSim.setInputVoltage(Math.clamp(turnSimState.getMotorVoltage(), -busVoltage, busVoltage));
     driveSim.update(Robot.defaultPeriodSecs);
     turnSim.update(Robot.defaultPeriodSecs);
 
@@ -85,7 +82,7 @@ public class ModuleIOSimTalonFX extends ModuleIOTalonFXBase {
     inputs.turnEncoderConnected = true;
 
     // 50Hz odometry (high-frequency odometry in sim doesn't matter)
-    inputs.odometryTimestamps = new double[] {Timer.getFPGATimestamp()};
+    inputs.odometryTimestamps = new double[] {Timer.getTimestamp()};
     inputs.odometryDrivePositionsRad = new double[] {inputs.drivePositionRad};
     inputs.odometryTurnPositions = new Rotation2d[] {inputs.turnPosition};
   }

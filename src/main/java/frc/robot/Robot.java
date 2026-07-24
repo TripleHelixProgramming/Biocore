@@ -53,7 +53,6 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
 import org.wpilib.command2.Commands;
-import org.wpilib.command2.InstantCommand;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.command2.button.CommandGenericHID;
 import org.wpilib.command2.button.CommandNiDsXboxController;

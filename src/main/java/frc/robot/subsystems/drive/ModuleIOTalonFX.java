@@ -19,10 +19,6 @@ import java.util.Queue;
 import org.wpilib.math.filter.Debouncer;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.util.Units;
-import org.wpilib.units.measure.Angle;
-import org.wpilib.units.measure.AngularVelocity;
-import org.wpilib.units.measure.Current;
-import org.wpilib.units.measure.Voltage;
 
 /**
  * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and

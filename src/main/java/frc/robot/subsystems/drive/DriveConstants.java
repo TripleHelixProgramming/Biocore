@@ -42,6 +42,7 @@ import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.math.system.Models;
 import org.wpilib.simulation.DCMotorSim;
 import org.wpilib.units.measure.AngularAcceleration;
 import org.wpilib.units.measure.AngularVelocity;
@@ -50,7 +51,6 @@ import org.wpilib.units.measure.LinearAcceleration;
 import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.units.measure.Mass;
 import org.wpilib.units.measure.MomentOfInertia;
-import org.wpilib.units.measure.Voltage;
 
 public class DriveConstants {
 
@@ -205,7 +205,7 @@ public class DriveConstants {
 
   static DCMotorSim createDriveSim() {
     return new DCMotorSim(
-        LinearSystemId.createDCMotorSystem(
+        Models.singleJointedArmFromPhysicalConstants(
             DRIVE_GEARBOX,
             DRIVE_INERTIA.in(KilogramSquareMeters),
             SELECTED_RATIO.getDriveMotorReduction()),
@@ -214,7 +214,7 @@ public class DriveConstants {
 
   static DCMotorSim createTurnSim() {
     return new DCMotorSim(
-        LinearSystemId.createDCMotorSystem(
+        Models.singleJointedArmFromPhysicalConstants(
             TURN_GEARBOX, STEER_INERTIA.in(KilogramSquareMeters), TURN_MOTOR_REDUCTION),
         TURN_GEARBOX);
   }
