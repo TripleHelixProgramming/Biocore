@@ -29,6 +29,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.SubsystemBase;
+import org.wpilib.command2.button.Trigger;
 import org.wpilib.command2.sysid.SysIdRoutine;
 import org.wpilib.driverstation.Alert;
 import org.wpilib.driverstation.Alliance;
@@ -47,6 +48,8 @@ import org.wpilib.math.kinematics.SwerveModuleVelocity;
 import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
+import org.wpilib.networktables.BooleanEntry;
+import org.wpilib.networktables.NetworkTableInstance;
 
 public class Drive extends SubsystemBase {
   static final double ODOMETRY_FREQUENCY =
@@ -59,6 +62,9 @@ public class Drive extends SubsystemBase {
   private final SysIdRoutine sysId;
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", Alert.Level.HIGH);
+
+  private final BooleanEntry alignEncodersEntry;
+  public final Trigger alignEncodersTrigger;
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(MODULE_TRANSLATIONS);
   private Rotation2d rawGyroRotation = Rotation2d.kZero;
@@ -90,6 +96,8 @@ public class Drive extends SubsystemBase {
 
   // PathPlanner trajectory logging (stored each loop for AKit compatibility)
   private Pose2d[] lastTrajectory = new Pose2d[0];
+
+  private double totalDistanceTraveledMeters = 0.0;
 
   // PID controllers for following Choreo trajectories
   private final PIDController xController = new PIDController(8.01, 0.0, 0.0);
@@ -144,6 +152,14 @@ public class Drive extends SubsystemBase {
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
 
     headingController.enableContinuousInput(-Math.PI, Math.PI);
+
+    alignEncodersEntry =
+        NetworkTableInstance.getDefault()
+            .getTable("Triggers")
+            .getBooleanTopic("Align Encoders")
+            .getEntry(false);
+    alignEncodersEntry.set(false);
+    alignEncodersTrigger = new Trigger(alignEncodersEntry::get);
   }
 
   @Override
@@ -191,6 +207,9 @@ public class Drive extends SubsystemBase {
         moduleDeltas[moduleIndex].angle = modulePositions[moduleIndex].angle;
         lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
       }
+
+      Twist2d centerTwist = kinematics.toTwist2d(moduleDeltas);
+      totalDistanceTraveledMeters += Math.hypot(centerTwist.dx, centerTwist.dy);
 
       // Update gyro angle
       if (gyroInputs.connected) {
@@ -437,9 +456,14 @@ public class Drive extends SubsystemBase {
     return total;
   }
 
+  public double getTotalDistanceTraveledMeters() {
+    return totalDistanceTraveledMeters;
+  }
+
   public void zeroAbsoluteEncoders() {
     for (var module : modules) {
       module.setTurnZero();
     }
+    alignEncodersEntry.set(false);
   }
 }
