@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj.Preferences;
 /**
  * Persists cumulative lifecycle statistics for the robot across power cycles using WPILib
  * Preferences. Call {@link #update()} from robotPeriodic() and the mode callbacks from each init
- * method. Bind a command to {@link #clearStatsTrigger} to wire up a dashboard reset button.
+ * method. Toggle the "Triggers/Clear Robot Stats" NT entry to reset all stats from the dashboard.
  */
 public final class RobotStats {
   private static final String KEY_BOOT_COUNT = "Stats/BootCount";
