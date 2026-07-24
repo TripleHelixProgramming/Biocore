@@ -53,7 +53,6 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
 import org.wpilib.command2.Commands;
-import org.wpilib.command2.InstantCommand;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.command2.button.CommandGenericHID;
 import org.wpilib.command2.button.CommandNiDsXboxController;
@@ -224,13 +223,20 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().onCommandFinish(cmd -> activeCommands.remove(cmd.getName()));
     CommandScheduler.getInstance().onCommandInterrupt(cmd -> activeCommands.remove(cmd.getName()));
 
-    new Trigger(
-            NetworkTableInstance.getDefault()
-                    .getTable("Triggers")
-                    .getBooleanTopic("Align Encoders")
-                    .subscribe(false)
-                ::get)
-        .onTrue(new InstantCommand(drive::zeroAbsoluteEncoders).ignoringDisable(true));
+    var alignEncodersEntry =
+        NetworkTableInstance.getDefault()
+            .getTable("Triggers")
+            .getBooleanTopic("Align Encoders")
+            .getEntry(false);
+    alignEncodersEntry.set(false);
+    new Trigger(alignEncodersEntry::get)
+        .onTrue(
+            Commands.runOnce(
+                    () -> {
+                      drive.zeroAbsoluteEncoders();
+                      alignEncodersEntry.set(false);
+                    })
+                .ignoringDisable(true));
     Field.plotRegions();
   }
 

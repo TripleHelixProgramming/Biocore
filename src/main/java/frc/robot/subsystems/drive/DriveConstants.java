@@ -10,12 +10,19 @@ package frc.robot.subsystems.drive;
 import static org.wpilib.units.Units.*;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.ClosedLoopGeneralConfigs;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TorqueCurrentConfigs;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -35,6 +42,8 @@ import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
 import org.wpilib.math.system.DCMotor;
+import org.wpilib.math.system.Models;
+import org.wpilib.simulation.DCMotorSim;
 import org.wpilib.units.measure.AngularAcceleration;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
@@ -42,7 +51,6 @@ import org.wpilib.units.measure.LinearAcceleration;
 import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.units.measure.Mass;
 import org.wpilib.units.measure.MomentOfInertia;
-import org.wpilib.units.measure.Voltage;
 
 public class DriveConstants {
 
@@ -65,10 +73,49 @@ public class DriveConstants {
   public static final Distance WHEEL_RADIUS = Inches.of(2);
   public static final double WHEEL_RADIUS_METERS = WHEEL_RADIUS.in(Meters);
 
-  // public static enum DRIVE_MOTOR_REDUCTIONS { SDS_MK5_R1, SDS_MK5_R2, SDS_MK5_R3 }
+  private static enum DriveGearRatio {
+    SDS_MK5i_R1(1, 54.0 / 12.0, 25.0 / 32.0, 30.0 / 15.0),
+    SDS_MK5i_R2(1, 54.0 / 14.0, 25.0 / 32.0, 30.0 / 15.0),
+    SDS_MK5i_R3(1, 54.0 / 16.0, 25.0 / 32.0, 30.0 / 15.0);
 
-  public static final double DRIVE_MOTOR_REDUCTION =
-      (54.0 / 14.0) * (25.0 / 32.0) * (30.0 / 15.0); // SDS MK5 R2
+    private final int chassisStages;
+    private final double[] reductions;
+
+    /**
+     * @param chassisStages the number of leading reduction stages fixed to the chassis reference
+     *     frame; their product defines the couple ratio
+     * @param reductions all gear reduction stages in order, chassis-frame stages first followed by
+     *     azimuth-frame stages
+     */
+    private DriveGearRatio(int chassisStages, double... reductions) {
+      this.chassisStages = chassisStages;
+      this.reductions = reductions;
+    }
+
+    /**
+     * Returns the total gear reduction from the drive motor to the wheel, combining all stages
+     * regardless of reference frame. Used to convert drive motor rotations to wheel rotations.
+     */
+    public double getDriveMotorReduction() {
+      double product = 1.0;
+      for (double r : reductions) product *= r;
+      return product;
+    }
+
+    /**
+     * Returns the number of drive motor rotations per one full rotation of the steering azimuth,
+     * due to mechanical coupling. This is the product of all gear reduction stages that are fixed
+     * to the chassis reference frame (i.e., before the azimuth pivot). The swerve odometry uses
+     * this to compensate for the apparent wheel displacement caused by azimuth rotation.
+     */
+    public double getCoupleRatio() {
+      double product = 1.0;
+      for (int i = 0; i < chassisStages; i++) product *= reductions[i];
+      return product;
+    }
+  }
+
+  private static final DriveGearRatio SELECTED_RATIO = DriveGearRatio.SDS_MK5i_R2;
   public static final DCMotor DRIVE_GEARBOX = DCMotor.getKrakenX60Foc(1);
   public static final LinearVelocity DRIVETRAIN_SPEED_LIMIT =
       MetersPerSecond.of(
@@ -76,7 +123,7 @@ public class DriveConstants {
               * (WHEEL_RADIUS_METERS * 2.0 * Math.PI)
               * DRIVE_GEARBOX.freeSpeed
               / (2.0 * Math.PI)
-              / DRIVE_MOTOR_REDUCTION);
+              / SELECTED_RATIO.getDriveMotorReduction());
 
   // Chassis movement limits
   private static final LinearVelocity DRIVER_SPEED_LIMIT = MetersPerSecond.of(5);
@@ -101,9 +148,7 @@ public class DriveConstants {
 
   // Turn motor configuration
   public static final boolean TURN_INVERTED = false;
-  public static final double TURN_MOTOR_REDUCTION = 26; // SDS MK5 R2
-  // Every 1 rotation of the azimuth results in COUPLE_RATIO drive motor turns
-  private static final double COUPLE_RATIO = (54.0 / 14.0); // SDS MK4 L2
+  public static final double TURN_MOTOR_REDUCTION = 26.0; // SDS MK5i
   public static final DCMotor TURN_GEARBOX = DCMotor.getKrakenX60Foc(1);
 
   // Absolute turn encoder configuration
@@ -122,7 +167,7 @@ public class DriveConstants {
               WHEEL_RADIUS_METERS,
               DRIVETRAIN_SPEED_LIMIT.in(MetersPerSecond),
               WHEEL_COF,
-              DRIVE_GEARBOX.withReduction(DRIVE_MOTOR_REDUCTION),
+              DRIVE_GEARBOX.withReduction(SELECTED_RATIO.getDriveMotorReduction()),
               KrakenX60Constants.DEFAULT_SUPPLY_CURRENT_LIMIT,
               1),
           MODULE_TRANSLATIONS);
@@ -143,59 +188,13 @@ public class DriveConstants {
   private static final Slot0Configs DRIVE_GAINS =
       new Slot0Configs().withKP(10).withKI(0).withKD(0).withKS(0).withKV(0.124);
 
-  // The closed-loop output type to use for the steer motors;
-  // This affects the PID/FF gains for the steer motors
-  private static final ClosedLoopOutputType STEER_CLOSED_LOOP_OUTPUT =
-      ClosedLoopOutputType.TorqueCurrentFOC;
-  // The closed-loop output type to use for the drive motors;
-  // This affects the PID/FF gains for the drive motors
-  private static final ClosedLoopOutputType DRIVE_CLOSED_LOOP_OUTPUT =
-      ClosedLoopOutputType.TorqueCurrentFOC;
-
-  // The type of motor used for the drive motor
-  private static final DriveMotorArrangement DRIVE_MOTOR_TYPE =
-      DriveMotorArrangement.TalonFX_Integrated;
-  // The type of motor used for the steer motor
-  private static final SteerMotorArrangement STEER_MOTOR_TYPE =
-      SteerMotorArrangement.TalonFX_Integrated;
-
-  // The remote sensor feedback type to use for the steer motors
-  private static final SteerFeedbackType STEER_FEEDBACK_TYPE = SteerFeedbackType.FusedCANcoder;
-
   // TorqueCurrent peak at which the wheels start to slip; used for slip detection in
   // TorqueCurrentFOC control mode. This needs to be tuned to your individual robot.
-  static final int SLIP_CURRENT = 120;
-
-  // Hardware stator current limit for drive motors
-  static final int DRIVE_STATOR_CURRENT_LIMIT = KrakenX60Constants.DEFAULT_STATOR_CURRENT_LIMIT;
+  private static final int SLIP_CURRENT = 120;
 
   // Stator current limit for azimuth (steer) motors; lower than drive to reduce brownout risk
   // since steering requires minimal torque compared to driving.
-  static final int STEER_STATOR_CURRENT_LIMIT = 60;
-
-  private static final TalonFXConfiguration DRIVE_INITIAL_CONFIGS =
-      new TalonFXConfiguration()
-          .withTorqueCurrent(
-              new TorqueCurrentConfigs()
-                  .withPeakForwardTorqueCurrent(SLIP_CURRENT)
-                  .withPeakReverseTorqueCurrent(-SLIP_CURRENT))
-          .withCurrentLimits(
-              new CurrentLimitsConfigs()
-                  .withStatorCurrentLimit(DRIVE_STATOR_CURRENT_LIMIT)
-                  .withStatorCurrentLimitEnable(true)
-                  .withSupplyCurrentLimit(KrakenX60Constants.DEFAULT_SUPPLY_CURRENT_LIMIT)
-                  .withSupplyCurrentLimitEnable(true));
-
-  // Azimuth does not require much torque; keep stator limit low to reduce brownout risk
-  // since steering requires minimal torque compared to driving.
-  private static final TalonFXConfiguration TURN_INITIAL_CONFIGS =
-      new TalonFXConfiguration()
-          .withCurrentLimits(
-              new CurrentLimitsConfigs()
-                  .withStatorCurrentLimit(STEER_STATOR_CURRENT_LIMIT)
-                  .withStatorCurrentLimitEnable(true)
-                  .withSupplyCurrentLimit(KrakenX60Constants.DEFAULT_SUPPLY_CURRENT_LIMIT)
-                  .withSupplyCurrentLimitEnable(true));
+  private static final int STEER_STATOR_CURRENT_LIMIT = 60;
 
   private static final boolean INVERT_LEFT_SIDE = false;
   private static final boolean INVERT_RIGHT_SIDE = false;
@@ -203,9 +202,35 @@ public class DriveConstants {
   // These are only used for simulation
   private static final MomentOfInertia STEER_INERTIA = KilogramSquareMeters.of(0.004);
   private static final MomentOfInertia DRIVE_INERTIA = KilogramSquareMeters.of(0.025);
-  // Simulated voltage necessary to overcome friction
-  private static final Voltage STEER_FRICTION_VOLTAGE = Volts.of(0.2);
-  private static final Voltage DRIVE_FRICTION_VOLTAGE = Volts.of(0.2);
+
+  static DCMotorSim createDriveSim() {
+    return new DCMotorSim(
+        Models.singleJointedArmFromPhysicalConstants(
+            DRIVE_GEARBOX,
+            DRIVE_INERTIA.in(KilogramSquareMeters),
+            SELECTED_RATIO.getDriveMotorReduction()),
+        DRIVE_GEARBOX);
+  }
+
+  static DCMotorSim createTurnSim() {
+    return new DCMotorSim(
+        Models.singleJointedArmFromPhysicalConstants(
+            TURN_GEARBOX, STEER_INERTIA.in(KilogramSquareMeters), TURN_MOTOR_REDUCTION),
+        TURN_GEARBOX);
+  }
+
+  private static SwerveModuleConstants<
+          TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+      configureModule(
+          SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+              constants) {
+    constants.DriveMotorInitialConfigs.MotorOutput.Inverted =
+        constants.DriveMotorInverted
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
+    constants.SteerMotorInitialConfigs.Feedback.FeedbackRemoteSensorID = constants.EncoderId;
+    return constants;
+  }
 
   public static final SwerveDrivetrainConstants DRIVETRAIN_CONSTANTS =
       new SwerveDrivetrainConstants().withCANBusName(SC1.BUS.getName());
@@ -215,87 +240,124 @@ public class DriveConstants {
       CONSTANT_CREATOR =
           new SwerveModuleConstantsFactory<
                   TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>()
-              .withDriveMotorGearRatio(DRIVE_MOTOR_REDUCTION)
+              .withDriveMotorGearRatio(SELECTED_RATIO.getDriveMotorReduction())
               .withSteerMotorGearRatio(TURN_MOTOR_REDUCTION)
-              .withCouplingGearRatio(COUPLE_RATIO)
+              .withCouplingGearRatio(SELECTED_RATIO.getCoupleRatio())
               .withWheelRadius(WHEEL_RADIUS)
               .withSteerMotorGains(STEER_GAINS)
               .withDriveMotorGains(DRIVE_GAINS)
-              .withSteerMotorClosedLoopOutput(STEER_CLOSED_LOOP_OUTPUT)
-              .withDriveMotorClosedLoopOutput(DRIVE_CLOSED_LOOP_OUTPUT)
+              .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
+              .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
               .withSlipCurrent(Amps.of(SLIP_CURRENT))
               .withSpeedAt12Volts(DRIVETRAIN_SPEED_LIMIT)
-              .withDriveMotorType(DRIVE_MOTOR_TYPE)
-              .withSteerMotorType(STEER_MOTOR_TYPE)
-              .withFeedbackSource(STEER_FEEDBACK_TYPE)
-              .withDriveMotorInitialConfigs(DRIVE_INITIAL_CONFIGS)
-              .withSteerMotorInitialConfigs(TURN_INITIAL_CONFIGS)
+              .withDriveMotorType(DriveMotorArrangement.TalonFX_Integrated)
+              .withSteerMotorType(SteerMotorArrangement.TalonFX_Integrated)
+              .withFeedbackSource(SteerFeedbackType.FusedCANcoder)
+              .withDriveMotorInitialConfigs(
+                  new TalonFXConfiguration()
+                      .withMotorOutput(
+                          new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
+                      .withSlot0(DRIVE_GAINS)
+                      .withFeedback(
+                          new FeedbackConfigs()
+                              .withSensorToMechanismRatio(SELECTED_RATIO.getDriveMotorReduction()))
+                      .withTorqueCurrent(
+                          new TorqueCurrentConfigs()
+                              .withPeakForwardTorqueCurrent(SLIP_CURRENT)
+                              .withPeakReverseTorqueCurrent(-SLIP_CURRENT))
+                      .withCurrentLimits(
+                          new CurrentLimitsConfigs()
+                              .withStatorCurrentLimit(
+                                  KrakenX60Constants.DEFAULT_STATOR_CURRENT_LIMIT)
+                              .withStatorCurrentLimitEnable(true)
+                              .withSupplyCurrentLimit(
+                                  KrakenX60Constants.DEFAULT_SUPPLY_CURRENT_LIMIT)
+                              .withSupplyCurrentLimitEnable(true)))
+              .withSteerMotorInitialConfigs(
+                  new TalonFXConfiguration()
+                      .withMotorOutput(
+                          new MotorOutputConfigs()
+                              .withNeutralMode(NeutralModeValue.Brake)
+                              .withInverted(InvertedValue.CounterClockwise_Positive))
+                      .withSlot0(STEER_GAINS)
+                      .withFeedback(
+                          new FeedbackConfigs()
+                              .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
+                              .withRotorToSensorRatio(TURN_MOTOR_REDUCTION))
+                      .withMotionMagic(
+                          new MotionMagicConfigs()
+                              .withMotionMagicCruiseVelocity(100.0 / TURN_MOTOR_REDUCTION)
+                              .withMotionMagicAcceleration(100.0 / TURN_MOTOR_REDUCTION / 0.100)
+                              .withMotionMagicExpo_kV(0.12 * TURN_MOTOR_REDUCTION)
+                              .withMotionMagicExpo_kA(0.1))
+                      .withClosedLoopGeneral(
+                          new ClosedLoopGeneralConfigs().withContinuousWrap(true))
+                      .withCurrentLimits(
+                          new CurrentLimitsConfigs()
+                              .withStatorCurrentLimit(STEER_STATOR_CURRENT_LIMIT)
+                              .withStatorCurrentLimitEnable(true)
+                              .withSupplyCurrentLimit(
+                                  KrakenX60Constants.DEFAULT_SUPPLY_CURRENT_LIMIT)
+                              .withSupplyCurrentLimitEnable(true)))
               .withSteerInertia(STEER_INERTIA)
-              .withDriveInertia(DRIVE_INERTIA)
-              .withSteerFrictionVoltage(STEER_FRICTION_VOLTAGE)
-              .withDriveFrictionVoltage(DRIVE_FRICTION_VOLTAGE);
+              .withDriveInertia(DRIVE_INERTIA);
 
   public static final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       FRONT_LEFT =
-          CONSTANT_CREATOR.createModuleConstants(
-              SC1.FRONT_LEFT_TURN,
-              SC1.FRONT_LEFT_DRIVE,
-              SC1.FRONT_LEFT_TURN_ABS_ENC,
-              Rotations.of(0),
-              WHEEL_BASE.div(2.0),
-              TRACK_WIDTH.div(2.0),
-              INVERT_LEFT_SIDE,
-              TURN_INVERTED,
-              TURN_ENCODER_INVERTED);
+          configureModule(
+              CONSTANT_CREATOR.createModuleConstants(
+                  SC1.FRONT_LEFT_TURN,
+                  SC1.FRONT_LEFT_DRIVE,
+                  SC1.FRONT_LEFT_TURN_ABS_ENC,
+                  Rotations.of(0),
+                  WHEEL_BASE.div(2.0),
+                  TRACK_WIDTH.div(2.0),
+                  INVERT_LEFT_SIDE,
+                  TURN_INVERTED,
+                  TURN_ENCODER_INVERTED));
   public static final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       FRONT_RIGHT =
-          CONSTANT_CREATOR.createModuleConstants(
-              SC1.FRONT_RIGHT_TURN,
-              SC1.FRONT_RIGHT_DRIVE,
-              SC1.FRONT_RIGHT_TURN_ABS_ENC,
-              Rotations.of(0),
-              WHEEL_BASE.div(2.0),
-              TRACK_WIDTH.div(-2.0),
-              INVERT_RIGHT_SIDE,
-              TURN_INVERTED,
-              TURN_ENCODER_INVERTED);
+          configureModule(
+              CONSTANT_CREATOR.createModuleConstants(
+                  SC1.FRONT_RIGHT_TURN,
+                  SC1.FRONT_RIGHT_DRIVE,
+                  SC1.FRONT_RIGHT_TURN_ABS_ENC,
+                  Rotations.of(0),
+                  WHEEL_BASE.div(2.0),
+                  TRACK_WIDTH.div(-2.0),
+                  INVERT_RIGHT_SIDE,
+                  TURN_INVERTED,
+                  TURN_ENCODER_INVERTED));
   public static final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       BACK_LEFT =
-          CONSTANT_CREATOR.createModuleConstants(
-              SC1.BACK_LEFT_TURN,
-              SC1.BACK_LEFT_DRIVE,
-              SC1.BACK_LEFT_TURN_ABS_ENC,
-              Rotations.of(0),
-              WHEEL_BASE.div(-2.0),
-              TRACK_WIDTH.div(2.0),
-              INVERT_LEFT_SIDE,
-              TURN_INVERTED,
-              TURN_ENCODER_INVERTED);
+          configureModule(
+              CONSTANT_CREATOR.createModuleConstants(
+                  SC1.BACK_LEFT_TURN,
+                  SC1.BACK_LEFT_DRIVE,
+                  SC1.BACK_LEFT_TURN_ABS_ENC,
+                  Rotations.of(0),
+                  WHEEL_BASE.div(-2.0),
+                  TRACK_WIDTH.div(2.0),
+                  INVERT_LEFT_SIDE,
+                  TURN_INVERTED,
+                  TURN_ENCODER_INVERTED));
   public static final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
       BACK_RIGHT =
-          CONSTANT_CREATOR.createModuleConstants(
-              SC1.BACK_RIGHT_TURN,
-              SC1.BACK_RIGHT_DRIVE,
-              SC1.BACK_RIGHT_TURN_ABS_ENC,
-              Rotations.of(0),
-              WHEEL_BASE.div(-2.0),
-              TRACK_WIDTH.div(-2.0),
-              INVERT_RIGHT_SIDE,
-              TURN_INVERTED,
-              TURN_ENCODER_INVERTED);
-
-  /**
-   * Creates a CommandSwerveDrivetrain instance. This should only be called once in your robot
-   * program,.
-   */
-  //   public static CommandSwerveDrivetrain createDrivetrain() {
-  //     return new CommandSwerveDrivetrain(
-  //         DRIVETRAIN_CONSTANTS, FRONT_LEFT, FRONT_RIGHT, BACK_LEFT, BACK_RIGHT);
-  //   }
+          configureModule(
+              CONSTANT_CREATOR.createModuleConstants(
+                  SC1.BACK_RIGHT_TURN,
+                  SC1.BACK_RIGHT_DRIVE,
+                  SC1.BACK_RIGHT_TURN_ABS_ENC,
+                  Rotations.of(0),
+                  WHEEL_BASE.div(-2.0),
+                  TRACK_WIDTH.div(-2.0),
+                  INVERT_RIGHT_SIDE,
+                  TURN_INVERTED,
+                  TURN_ENCODER_INVERTED));
 
   /** Swerve Drive class utilizing CTR Electronics' Phoenix 6 API with the selected device types. */
   public static class TunerSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> {
