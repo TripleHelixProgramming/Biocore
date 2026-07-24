@@ -227,11 +227,6 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().onCommandFinish(cmd -> activeCommands.remove(cmd.getName()));
     CommandScheduler.getInstance().onCommandInterrupt(cmd -> activeCommands.remove(cmd.getName()));
 
-    drive.alignEncodersTrigger.onTrue(
-        Commands.runOnce(drive::zeroAbsoluteEncoders).ignoringDisable(true));
-    robotStats.clearStatsTrigger.onTrue(
-        Commands.runOnce(robotStats::resetAll).ignoringDisable(true));
-
     Field.plotRegions();
   }
 

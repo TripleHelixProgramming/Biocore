@@ -9,8 +9,8 @@ package frc.robot.util;
 
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
-import org.wpilib.command2.button.Trigger;
-import org.wpilib.networktables.BooleanEntry;
+import org.wpilib.networktables.BooleanPublisher;
+import org.wpilib.networktables.BooleanSubscriber;
 import org.wpilib.networktables.NetworkTableInstance;
 import org.wpilib.util.Preferences;
 
@@ -40,8 +40,9 @@ public final class RobotStats {
 
   private final double periodSecs;
   private final DoubleSupplier driveDistanceSupplier;
-  private final BooleanEntry clearStatsEntry;
-  public final Trigger clearStatsTrigger;
+  private final BooleanSubscriber clearStatsSub;
+  private final BooleanPublisher clearStatsPub;
+  private boolean lastClearState = false;
 
   public RobotStats(double periodSecs, DoubleSupplier driveDistanceSupplier) {
     this.periodSecs = periodSecs;
@@ -63,16 +64,20 @@ public final class RobotStats {
 
     lastDriveDistanceMeters = driveDistanceSupplier.getAsDouble();
 
-    clearStatsEntry =
-        NetworkTableInstance.getDefault()
-            .getTable("Triggers")
-            .getBooleanTopic("Clear Robot Stats")
-            .getEntry(false);
-    clearStatsEntry.set(false);
-    clearStatsTrigger = new Trigger(clearStatsEntry::get);
+    var clearStatsTopic =
+        NetworkTableInstance.getDefault().getTable("Triggers").getBooleanTopic("Clear Robot Stats");
+    clearStatsSub = clearStatsTopic.subscribe(false);
+    clearStatsPub = clearStatsTopic.publish();
+    clearStatsPub.set(false);
   }
 
   public void update() {
+    boolean clearState = clearStatsSub.get();
+    if (clearState && !lastClearState) {
+      resetAll();
+    }
+    lastClearState = clearState;
+
     powerOnSecs += periodSecs;
     if (inAuton) autonSecs += periodSecs;
     if (inTeleop) teleopSecs += periodSecs;
@@ -115,7 +120,7 @@ public final class RobotStats {
     teleopSecs = 0.0;
     distanceMeters = 0.0;
     lastDriveDistanceMeters = driveDistanceSupplier.getAsDouble();
-    clearStatsEntry.set(false);
+    clearStatsPub.set(false);
     save();
   }
 
