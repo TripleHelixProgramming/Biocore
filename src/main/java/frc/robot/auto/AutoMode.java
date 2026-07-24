@@ -7,13 +7,14 @@
 
 package frc.robot.auto;
 
+import frc.lib.autoselect.NamedAuto;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import java.util.Optional;
 import org.wpilib.command2.Command;
 import org.wpilib.math.geometry.Pose2d;
 
-public abstract class AutoMode {
+public abstract class AutoMode implements NamedAuto {
   protected final Drive drive;
 
   public AutoMode(Drive drivetrain) {
@@ -28,8 +29,8 @@ public abstract class AutoMode {
     return Optional.empty();
   }
 
-  public SwerveSample[] getLoggableTrajectory() {
-    return new SwerveSample[0];
+  public Pose2d[] getLoggableTrajectory() {
+    return new Pose2d[0];
   }
 
   protected Command stopDrive() {

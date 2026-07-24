@@ -2,8 +2,9 @@ package frc.robot.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import frc.robot.util.KernelLogMonitor.EventPattern;
-import frc.robot.util.KernelLogMonitor.KernelEvent;
+import frc.lib.hardware.KernelLogMonitor;
+import frc.lib.hardware.KernelLogMonitor.EventPattern;
+import frc.lib.hardware.KernelLogMonitor.KernelEvent;
 import java.lang.reflect.Method;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
