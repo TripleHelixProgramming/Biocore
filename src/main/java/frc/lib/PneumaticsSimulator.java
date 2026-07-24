@@ -7,11 +7,11 @@
 
 package frc.lib;
 
-import org.wpilib.wpilibj.DoubleSolenoid;
-import org.wpilib.wpilibj.DriverStation;
-import org.wpilib.wpilibj.simulation.DoubleSolenoidSim;
-import org.wpilib.wpilibj.simulation.REVPHSim;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.driverstation.RobotState;
+import org.wpilib.hardware.pneumatic.DoubleSolenoid;
+import org.wpilib.simulation.DoubleSolenoidSim;
+import org.wpilib.simulation.REVPHSim;
 
 /**
  * Physics-based simulation of the robot's pneumatic system (Viair 90C + 2× Clippard AVT-PP-35).
@@ -180,13 +180,13 @@ public class PneumaticsSimulator {
     double qRodNetScfm = 0.0; // positive = net inflow to rod side
     double qSupplyScfm = 0.0; // consumed from working volume
 
-    if (solenoidValue == DoubleSolenoid.Value.kForward) {
+    if (solenoidValue == DoubleSolenoid.Value.FORWARD) {
       // Extend: supply → bore, exhaust ← rod
       qSupplyScfm = flowScfm(CV_SOLENOID, pWorking, pBore);
       double qExhaustScfm = flowScfm(CV_EXHAUST, pRod, P_ATM_PSIA);
       qBoreNetScfm = +qSupplyScfm;
       qRodNetScfm = -qExhaustScfm;
-    } else if (solenoidValue == DoubleSolenoid.Value.kReverse) {
+    } else if (solenoidValue == DoubleSolenoid.Value.REVERSE) {
       // Retract: supply → rod, exhaust ← bore
       qSupplyScfm = flowScfm(CV_SOLENOID, pWorking, pRod);
       double qExhaustScfm = flowScfm(CV_EXHAUST, pBore, P_ATM_PSIA);
@@ -205,7 +205,7 @@ public class PneumaticsSimulator {
 
     // ── Compressor flow: atmosphere → storage (Viair 90C) ─────────────────
     double pStorageGauge = pStorage - P_ATM_PSIA;
-    compressorRunning = DriverStation.isEnabled() && pStorageGauge < P_CUTOFF_PSIG;
+    compressorRunning = RobotState.isEnabled() && pStorageGauge < P_CUTOFF_PSIG;
     compressorCurrentAmps = compressorRunning ? AMP_INTERCEPT + AMP_SLOPE * pStorageGauge : 0.0;
     double qCompressorScfm = compressorRunning ? FLOW_INTERCEPT + FLOW_SLOPE * pStorageGauge : 0.0;
 

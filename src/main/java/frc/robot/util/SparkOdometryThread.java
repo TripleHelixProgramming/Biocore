@@ -8,15 +8,16 @@
 package frc.robot.util;
 
 import com.revrobotics.AbsoluteEncoder;
-import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase;
-import org.wpilib.wpilibj.Notifier;
-import org.wpilib.wpilibj.RobotController;
+import com.revrobotics.util.Signal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+import org.wpilib.system.Notifier;
+import org.wpilib.system.Timer;
 
 /**
  * Provides an interface for asynchronously reading SparkMax/SparkFlex inputs on a background
@@ -33,8 +34,8 @@ public class SparkOdometryThread {
   /** Cached inputs for a single SparkMax/SparkFlex device. */
   public static class SparkInputs {
     private final SparkBase spark;
-    private final DoubleSupplier positionSupplier;
-    private final DoubleSupplier velocitySupplier;
+    private final Supplier<Signal<Double>> positionSignal;
+    private final Supplier<Signal<Double>> velocitySignal;
     private final DoubleSupplier[] additionalSuppliers;
 
     // Cached values (volatile for thread safety)
@@ -50,18 +51,18 @@ public class SparkOdometryThread {
      * Creates SparkInputs for a device.
      *
      * @param spark The SparkBase device
-     * @param positionSupplier Supplier for encoder position
-     * @param velocitySupplier Supplier for encoder velocity
+     * @param positionSignal Supplier for encoder position Signal
+     * @param velocitySignal Supplier for encoder velocity Signal
      * @param additionalSuppliers Optional additional values to read
      */
     public SparkInputs(
         SparkBase spark,
-        DoubleSupplier positionSupplier,
-        DoubleSupplier velocitySupplier,
+        Supplier<Signal<Double>> positionSignal,
+        Supplier<Signal<Double>> velocitySignal,
         DoubleSupplier... additionalSuppliers) {
       this.spark = spark;
-      this.positionSupplier = positionSupplier;
-      this.velocitySupplier = velocitySupplier;
+      this.positionSignal = positionSignal;
+      this.velocitySignal = velocitySignal;
       this.additionalSuppliers = additionalSuppliers;
       this.additionalValues = new double[additionalSuppliers.length];
     }
@@ -70,47 +71,40 @@ public class SparkOdometryThread {
     private void update() {
       boolean ok = true;
 
-      double pos = positionSupplier.getAsDouble();
-      if (spark.getLastError() == REVLibError.kOk) {
-        position = pos;
+      Signal<Double> posSig = positionSignal.get();
+      if (posSig.isValid()) {
+        position = posSig.get();
       } else {
         ok = false;
       }
 
-      double vel = velocitySupplier.getAsDouble();
-      if (spark.getLastError() == REVLibError.kOk) {
-        velocity = vel;
+      Signal<Double> velSig = velocitySignal.get();
+      if (velSig.isValid()) {
+        velocity = velSig.get();
       } else {
         ok = false;
       }
 
-      double output = spark.getAppliedOutput();
-      boolean outputOk = spark.getLastError() == REVLibError.kOk;
-      double voltage = spark.getBusVoltage();
-      boolean voltageOk = spark.getLastError() == REVLibError.kOk;
-      if (outputOk && voltageOk) {
-        appliedVolts = output * voltage;
+      Signal<Double> outputSig = spark.getAppliedOutput();
+      Signal<Double> voltageSig = spark.getBusVoltage();
+      if (outputSig.isValid() && voltageSig.isValid()) {
+        appliedVolts = outputSig.get() * voltageSig.get();
       } else {
         ok = false;
       }
 
-      double current = spark.getOutputCurrent();
-      if (spark.getLastError() == REVLibError.kOk) {
-        outputCurrent = current;
+      Signal<Double> currentSig = spark.getOutputCurrent();
+      if (currentSig.isValid()) {
+        outputCurrent = currentSig.get();
       } else {
         ok = false;
       }
 
       for (int i = 0; i < additionalSuppliers.length; i++) {
-        double val = additionalSuppliers[i].getAsDouble();
-        if (spark.getLastError() == REVLibError.kOk) {
-          additionalValues[i] = val;
-        } else {
-          ok = false;
-        }
+        additionalValues[i] = additionalSuppliers[i].getAsDouble();
       }
 
-      timestamp = RobotController.getFPGATime() / 1e6;
+      timestamp = Timer.getTimestamp();
       connected = ok;
     }
 

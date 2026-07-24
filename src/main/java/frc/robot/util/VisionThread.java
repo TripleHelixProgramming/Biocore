@@ -7,7 +7,6 @@
 
 package frc.robot.util;
 
-import org.wpilib.wpilibj.Notifier;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIO.PoseObservation;
 import frc.robot.subsystems.vision.VisionIO.TargetObservation;
@@ -15,6 +14,7 @@ import frc.robot.subsystems.vision.VisionIO.VisionIOInputs;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
+import org.wpilib.system.Notifier;
 
 /**
  * Provides an interface for asynchronously reading vision inputs on a background thread, avoiding

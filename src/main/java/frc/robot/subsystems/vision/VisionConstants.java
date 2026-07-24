@@ -9,21 +9,21 @@ package frc.robot.subsystems.vision;
 
 import static org.wpilib.units.Units.*;
 
-import org.wpilib.apriltag.AprilTagFields;
+import frc.robot.subsystems.drive.DriveConstants;
 import org.wpilib.math.geometry.Quaternion;
 import org.wpilib.math.geometry.Rotation3d;
 import org.wpilib.math.geometry.Transform3d;
+import org.wpilib.system.Filesystem;
 import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.Distance;
-import org.wpilib.wpilibj.Filesystem;
-import frc.robot.subsystems.drive.DriveConstants;
+import org.wpilib.vision.apriltag.AprilTagFields;
 
 public class VisionConstants {
 
   public static String CUSTOM_APRIL_TAG_LAYOUT_PATH =
       Filesystem.getDeployDirectory() + "/stemgym-2026.json";
   public static Boolean USE_CUSTOM_APRIL_TAG_LAYOUT = false;
-  public static AprilTagFields DEFAULT_APRIL_TAG_FIELD_LAYOUT = AprilTagFields.k2026RebuiltAndymark;
+  public static AprilTagFields DEFAULT_APRIL_TAG_FIELD_LAYOUT = AprilTagFields.kDefaultField;
 
   /** Pairs a camera's coprocessor name with its robot-to-camera transform. */
   public record CameraConfig(String name, Transform3d robotToCamera) {}

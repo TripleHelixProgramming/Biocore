@@ -1,16 +1,17 @@
 package frc.lib;
 
-import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.wpilibj.DriverStation.Alliance;
-import org.wpilib.wpilibj.event.BooleanEvent;
-import org.wpilib.wpilibj.event.EventLoop;
-import org.wpilib.commandsv2.Command;
-import org.wpilib.commandsv2.button.Trigger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.CommandScheduler;
+import org.wpilib.command2.button.Trigger;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.event.BooleanEvent;
+import org.wpilib.event.EventLoop;
+import org.wpilib.math.geometry.Pose2d;
 
 public class AutoSelector implements Supplier<Optional<AutoOption>> {
 
@@ -72,8 +73,8 @@ public class AutoSelector implements Supplier<Optional<AutoOption>> {
 
   /** Schedules the command corresponding to the selected autonomous mode */
   public void scheduleAuto() {
-    // TODO: schedule() in Command has been deprecated and marked for removal
-    currentAutoOption.ifPresent(ao -> ao.getAutoCommand().ifPresent(Command::schedule));
+    currentAutoOption.ifPresent(
+        ao -> ao.getAutoCommand().ifPresent(CommandScheduler.getInstance()::schedule));
   }
 
   /** Deschedules the command corresponding to the selected autonomous mode */

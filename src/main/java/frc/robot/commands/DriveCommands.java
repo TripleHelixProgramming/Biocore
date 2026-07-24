@@ -10,22 +10,9 @@
 
 package frc.robot.commands;
 
-import static org.wpilib.units.Units.*;
 import static frc.robot.subsystems.drive.DriveConstants.*;
+import static org.wpilib.units.Units.*;
 
-import org.wpilib.math.MathUtil;
-import org.wpilib.math.controller.ProfiledPIDController;
-import org.wpilib.math.filter.SlewRateLimiter;
-import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.geometry.Transform2d;
-import org.wpilib.math.geometry.Translation2d;
-import org.wpilib.math.kinematics.ChassisSpeeds;
-import org.wpilib.math.trajectory.TrapezoidProfile;
-import org.wpilib.math.util.Units;
-import org.wpilib.wpilibj.Timer;
-import org.wpilib.commandsv2.Command;
-import org.wpilib.commandsv2.Commands;
 import frc.robot.subsystems.drive.Drive;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -34,6 +21,19 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
+import org.wpilib.math.controller.ProfiledPIDController;
+import org.wpilib.math.filter.SlewRateLimiter;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Transform2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.math.trajectory.TrapezoidProfile;
+import org.wpilib.math.util.MathUtil;
+import org.wpilib.math.util.Units;
+import org.wpilib.system.Timer;
 
 public class DriveCommands {
   private static final double DEADBAND = 0.035;
@@ -111,21 +111,20 @@ public class DriveCommands {
               // Square rotation value for more precise control
               omega = Math.copySign(omega * omega, omega);
 
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                      omega * drive.getMaxAngularSpeedRadPerSec());
+              ChassisVelocities velocities =
+                  new ChassisVelocities(
+                      linearVelocity.getX() * drive.getMaxLinearVelocityMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearVelocityMetersPerSec(),
+                      omega * drive.getMaxAngularVelocityRadPerSec());
 
-              // Convert to field relative speeds
+              // Convert to field relative velocities
               if (fieldRelativeSupplier.getAsBoolean()) {
-                speeds =
-                    ChassisSpeeds.fromFieldRelativeSpeeds(
-                        speeds,
+                velocities =
+                    velocities.toRobotRelative(
                         getDriverRelativeHeading(drive, fieldRotatedSupplier.getAsBoolean()));
               }
 
-              drive.runVelocity(speeds);
+              drive.runVelocity(velocities);
             },
             drive)
         .withName("Joystick Drive");
@@ -152,15 +151,14 @@ public class DriveCommands {
               // Square rotation value for more precise control
               omega = Math.copySign(omega * omega, omega);
 
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                      omega * drive.getMaxAngularSpeedRadPerSec());
+              // Convert to field relative velocities & send command
+              ChassisVelocities velocities =
+                  new ChassisVelocities(
+                      linearVelocity.getX() * drive.getMaxLinearVelocityMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearVelocityMetersPerSec(),
+                      omega * drive.getMaxAngularVelocityRadPerSec());
               drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
+                  velocities.toRobotRelative(
                       getDriverRelativeHeading(drive, fieldRotatedSupplier.getAsBoolean())));
             },
             drive)
@@ -187,12 +185,12 @@ public class DriveCommands {
               // Square rotation value for more precise control
               omega = Math.copySign(omega * omega, omega);
 
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                      omega * drive.getMaxAngularSpeedRadPerSec());
-              drive.runVelocity(speeds);
+              ChassisVelocities velocities =
+                  new ChassisVelocities(
+                      linearVelocity.getX() * drive.getMaxLinearVelocityMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearVelocityMetersPerSec(),
+                      omega * drive.getMaxAngularVelocityRadPerSec());
+              drive.runVelocity(velocities);
             },
             drive)
         .withName("Robot Relative Joystick Drive");
@@ -226,21 +224,20 @@ public class DriveCommands {
               Translation2d linearVelocity =
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-              // Calculate angular speed
+              // Calculate angular velocity
               double omega =
                   angleController.calculate(
                       drive.getPose().getRotation().getRadians(),
                       rotationSupplier.get().getRadians());
 
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+              // Convert to field relative velocities & send command
+              ChassisVelocities velocities =
+                  new ChassisVelocities(
+                      linearVelocity.getX() * drive.getMaxLinearVelocityMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearVelocityMetersPerSec(),
                       omega);
               drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
+                  velocities.toRobotRelative(
                       getDriverRelativeHeading(drive, fieldRotatedSupplier.getAsBoolean())));
             },
             drive)
@@ -273,20 +270,20 @@ public class DriveCommands {
               Translation2d linearVelocity =
                   getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-              // Calculate angular speed
+              // Calculate angular velocity
               Rotation2d driverHeading =
                   getDriverRelativeHeading(drive, fieldRotatedSupplier.getAsBoolean());
               double omega =
                   angleController.calculate(
                       driverHeading.getRadians(), linearVelocity.getAngle().getRadians());
 
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+              // Convert to field relative velocities & send command
+              ChassisVelocities velocities =
+                  new ChassisVelocities(
+                      linearVelocity.getX() * drive.getMaxLinearVelocityMetersPerSec(),
+                      linearVelocity.getY() * drive.getMaxLinearVelocityMetersPerSec(),
                       omega);
-              drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, driverHeading));
+              drive.runVelocity(velocities.toRobotRelative(driverHeading));
             },
             drive)
         .withName("Forward Orientated Joystick Drive")
@@ -320,14 +317,13 @@ public class DriveCommands {
     return Commands.run(
             () -> {
 
-              // Calculate angular speed
+              // Calculate angular velocity
               double omega = angleController.calculate(yawErrorSupplier.get().getRadians(), 0);
 
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds = new ChassisSpeeds(0, 0, omega);
+              // Convert to field relative velocities & send command
+              ChassisVelocities velocities = new ChassisVelocities(0, 0, omega);
               drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
+                  velocities.toRobotRelative(
                       getDriverRelativeHeading(drive, fieldRotatedSupplier.getAsBoolean())));
             },
             drive)
@@ -429,14 +425,14 @@ public class DriveCommands {
             Commands.run(
                 () -> {
                   double speed = limiter.calculate(WHEEL_RADIUS_MAX_VELOCITY);
-                  drive.runVelocity(new ChassisSpeeds(0.0, 0.0, speed));
+                  drive.runVelocity(new ChassisVelocities(0.0, 0.0, speed));
                 },
                 drive)),
 
         // Measurement sequence
         Commands.sequence(
             // Wait for modules to fully orient before starting measurement
-            Commands.waitSeconds(1.0),
+            Commands.waitTime(Seconds.of(1.0)),
 
             // Record starting measurement
             Commands.runOnce(

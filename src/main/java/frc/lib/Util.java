@@ -1,7 +1,7 @@
 package frc.lib;
 
-import org.wpilib.wpilibj.DriverStation.Alliance;
-import org.wpilib.wpilibj.util.Color;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.util.Color;
 
 public interface Util {
   /**
@@ -11,7 +11,7 @@ public interface Util {
    * @return the appropriate color
    */
   public static Color allianceToColor(Alliance alliance) {
-    return alliance == Alliance.Blue ? Color.kBlue : Color.kRed;
+    return alliance == Alliance.BLUE ? Color.BLUE : Color.RED;
   }
 
   /**

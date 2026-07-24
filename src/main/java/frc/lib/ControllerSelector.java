@@ -1,13 +1,13 @@
 package frc.lib;
 
-import org.wpilib.wpilibj.DriverStation;
-import org.wpilib.wpilibj.GenericHID;
-import org.wpilib.commandsv2.CommandScheduler;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import java.util.Objects;
 import java.util.Set;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.command2.CommandScheduler;
+import org.wpilib.driverstation.GenericHID;
+import org.wpilib.driverstation.internal.DriverStationBackend;
 
 /**
  * Manages the selection and binding of controllers for driver and operator roles as a singleton.
@@ -172,7 +172,7 @@ public class ControllerSelector {
     }
   }
 
-  private static final int NUM_CONTROLLER_PORTS = DriverStation.kJoystickPorts;
+  private static final int NUM_CONTROLLER_PORTS = DriverStationBackend.JOYSTICK_PORTS;
 
   private final ControllerConfig[] controllerConfigs;
   private final GenericHID[] controllers;

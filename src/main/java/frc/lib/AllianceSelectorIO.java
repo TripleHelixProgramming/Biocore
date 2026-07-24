@@ -1,10 +1,10 @@
 package frc.lib;
 
-import org.wpilib.wpilibj.DigitalInput;
-import org.wpilib.wpilibj.DriverStation;
-import org.wpilib.wpilibj.DriverStation.Alliance;
 import java.util.Optional;
 import org.littletonrobotics.junction.AutoLog;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchState;
+import org.wpilib.hardware.discrete.DigitalInput;
 
 public class AllianceSelectorIO {
 
@@ -17,13 +17,13 @@ public class AllianceSelectorIO {
 
   @AutoLog
   public static class AllianceSelectorIOInputs {
-    public Alliance allianceFromSwitch = Alliance.Red;
+    public Alliance allianceFromSwitch = Alliance.RED;
     public boolean agreementInAllianceInputs = false;
     public boolean allianceChanged = false;
   }
 
   public void updateInputs(AllianceSelectorIOInputs inputs) {
-    inputs.allianceFromSwitch = allianceSelectionSwitch.get() ? Alliance.Red : Alliance.Blue;
+    inputs.allianceFromSwitch = allianceSelectionSwitch.get() ? Alliance.RED : Alliance.BLUE;
     inputs.agreementInAllianceInputs = agreementInAllianceInputs(inputs);
     inputs.allianceChanged = changedAlliance(inputs);
   }
@@ -39,7 +39,7 @@ public class AllianceSelectorIO {
   }
 
   private boolean agreementInAllianceInputs(AllianceSelectorIOInputs inputs) {
-    Optional<Alliance> allianceFromFMS = DriverStation.getAlliance();
+    Optional<Alliance> allianceFromFMS = MatchState.getAlliance();
     if (allianceFromFMS.isPresent()) {
       return inputs.allianceFromSwitch.equals(allianceFromFMS.get());
     } else return false;

@@ -7,7 +7,6 @@
 
 package frc.robot.util;
 
-import org.wpilib.wpilibj.RobotBase;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -20,6 +19,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.framework.RobotBase;
 
 /**
  * Monitors RoboRIO kernel logs for unexpected events (USB disconnects, ESD events, hardware errors)

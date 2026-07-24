@@ -7,9 +7,9 @@
 
 package frc.robot.subsystems.leds;
 
-import org.wpilib.wpilibj.AddressableLED;
-import org.wpilib.wpilibj.AddressableLEDBuffer;
-import org.wpilib.wpilibj.AddressableLEDBufferView;
+import org.wpilib.hardware.led.AddressableLED;
+import org.wpilib.hardware.led.AddressableLEDBuffer;
+import org.wpilib.hardware.led.AddressableLEDBufferView;
 
 /**
  * Defines the physical LED strips on the robot. Each strip is connected to a PWM port and has a
@@ -27,7 +27,6 @@ public enum LEDStrip {
   private final int length;
   private AddressableLED led;
   private AddressableLEDBuffer buffer;
-  private boolean started = false;
 
   LEDStrip(int port, int length) {
     this.port = port;
@@ -58,26 +57,10 @@ public enum LEDStrip {
     return getBuffer().createView(start, end).reversed();
   }
 
-  /** Starts this strip. Must be called before the strip will display anything. */
-  public void start() {
-    if (!started) {
-      getBuffer(); // Ensure LED and buffer are created
-      led.start();
-      started = true;
-    }
-  }
-
   /** Pushes buffer data to the physical LED strip. */
   public void update() {
     if (led != null) {
       led.setData(buffer);
-    }
-  }
-
-  /** Starts all physical LED strips. Call once during robot initialization. */
-  public static void startAll() {
-    for (LEDStrip strip : values()) {
-      strip.start();
     }
   }
 

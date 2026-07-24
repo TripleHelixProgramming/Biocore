@@ -2,13 +2,13 @@ package frc.game;
 
 import static org.wpilib.units.Units.*;
 
+import java.util.List;
+import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rectangle2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.units.measure.Distance;
-import java.util.List;
-import org.littletonrobotics.junction.Logger;
 
 public class Field {
   // Measured

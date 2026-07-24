@@ -27,6 +27,8 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import frc.robot.Constants.CANBusPorts.SC1;
+import java.util.Queue;
 import org.wpilib.math.filter.Debouncer;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.util.Units;
@@ -34,8 +36,6 @@ import org.wpilib.units.measure.Angle;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Current;
 import org.wpilib.units.measure.Voltage;
-import frc.robot.Constants.CANBusPorts.CANHD;
-import java.util.Queue;
 
 /**
  * Module IO implementation for Talon FX drive motor controller, Talon FX turn motor controller, and
@@ -96,9 +96,9 @@ public class ModuleIOTalonFX implements ModuleIO {
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
           constants) {
     this.constants = constants;
-    driveTalon = new TalonFX(constants.DriveMotorId, CANHD.BUS);
-    turnTalon = new TalonFX(constants.SteerMotorId, CANHD.BUS);
-    cancoder = new CANcoder(constants.EncoderId, CANHD.BUS);
+    driveTalon = new TalonFX(constants.DriveMotorId, SC1.BUS);
+    turnTalon = new TalonFX(constants.SteerMotorId, SC1.BUS);
+    cancoder = new CANcoder(constants.EncoderId, SC1.BUS);
 
     // Configure drive motor
     var driveConfig = constants.DriveMotorInitialConfigs;

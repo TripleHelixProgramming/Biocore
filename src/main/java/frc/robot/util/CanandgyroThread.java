@@ -8,11 +8,11 @@
 package frc.robot.util;
 
 import com.reduxrobotics.sensors.canandgyro.Canandgyro;
-import org.wpilib.wpilibj.Notifier;
-import org.wpilib.wpilibj.RobotController;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
+import org.wpilib.system.Notifier;
+import org.wpilib.system.Timer;
 
 /**
  * Provides an interface for asynchronously reading Canandgyro inputs on a background thread,
@@ -47,7 +47,7 @@ public class CanandgyroThread {
       calibrating = gyro.isCalibrating();
       yaw = gyro.getYaw();
       angularVelocityYaw = gyro.getAngularVelocityYaw();
-      timestamp = RobotController.getFPGATime() / 1e6;
+      timestamp = Timer.getTimestamp();
     }
 
     // Getters for cached values (called from main thread)

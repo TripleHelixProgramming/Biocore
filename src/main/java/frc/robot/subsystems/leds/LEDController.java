@@ -10,16 +10,17 @@ package frc.robot.subsystems.leds;
 import static org.wpilib.units.Units.Centimeters;
 import static org.wpilib.units.Units.Seconds;
 
-import org.wpilib.math.MathUtil;
-import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.wpilibj.DriverStation;
-import org.wpilib.wpilibj.DriverStation.Alliance;
-import org.wpilib.wpilibj.LEDPattern;
-import org.wpilib.wpilibj.util.Color;
-import org.wpilib.commandsv2.SubsystemBase;
 import frc.game.GameState;
 import frc.robot.Robot;
 import java.util.function.Supplier;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchState;
+import org.wpilib.driverstation.RobotState;
+import org.wpilib.hardware.led.LEDPattern;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.util.MathUtil;
+import org.wpilib.util.Color;
 
 /**
  * A subsystem to control the LEDs on the robot.
@@ -47,9 +48,7 @@ public class LEDController extends SubsystemBase {
     return instance;
   }
 
-  private LEDController() {
-    LEDStrip.startAll();
-  }
+  private LEDController() {}
 
   /** Pushes LED buffer data to all physical strips each cycle. */
   @Override
@@ -122,27 +121,27 @@ public class LEDController extends SubsystemBase {
   // ==================== PRE-ALLOCATED PATTERNS ====================
 
   /** LEDs off */
-  public static final LEDPattern solidBlackPattern = LEDPattern.solid(Color.kBlack);
+  public static final LEDPattern solidBlackPattern = LEDPattern.solid(Color.BLACK);
 
   /** Solid color patterns */
-  public static final LEDPattern solidYellowPattern = LEDPattern.solid(Color.kYellow);
+  public static final LEDPattern solidYellowPattern = LEDPattern.solid(Color.YELLOW);
 
-  public static final LEDPattern solidRedPattern = LEDPattern.solid(Color.kRed);
-  public static final LEDPattern solidGreenPattern = LEDPattern.solid(Color.kGreen);
-  public static final LEDPattern solidWhitePattern = LEDPattern.solid(Color.kWhite);
-  public static final LEDPattern solidOrangeRedPattern = LEDPattern.solid(Color.kOrangeRed);
+  public static final LEDPattern solidRedPattern = LEDPattern.solid(Color.RED);
+  public static final LEDPattern solidGreenPattern = LEDPattern.solid(Color.GREEN);
+  public static final LEDPattern solidWhitePattern = LEDPattern.solid(Color.WHITE);
+  public static final LEDPattern solidOrangeRedPattern = LEDPattern.solid(Color.ORANGE_RED);
 
   /** Blinking yellow pattern (0.5s period) for missing auto selection. */
   public static final LEDPattern blinkingYellowPattern =
-      LEDPattern.solid(Color.kYellow).blink(Seconds.of(0.5));
+      LEDPattern.solid(Color.YELLOW).blink(Seconds.of(0.5));
 
   /** Bounce ripple pattern in yellow (spindexing, not on target). */
   public static final LEDPattern bounceRippleYellowPattern =
-      LEDCustomPattern.bounceRipple(Color.kYellow);
+      LEDCustomPattern.bounceRipple(Color.YELLOW);
 
   /** Bounce ripple pattern in green (spindexing, on target). */
   public static final LEDPattern bounceRippleGreenPattern =
-      LEDCustomPattern.bounceRipple(Color.kGreen);
+      LEDCustomPattern.bounceRipple(Color.GREEN);
 
   /**
    * Pattern displaying the selected auto routine as counting blocks in alliance color. The number
@@ -170,10 +169,10 @@ public class LEDController extends SubsystemBase {
           10.0,
           // Fill color
           () -> {
-            return GameState.getMyAlliance() == Alliance.Blue ? Color.kBlue : Color.kRed;
+            return GameState.getMyAlliance() == Alliance.BLUE ? Color.BLUE : Color.RED;
           },
           // Background color
-          Color.kBlack,
+          Color.BLACK,
           // Blink period (0.25s = 4Hz flash)
           0.25);
 
@@ -191,7 +190,7 @@ public class LEDController extends SubsystemBase {
             () -> LEDSeries.AUTO_SELECTION.applyPattern(blinkingYellowPattern));
 
     // Display yellow warning pixel if alliance disagreement
-    DriverStation.getAlliance()
+    MatchState.getAlliance()
         .ifPresent(
             alliance -> {
               if (alliance != Robot.allianceSelector.getAllianceColor()) {
@@ -217,7 +216,7 @@ public class LEDController extends SubsystemBase {
    * Otherwise uses X_AXIS_BODY (LEDs 15-35), leaving WARNING_COMPRESSOR free for other indicators.
    */
   public void displayHubCountdown() {
-    if (DriverStation.isFMSAttached()) {
+    if (RobotState.isFMSAttached()) {
       LEDSeries.X_AXIS_FULL.applyPattern(hubCountdownPattern);
     } else {
       LEDSeries.X_AXIS_BODY.applyPattern(hubCountdownPattern);

@@ -8,12 +8,12 @@
 package frc.robot.subsystems.drive;
 
 import com.reduxrobotics.sensors.canandgyro.Canandgyro;
-import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.util.Units;
-import frc.robot.Constants.CANBusPorts.CAN2;
+import frc.robot.Constants.CANBusPorts.SC0;
 import frc.robot.util.CanandgyroThread;
 import frc.robot.util.CanandgyroThread.GyroInputs;
 import java.util.Queue;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.util.Units;
 
 /** IO implementation for Redux Canandgyro. */
 public class GyroIOBoron implements GyroIO {
@@ -23,7 +23,7 @@ public class GyroIOBoron implements GyroIO {
   private final Queue<Double> yawPositionQueue;
 
   public GyroIOBoron() {
-    canandgyro = new Canandgyro(CAN2.GYRO);
+    canandgyro = new Canandgyro(SC0.GYRO);
     gyroInputs = CanandgyroThread.getInstance().registerCanandgyro(canandgyro);
     yawTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
     yawPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(canandgyro::getYaw);
