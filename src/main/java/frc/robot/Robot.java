@@ -18,6 +18,8 @@ import frc.game.GameState;
 import frc.lib.autoselect.AllianceSelector;
 import frc.lib.autoselect.AutoSelector;
 import frc.lib.hardware.KernelLogMonitor;
+import frc.lib.hardware.LoggedAlertGroup;
+import frc.lib.hardware.LoggedCANBus;
 import frc.lib.hardware.LoggedPowerDistribution;
 import frc.lib.input.CommandZorroController;
 import frc.lib.input.ControllerSelector;
@@ -64,7 +66,6 @@ import org.wpilib.event.EventLoop;
 import org.wpilib.framework.RobotBase;
 import org.wpilib.hardware.power.PowerDistribution.ModuleType;
 import org.wpilib.math.filter.LinearFilter;
-import org.wpilib.networktables.NetworkTableInstance;
 import org.wpilib.simulation.BatterySim;
 import org.wpilib.simulation.RoboRioSim;
 
@@ -95,6 +96,17 @@ public class Robot extends LoggedRobot {
       new AutoSelector(DIOPorts.AUTONOMOUS_MODE_SELECTOR, allianceSelector::getAllianceColor);
   public final LoggedPowerDistribution powerDistribution =
       new LoggedPowerDistribution(SC0.BUS_ID, SC0.PD, ModuleType.REV, "PD");
+
+  private final LoggedCANBus sc0CANBus =
+      new LoggedCANBus(Constants.CANBusPorts.SC0.NAME, Constants.CANBusPorts.SC0.BUS);
+  private final LoggedCANBus sc1CANBus =
+      new LoggedCANBus(Constants.CANBusPorts.SC1.NAME, Constants.CANBusPorts.SC1.BUS);
+
+  // Third-party library alerts (PathPlanner, Choreo, PhotonVision) still publish to SmartDashboard
+  // via their own Alert objects, so we read them back from NT.
+  private final LoggedAlertGroup pathPlannerAlerts = new LoggedAlertGroup("PathPlanner");
+  private final LoggedAlertGroup choreoAlerts = new LoggedAlertGroup("Choreo");
+  private final LoggedAlertGroup photonAlerts = new LoggedAlertGroup("PhotonAlerts");
 
   private final java.util.Set<String> activeCommands = new java.util.LinkedHashSet<>();
 
@@ -247,8 +259,8 @@ public class Robot extends LoggedRobot {
     ControllerSelector.getInstance().getBindingLoop().poll();
     long t1 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
-    logCANBus(Constants.CANBusPorts.SC0.NAME, Constants.CANBusPorts.SC0.BUS);
-    logCANBus(Constants.CANBusPorts.SC1.NAME, Constants.CANBusPorts.SC1.BUS);
+    sc0CANBus.log();
+    sc1CANBus.log();
     powerDistribution.log();
     logHIDs();
     logScheduler();
@@ -551,25 +563,9 @@ public class Robot extends LoggedRobot {
     Logger.recordOutput("Commands/ActiveCommands", activeCommands.toArray(new String[0]));
     logSubsystem("Drive", drive);
     if (vision != null) logSubsystem("Vision", vision);
-    logAlerts();
-  }
-
-  // Third-party library alerts (PathPlanner, Choreo, PhotonVision) still publish to SmartDashboard
-  // via their own Alert objects, so we read them back from NT.
-  private static void logAlerts() {
-    logAlertGroup("PathPlanner");
-    logAlertGroup("Choreo");
-    logAlertGroup("PhotonAlerts");
-  }
-
-  private static void logAlertGroup(String group) {
-    var table = NetworkTableInstance.getDefault().getTable("SmartDashboard").getSubTable(group);
-    Logger.recordOutput(
-        "Alerts/" + group + "/Errors", table.getEntry("errors").getStringArray(new String[0]));
-    Logger.recordOutput(
-        "Alerts/" + group + "/Warnings", table.getEntry("warnings").getStringArray(new String[0]));
-    Logger.recordOutput(
-        "Alerts/" + group + "/Infos", table.getEntry("infos").getStringArray(new String[0]));
+    pathPlannerAlerts.log();
+    choreoAlerts.log();
+    photonAlerts.log();
   }
 
   /**
@@ -597,15 +593,6 @@ public class Robot extends LoggedRobot {
     String dir = "/U/logs/session_" + (maxCount + 1) + "/";
     new java.io.File(dir).mkdirs();
     return dir;
-  }
-
-  private static void logCANBus(String name, com.ctre.phoenix6.CANBus bus) {
-    var status = bus.getStatus();
-    Logger.recordOutput("CANBus/" + name + "/Utilization", status.BusUtilization);
-    Logger.recordOutput("CANBus/" + name + "/BusOffCount", (long) status.BusOffCount);
-    Logger.recordOutput("CANBus/" + name + "/TxFullCount", (long) status.TxFullCount);
-    Logger.recordOutput("CANBus/" + name + "/REC", (long) status.REC);
-    Logger.recordOutput("CANBus/" + name + "/TEC", (long) status.TEC);
   }
 
   private static void logSubsystem(String name, SubsystemBase subsystem) {

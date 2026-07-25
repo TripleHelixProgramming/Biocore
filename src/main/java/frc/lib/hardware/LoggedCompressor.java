@@ -7,12 +7,22 @@
 
 package frc.lib.hardware;
 
+import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.hardware.pneumatic.Compressor;
 import org.wpilib.hardware.pneumatic.PneumaticsModuleType;
 
 public class LoggedCompressor extends Compressor {
+  @AutoLog
+  public static class CompressorInputs {
+    public boolean enabled = false;
+    public boolean pressureSwitch = false;
+    public double currentAmps = 0.0;
+    public double pressurePSI = 0.0;
+  }
+
   private final String key;
+  private final CompressorInputsAutoLogged inputs = new CompressorInputsAutoLogged();
 
   /**
    * Creates a logged compressor.
@@ -27,9 +37,10 @@ public class LoggedCompressor extends Compressor {
   }
 
   public void log() {
-    Logger.recordOutput(key + "/Enabled", isEnabled());
-    Logger.recordOutput(key + "/PressureSwitch", getPressureSwitchValue());
-    Logger.recordOutput(key + "/CurrentAmps", getCurrent());
-    Logger.recordOutput(key + "/PressurePSI", getPressure());
+    inputs.enabled = isEnabled();
+    inputs.pressureSwitch = getPressureSwitchValue();
+    inputs.currentAmps = getCurrent();
+    inputs.pressurePSI = getPressure();
+    Logger.processInputs(key, inputs);
   }
 }
