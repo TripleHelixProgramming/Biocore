@@ -451,7 +451,7 @@ public class Robot extends LoggedRobot {
           }
 
           public double getRotationInput() {
-            return -xboxDriver.getRightX();
+            return xboxDriver.getRightX();
           }
 
           public boolean getFieldRelativeInput() {

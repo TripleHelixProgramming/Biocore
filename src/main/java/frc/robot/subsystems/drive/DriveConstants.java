@@ -178,7 +178,7 @@ public class DriveConstants {
       new Slot0Configs()
           .withKP(300)
           .withKI(0)
-          .withKD(1.5)
+          .withKD(12)
           .withKS(0.1)
           .withKV(1.91)
           .withKA(0)
