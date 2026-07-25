@@ -2,12 +2,12 @@ package frc.lib;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.event.EventLoop;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import java.util.Objects;
 import java.util.Set;
 import org.littletonrobotics.junction.Logger;
-import edu.wpi.first.wpilibj.event.EventLoop;
 
 /**
  * Manages the selection and binding of controllers for driver and operator roles as a singleton.
