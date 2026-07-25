@@ -15,6 +15,7 @@ import static frc.robot.subsystems.vision.VisionConstants.*;
 import com.ctre.phoenix6.SignalLogger;
 import frc.game.Field;
 import frc.game.GameState;
+import frc.lib.RobotMode;
 import frc.lib.autoselect.AllianceSelector;
 import frc.lib.autoselect.AutoSelector;
 import frc.lib.hardware.KernelLogMonitor;
@@ -82,7 +83,7 @@ public class Robot extends LoggedRobot {
   private static final String SESSION_DIR;
 
   static {
-    if (Constants.currentMode == Constants.Mode.REAL) {
+    if (Constants.currentMode == RobotMode.REAL) {
       SESSION_DIR = createSessionDir();
       SignalLogger.setPath(SESSION_DIR);
     } else {
@@ -381,17 +382,17 @@ public class Robot extends LoggedRobot {
 
   private void configureControlPanelBindings() {
     ControllerSelector.configure(
+        Constants.currentMode,
         // ZORRO is always preferred as driver in REAL and SIM mode
         new DriverConfig(
-            ControllerType.ZORRO, this::bindZorroDriver, Constants.Mode.REAL, Constants.Mode.SIM),
+            ControllerType.ZORRO, this::bindZorroDriver, RobotMode.REAL, RobotMode.SIM),
         // XBOX is always preferred as operator in REAL and SIM mode
         new OperatorConfig(
-            ControllerType.XBOX, this::bindXboxOperator, Constants.Mode.REAL, Constants.Mode.SIM),
+            ControllerType.XBOX, this::bindXboxOperator, RobotMode.REAL, RobotMode.SIM),
         // XBOX is permitted as driver in REAL and SIM mode
-        new DriverConfig(
-            ControllerType.XBOX, this::bindXboxDriver, Constants.Mode.REAL, Constants.Mode.SIM),
+        new DriverConfig(ControllerType.XBOX, this::bindXboxDriver, RobotMode.REAL, RobotMode.SIM),
         // KEYBOARD is permitted as driver in SIM mode only
-        new DriverConfig(ControllerType.KEYBOARD, this::bindKeyboardDriver, Constants.Mode.SIM));
+        new DriverConfig(ControllerType.KEYBOARD, this::bindKeyboardDriver, RobotMode.SIM));
   }
 
   public DriverController bindZorroDriver(int port, EventLoop loop) {
@@ -534,7 +535,7 @@ public class Robot extends LoggedRobot {
 
   /** Returns the number of free bytes on the USB log drive at /U, or Long.MAX_VALUE in sim. */
   public static long getUSBStorageFreeSpace() {
-    if (Constants.currentMode != Constants.Mode.REAL) return Long.MAX_VALUE;
+    if (Constants.currentMode != RobotMode.REAL) return Long.MAX_VALUE;
     return new java.io.File("/U").getFreeSpace();
   }
 

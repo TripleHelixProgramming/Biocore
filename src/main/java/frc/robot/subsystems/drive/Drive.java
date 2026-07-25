@@ -19,9 +19,9 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
+import frc.lib.RobotMode;
 import frc.robot.Constants;
 import frc.robot.Constants.FeatureFlags;
-import frc.robot.Constants.Mode;
 import frc.robot.auto.SwerveSample;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -228,7 +228,7 @@ public class Drive extends SubsystemBase {
     long t6 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
     // Update gyro alert
-    boolean gyroDisconnected = !gyroInputs.connected && Constants.currentMode != Mode.SIM;
+    boolean gyroDisconnected = !gyroInputs.connected && Constants.currentMode != RobotMode.SIM;
     gyroDisconnectedAlert.set(gyroDisconnected);
     Logger.recordOutput("Faults/Drive/GyroDisconnected", gyroDisconnected);
 

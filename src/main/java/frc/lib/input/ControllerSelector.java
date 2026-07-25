@@ -7,8 +7,7 @@
 
 package frc.lib.input;
 
-import frc.robot.Constants;
-import frc.robot.Constants.Mode;
+import frc.lib.RobotMode;
 import java.util.Objects;
 import java.util.Set;
 import org.littletonrobotics.junction.Logger;
@@ -70,11 +69,13 @@ public class ControllerSelector {
    * Configures the ControllerSelector singleton with the specified controller configurations. This
    * method must be called once before getting the instance.
    *
+   * @param currentMode The robot's current runtime mode, used to select configs whose {@code modes}
+   *     include it.
    * @param configs A varargs list of controller configurations.
    */
-  public static void configure(ControllerConfig... configs) {
+  public static void configure(RobotMode currentMode, ControllerConfig... configs) {
     if (instance == null) {
-      instance = new ControllerSelector(configs);
+      instance = new ControllerSelector(currentMode, configs);
     }
   }
 
@@ -127,7 +128,7 @@ public class ControllerSelector {
    * controller type, and a callback function to bind the controller's commands.
    */
   public abstract static class ControllerConfig {
-    public final Set<Mode> modes;
+    public final Set<RobotMode> modes;
     public final ControllerFunction controllerFunction;
     public final ControllerType controllerType;
     public final DriverBinding driverBinding;
@@ -147,7 +148,7 @@ public class ControllerSelector {
         ControllerType controllerType,
         DriverBinding driverBinding,
         OperatorBinding operatorBinding,
-        Mode... modes) {
+        RobotMode... modes) {
       this.modes = Set.of(modes);
       this.controllerFunction = controllerFunction;
       this.controllerType = controllerType;
@@ -165,7 +166,7 @@ public class ControllerSelector {
      * @param modes The modes in which this configuration is valid (e.g., REAL, SIM).
      */
     public DriverConfig(
-        ControllerType controllerType, DriverBinding bindingCallback, Mode... modes) {
+        ControllerType controllerType, DriverBinding bindingCallback, RobotMode... modes) {
       super(ControllerFunction.DRIVER, controllerType, bindingCallback, null, modes);
     }
   }
@@ -179,13 +180,14 @@ public class ControllerSelector {
      * @param modes The modes in which this configuration is valid (e.g., REAL, SIM).
      */
     public OperatorConfig(
-        ControllerType controllerType, OperatorBinding bindingCallback, Mode... modes) {
+        ControllerType controllerType, OperatorBinding bindingCallback, RobotMode... modes) {
       super(ControllerFunction.OPERATOR, controllerType, null, bindingCallback, modes);
     }
   }
 
   private static final int NUM_CONTROLLER_PORTS = DriverStationBackend.JOYSTICK_PORTS;
 
+  private final RobotMode currentMode;
   private final ControllerConfig[] controllerConfigs;
   private final GenericHID[] controllers;
   private final String[] controllerNames;
@@ -210,9 +212,12 @@ public class ControllerSelector {
   /**
    * Constructs a new ControllerSelector object. This is private to enforce the singleton pattern.
    *
+   * @param currentMode The robot's current runtime mode, used to select configs whose {@code modes}
+   *     include it.
    * @param configs A varargs list of controller configurations.
    */
-  private ControllerSelector(ControllerConfig... configs) {
+  private ControllerSelector(RobotMode currentMode, ControllerConfig... configs) {
+    this.currentMode = currentMode;
     this.controllerConfigs = configs;
 
     // Create a GenericHID object for each port to allow polling for names.
@@ -301,7 +306,7 @@ public class ControllerSelector {
     for (ControllerConfig config : controllerConfigs) {
       // Skip configs that aren't for the driver or the current robot mode
       if (config.controllerFunction != ControllerFunction.DRIVER
-          || !config.modes.contains(Constants.currentMode)) {
+          || !config.modes.contains(currentMode)) {
         continue;
       }
 
@@ -331,7 +336,7 @@ public class ControllerSelector {
     for (ControllerConfig config : controllerConfigs) {
       // Skip configs that aren't for the operator or the current robot mode
       if (config.controllerFunction != ControllerFunction.OPERATOR
-          || !config.modes.contains(Constants.currentMode)) {
+          || !config.modes.contains(currentMode)) {
         continue;
       }
 
