@@ -34,21 +34,20 @@ deploy {
                     jvmArgs.add("-XX:+UseSerialGC")
                     jvmArgs.add("-XX:MaxGCPauseMillis=50")
 
-                    // The options below may improve performance, but should only be enabled on the RIO 2
-                    // (RIO 1 has only 256MB RAM — 100MB heap + AlwaysPreTouch causes OOM crash loop)
-                    //
-                    // final MAX_JAVA_HEAP_SIZE_MB = 100;
-                    // jvmArgs.add("-Xmx" + MAX_JAVA_HEAP_SIZE_MB + "M")
-                    // jvmArgs.add("-Xms" + MAX_JAVA_HEAP_SIZE_MB + "M")
-                    // jvmArgs.add("-XX:+AlwaysPreTouch")
+                    // Cap heap to leave room for native memory (thread stacks, JIT code cache).
+                    // Rio 1.0 has 256 MB total RAM shared with Linux — keep heap well under half.
+                    final MAX_JAVA_HEAP_SIZE_MB = 75;
+                    jvmArgs.add("-Xmx" + MAX_JAVA_HEAP_SIZE_MB + "M")
 
-                    // Enable VisualVM connection
-                    jvmArgs.add("-Dcom.sun.management.jmxremote=true")
-                    jvmArgs.add("-Dcom.sun.management.jmxremote.port=1198")
-                    jvmArgs.add("-Dcom.sun.management.jmxremote.local.only=false")
-                    jvmArgs.add("-Dcom.sun.management.jmxremote.ssl=false")
-                    jvmArgs.add("-Dcom.sun.management.jmxremote.authenticate=false")
-                    jvmArgs.add("-Djava.rmi.server.hostname=10.23.63.2")
+                    // Limit JIT code cache — default can grow to 32–48 MB on Client VM.
+                    jvmArgs.add("-XX:ReservedCodeCacheSize=8m")
+
+                    // NOTE: Do NOT add -XX:+AlwaysPreTouch on Rio 1.0 — it pre-commits the entire
+                    // heap at startup and causes an immediate OOM crash loop.
+
+                    // NOTE: JMX remote monitoring (-Dcom.sun.management.jmxremote) starts an RMI
+                    // server with several extra threads and uses ~20-50 MB of native memory.
+                    // This was the primary cause of OOM on Rio 1.0. Removed.
                 }
 
                 // Static files artifact

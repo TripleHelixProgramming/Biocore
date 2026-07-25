@@ -29,7 +29,10 @@ import org.littletonrobotics.junction.Logger;
  * This is a singleton that runs as a daemon thread for the lifetime of the robot program.
  */
 public class KernelLogMonitor {
-  private static final int MAX_QUEUE_SIZE = 5000;
+  // Keep small: dmesg -w replays the full boot log before following, so hundreds of events
+  // can arrive immediately on startup. A 5000-slot queue was pre-allocating objects on a
+  // 256 MB Rio 1.0 and contributing to OOM. 100 is plenty for diagnostic purposes.
+  private static final int MAX_QUEUE_SIZE = 100;
   private static final int MAX_EVENTS_PER_CYCLE = 10;
   private static final double QUEUE_WARNING_THRESHOLD = 0.8;
 
