@@ -7,12 +7,12 @@
 
 package frc.robot.util;
 
-import java.util.function.DoubleSupplier;
-import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.BooleanSubscriber;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Preferences;
+import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.Logger;
 
 /**
  * Persists cumulative lifecycle statistics for the robot across power cycles using WPILib
