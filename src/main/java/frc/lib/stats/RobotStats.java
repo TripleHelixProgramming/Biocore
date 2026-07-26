@@ -44,13 +44,12 @@ public final class RobotStats {
 
   private Mode mode = Mode.DISABLED;
   private final Timer saveTimer = new Timer();
+  private final Timer elapsedTimer = new Timer();
 
-  private final double periodSecs;
   private final DoubleSupplier driveDistanceSupplier;
   private final BooleanPublisher clearStatsPub;
 
-  public RobotStats(double periodSecs, DoubleSupplier driveDistanceSupplier) {
-    this.periodSecs = periodSecs;
+  public RobotStats(DoubleSupplier driveDistanceSupplier) {
     this.driveDistanceSupplier = driveDistanceSupplier;
 
     Preferences.initInt(KEY_BOOT_COUNT, 0);
@@ -69,6 +68,7 @@ public final class RobotStats {
 
     lastDriveDistanceMeters = driveDistanceSupplier.getAsDouble();
     saveTimer.start();
+    elapsedTimer.start();
 
     var clearStatsTopic =
         NetworkTableInstance.getDefault().getTable("Triggers").getBooleanTopic("Clear Robot Stats");
@@ -79,9 +79,12 @@ public final class RobotStats {
   }
 
   public void update() {
-    powerOnSecs += periodSecs;
-    if (mode == Mode.AUTON) autonSecs += periodSecs;
-    if (mode == Mode.TELEOP) teleopSecs += periodSecs;
+    double elapsedSecs = elapsedTimer.get();
+    elapsedTimer.reset();
+
+    powerOnSecs += elapsedSecs;
+    if (mode == Mode.AUTON) autonSecs += elapsedSecs;
+    if (mode == Mode.TELEOP) teleopSecs += elapsedSecs;
 
     double current = driveDistanceSupplier.getAsDouble();
     distanceMeters += current - lastDriveDistanceMeters;

@@ -232,7 +232,7 @@ public class Robot extends LoggedRobot {
     // Start AdvantageKit logger
     Logger.start();
 
-    robotStats = new RobotStats(Robot.defaultPeriodSecs, drive::getTotalDistanceTraveledMeters);
+    robotStats = new RobotStats(drive::getTotalDistanceTraveledMeters);
 
     configureControlPanelBindings();
     configureAutoOptions();
