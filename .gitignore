@@ -139,6 +139,10 @@ $RECYCLE.BIN/
 .gradle
 /build/
 
+# Machine-local JVM override (e.g. org.gradle.java.home) - not portable across
+# machines or CI, which provisions its own JDK via actions/setup-java.
+gradle.properties
+
 # Ignore Gradle GUI config
 gradle-app.setting
 
