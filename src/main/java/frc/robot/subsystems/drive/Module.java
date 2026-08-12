@@ -25,7 +25,7 @@ public class Module {
   private final ModuleIO io;
   private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
   private final String name;
-
+  private boolean initialized = false;
   private final Alert driveDisconnectedAlert;
   private final Alert turnDisconnectedAlert;
   private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
@@ -37,26 +37,28 @@ public class Module {
         new Alert("Disconnected drive motor on module " + name + ".", AlertType.kError);
     turnDisconnectedAlert =
         new Alert("Disconnected turn motor on module " + name + ".", AlertType.kError);
-
-    // Set turn zero from preferences
-    Rotation2d turnZeroFromCancoder = inputs.turnZero;
-    Preferences.initDouble(ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians());
-    Rotation2d turnZeroFromPreferences =
-        new Rotation2d(
-            Preferences.getDouble(
-                ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians()));
-    io.setTurnZero(turnZeroFromPreferences);
-    Logger.recordOutput(
-        "Drive/Module" + name + "/TurnZeroRad", turnZeroFromPreferences.getRadians());
   }
 
   public void periodic() {
+
     long t0 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
     io.updateInputs(inputs);
     long t1 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
     Logger.processInputs("Drive/Module" + name, inputs);
     long t2 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
-
+    if (!initialized) {
+      // Set turn zero from preferences
+      Rotation2d turnZeroFromCancoder = inputs.turnZero;
+      Preferences.initDouble(ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians());
+      Rotation2d turnZeroFromPreferences =
+          new Rotation2d(
+              Preferences.getDouble(
+                  ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians()));
+      io.setTurnZero(turnZeroFromPreferences);
+      Logger.recordOutput(
+          "Drive/Module" + name + "/TurnZeroRad", turnZeroFromPreferences.getRadians());
+      initialized = true;
+    }
     // Calculate positions for odometry
     int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
     odometryPositions = new SwerveModulePosition[sampleCount];
