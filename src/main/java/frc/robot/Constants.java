@@ -106,6 +106,8 @@ public final class Constants {
       public static final int FRONT_RIGHT_TURN_ABS_ENC = 8;
       public static final int FRONT_LEFT_TURN_ABS_ENC = 5;
       public static final int BACK_LEFT_TURN_ABS_ENC = 2;
+
+      public static final int LIFTER = 30;
     }
   }
 }

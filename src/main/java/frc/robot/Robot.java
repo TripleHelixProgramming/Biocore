@@ -50,6 +50,8 @@ import frc.robot.subsystems.drive.GyroIOBoron;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSimWPI;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.LifterIOSimTalonFX;
 import frc.robot.subsystems.leds.LEDController;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
@@ -101,6 +103,7 @@ public class Robot extends LoggedRobot {
 
   // Subsystems
   private Drive drive;
+  private Elevator elevator;
   private Vision vision;
   private final LEDController leds = FeatureFlags.LEDS_ENABLED ? LEDController.getInstance() : null;
   // Battery simulation constants
@@ -169,6 +172,7 @@ public class Robot extends LoggedRobot {
                 new ModuleIOSimWPI(DriveConstants.FRONT_RIGHT),
                 new ModuleIOSimWPI(DriveConstants.BACK_LEFT),
                 new ModuleIOSimWPI(DriveConstants.BACK_RIGHT));
+        elevator = new Elevator(new LifterIOSimTalonFX());
         if (FeatureFlags.VISION_ENABLED) {
           vision =
               new Vision(
@@ -401,6 +405,10 @@ public class Robot extends LoggedRobot {
             return -zorroDriver.getLeftXAxis();
           }
 
+          public double getElevatorInput() {
+            return -zorroDriver.getLeftYAxis();
+          }
+
           public boolean getFieldRelativeInput() {
             return zorroDriver.getHID().getEUp();
           }
@@ -422,6 +430,9 @@ public class Robot extends LoggedRobot {
         .GIn(loop)
         .onTrue(
             Commands.runOnce(() -> DriveCommands.resetDriverForward(drive)).ignoringDisable(true));
+
+    elevator.setDefaultCommand(
+      elevator.getJoystickMoveCommand(() -> controller.getElevatorInput()));
 
     return controller;
   }
