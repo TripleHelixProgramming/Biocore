@@ -51,6 +51,7 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSimWPI;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.LifterIO;
 import frc.robot.subsystems.elevator.LifterIOSimTalonFX;
 import frc.robot.subsystems.leds.LEDController;
 import frc.robot.subsystems.vision.Vision;
@@ -145,6 +146,7 @@ public class Robot extends LoggedRobot {
                 new ModuleIOTalonFX(DriveConstants.FRONT_RIGHT),
                 new ModuleIOTalonFX(DriveConstants.BACK_LEFT),
                 new ModuleIOTalonFX(DriveConstants.BACK_RIGHT));
+        elevator = new Elevator(new LifterIO() {});
         if (FeatureFlags.VISION_ENABLED) {
           vision =
               new Vision(
@@ -201,6 +203,7 @@ public class Robot extends LoggedRobot {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
+        elevator = new Elevator(new LifterIO() {});
         if (FeatureFlags.VISION_ENABLED) {
           vision =
               new Vision(
@@ -432,7 +435,7 @@ public class Robot extends LoggedRobot {
             Commands.runOnce(() -> DriveCommands.resetDriverForward(drive)).ignoringDisable(true));
 
     elevator.setDefaultCommand(
-      elevator.getJoystickMoveCommand(() -> controller.getElevatorInput()));
+        elevator.getJoystickMoveCommand(() -> controller.getElevatorInput()));
 
     return controller;
   }
@@ -562,6 +565,7 @@ public class Robot extends LoggedRobot {
   private void logScheduler() {
     Logger.recordOutput("Commands/ActiveCommands", activeCommands.toArray(new String[0]));
     logSubsystem("Drive", drive);
+    logSubsystem("Elevator", elevator);
     if (vision != null) logSubsystem("Vision", vision);
     logAlerts();
   }
