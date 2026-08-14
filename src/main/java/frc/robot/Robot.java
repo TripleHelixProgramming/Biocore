@@ -457,6 +457,10 @@ public class Robot extends LoggedRobot {
             return xboxDriver.getRightX();
           }
 
+          public double getElevatorInput() {
+            return xboxDriver.getRightY();
+          }
+
           public boolean getFieldRelativeInput() {
             return !xboxDriver.getHID().getLeftBumperButton();
           }
@@ -478,6 +482,9 @@ public class Robot extends LoggedRobot {
         .b(loop)
         .onTrue(
             Commands.runOnce(() -> DriveCommands.resetDriverForward(drive)).ignoringDisable(true));
+
+    elevator.setDefaultCommand(
+        elevator.getJoystickMoveCommand(() -> controller.getElevatorInput()));
 
     return controller;
   }
