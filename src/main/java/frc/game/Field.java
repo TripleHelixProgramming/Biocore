@@ -12,9 +12,9 @@ import static org.wpilib.units.Units.*;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.math.geometry.Rectangle2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.shape.Rectangle2d;
 import org.wpilib.units.measure.Distance;
 
 public class Field {
@@ -27,7 +27,7 @@ public class Field {
   public static final Distance field_y_len = centerField_y_pos.times(2);
 
   // private static final Pose2d fieldCenter =
-  //     new Pose2d(new Translation2d(centerField_x_pos, centerField_y_pos), Rotation2d.kZero);
+  //     new Pose2d(new Translation2d(centerField_x_pos, centerField_y_pos), Rotation2d.ZERO);
 
   enum Region {
     Field(new Rectangle2d(new Translation2d(0, 0), new Translation2d(field_x_len, field_y_len)));
@@ -60,11 +60,11 @@ public class Field {
     double y = rect.getYWidth() / 2.0;
 
     return List.of(
-        new Pose2d(center.getX() - x, center.getY() - y, Rotation2d.kZero),
-        new Pose2d(center.getX() - x, center.getY() + y, Rotation2d.kZero),
-        new Pose2d(center.getX() + x, center.getY() + y, Rotation2d.kZero),
-        new Pose2d(center.getX() + x, center.getY() - y, Rotation2d.kZero),
-        new Pose2d(center.getX() - x, center.getY() - y, Rotation2d.kZero) // close loop
+        new Pose2d(center.getX() - x, center.getY() - y, Rotation2d.ZERO),
+        new Pose2d(center.getX() - x, center.getY() + y, Rotation2d.ZERO),
+        new Pose2d(center.getX() + x, center.getY() + y, Rotation2d.ZERO),
+        new Pose2d(center.getX() + x, center.getY() - y, Rotation2d.ZERO),
+        new Pose2d(center.getX() - x, center.getY() - y, Rotation2d.ZERO) // close loop
         );
   }
 }

@@ -17,8 +17,8 @@ import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.kinematics.SwerveModulePosition;
 import org.wpilib.math.kinematics.SwerveModuleVelocity;
+import org.wpilib.preferences.Preferences;
 import org.wpilib.util.Alert;
-import org.wpilib.util.Preferences;
 
 public class Module {
   private final ModuleIO io;
@@ -33,9 +33,15 @@ public class Module {
     this.io = io;
     this.name = name;
     driveDisconnectedAlert =
-        new Alert("Disconnected drive motor on module " + name + ".", Alert.Level.HIGH);
+        new Alert(
+            "Module/" + name + "/driveDisconnected",
+            "Disconnected drive motor on module " + name + ".",
+            Alert.Level.HIGH);
     turnDisconnectedAlert =
-        new Alert("Disconnected turn motor on module " + name + ".", Alert.Level.HIGH);
+        new Alert(
+            "Module/" + name + "/turnDisconnected",
+            "Disconnected turn motor on module " + name + ".",
+            Alert.Level.HIGH);
 
     // Set turn zero from preferences
     Rotation2d turnZeroFromCancoder = inputs.turnZero;
@@ -102,7 +108,7 @@ public class Module {
   /** Runs the module with the specified output while controlling to zero degrees. */
   public void runCharacterization(double output) {
     io.setDriveOpenLoop(output);
-    io.setTurnPosition(Rotation2d.kZero);
+    io.setTurnPosition(Rotation2d.ZERO);
   }
 
   /** Disables all outputs to motors. */

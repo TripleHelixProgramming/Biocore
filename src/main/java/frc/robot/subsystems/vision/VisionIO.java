@@ -16,7 +16,7 @@ import org.wpilib.math.geometry.Rotation2d;
 
 public interface VisionIO {
   public static final TargetObservation EMPTY_TARGET =
-      new TargetObservation(Rotation2d.kZero, Rotation2d.kZero, Rotation2d.kZero, 0, -1, -1);
+      new TargetObservation(Rotation2d.ZERO, Rotation2d.ZERO, Rotation2d.ZERO, 0, -1, -1);
 
   @AutoLog
   public static class VisionIOInputs {

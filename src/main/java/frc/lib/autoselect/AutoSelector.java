@@ -114,9 +114,9 @@ public class AutoSelector implements Supplier<Optional<AutoOption>> {
         () -> {
           Logger.recordOutput("AutoSelector/SelectedAutoMode", "No auto mode assigned");
           lastLoggedTrajectoryOption = null;
-          if (!Pose2d.kZero.equals(lastLoggedInitialPose)) {
-            lastLoggedInitialPose = Pose2d.kZero;
-            Logger.recordOutput("AutoSelector/AutonomousInitialPose", Pose2d.kZero);
+          if (!Pose2d.ZERO.equals(lastLoggedInitialPose)) {
+            lastLoggedInitialPose = Pose2d.ZERO;
+            Logger.recordOutput("AutoSelector/AutonomousInitialPose", Pose2d.ZERO);
           }
         });
   }

@@ -50,7 +50,7 @@ public class DriveCommands {
    * The direction the driver considers "forward" for field-relative controls. This is a pure UI
    * concept — it affects only how joystick inputs are interpreted, not the robot's pose estimate.
    */
-  private static Rotation2d driverForwardDirection = Rotation2d.kZero;
+  private static Rotation2d driverForwardDirection = Rotation2d.ZERO;
 
   /** Redefines the driver's "forward" to the robot's current heading. */
   public static void resetDriverForward(Drive drive) {
@@ -60,7 +60,7 @@ public class DriveCommands {
   /** Returns the heading to use for field-relative joystick conversion. */
   private static Rotation2d getDriverRelativeHeading(Drive drive, boolean fieldRotated) {
     Rotation2d heading = drive.getPose().getRotation().minus(driverForwardDirection);
-    return fieldRotated ? heading.plus(Rotation2d.kPi) : heading;
+    return fieldRotated ? heading.plus(Rotation2d.PI) : heading;
   }
 
   private DriveCommands() {}
@@ -75,7 +75,7 @@ public class DriveCommands {
 
     // Return new linear velocity
     return new Pose2d(new Translation2d(), linearDirection)
-        .transformBy(new Transform2d(linearMagnitude, 0.0, Rotation2d.kZero))
+        .transformBy(new Transform2d(linearMagnitude, 0.0, Rotation2d.ZERO))
         .getTranslation();
   }
 
@@ -275,7 +275,8 @@ public class DriveCommands {
                   getDriverRelativeHeading(drive, fieldRotatedSupplier.getAsBoolean());
               double omega =
                   angleController.calculate(
-                      driverHeading.getRadians(), linearVelocity.getAngle().getRadians());
+                      driverHeading.getRadians(),
+                      linearVelocity.getAngle().orElse(Rotation2d.ZERO).getRadians());
 
               // Convert to field relative velocities & send command
               ChassisVelocities velocities =
@@ -497,7 +498,7 @@ public class DriveCommands {
 
   private static class WheelRadiusCharacterizationState {
     double[] positions = new double[4];
-    Rotation2d lastAngle = Rotation2d.kZero;
+    Rotation2d lastAngle = Rotation2d.ZERO;
     double gyroDelta = 0.0;
   }
 }

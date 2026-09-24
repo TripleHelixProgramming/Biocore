@@ -11,6 +11,7 @@ import frc.lib.RobotMode;
 import java.util.Objects;
 import java.util.Set;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.driverstation.DriverStation;
 import org.wpilib.driverstation.GenericHID;
 import org.wpilib.driverstation.internal.DriverStationBackend;
 import org.wpilib.event.EventLoop;
@@ -224,7 +225,7 @@ public class ControllerSelector {
     controllers = new GenericHID[NUM_CONTROLLER_PORTS];
     controllerNames = new String[NUM_CONTROLLER_PORTS];
     for (int i = 0; i < NUM_CONTROLLER_PORTS; i++) {
-      controllers[i] = new GenericHID(i);
+      controllers[i] = DriverStation.getGenericHID(i);
     }
 
     // Perform the initial scan and binding.

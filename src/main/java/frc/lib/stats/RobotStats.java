@@ -13,8 +13,8 @@ import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.Trigger;
 import org.wpilib.networktables.BooleanPublisher;
 import org.wpilib.networktables.NetworkTableInstance;
+import org.wpilib.preferences.Preferences;
 import org.wpilib.system.Timer;
-import org.wpilib.util.Preferences;
 
 /**
  * Persists cumulative lifecycle statistics for the robot across power cycles using WPILib

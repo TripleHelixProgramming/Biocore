@@ -18,12 +18,14 @@ import frc.robot.subsystems.vision.VisionFilter.Test;
 import frc.robot.subsystems.vision.VisionFilter.TestedObservation;
 import frc.robot.subsystems.vision.VisionThread.VisionInputs;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.driverstation.RobotState;
+import org.wpilib.fields.Field;
 import org.wpilib.math.filter.LinearFilter;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Pose3d;
@@ -33,7 +35,6 @@ import org.wpilib.math.linalg.VecBuilder;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
 import org.wpilib.util.Alert;
-import org.wpilib.vision.apriltag.AprilTagFieldLayout;
 
 public class Vision extends SubsystemBase {
   private final VisionConsumer consumer;
@@ -105,7 +106,9 @@ public class Vision extends SubsystemBase {
     for (int i = 0; i < inputs.length; i++) {
       disconnectedAlerts[i] =
           new Alert(
-              "Vision camera " + Integer.toString(i) + " is disconnected.", Alert.Level.MEDIUM);
+              "Vision/camera" + i + "/disconnected",
+              "Vision camera " + Integer.toString(i) + " is disconnected.",
+              Alert.Level.MEDIUM);
     }
   }
 
@@ -306,22 +309,22 @@ public class Vision extends SubsystemBase {
   }
 
   // Caching for AprilTag layout (volatile for thread-safe lazy initialization)
-  private static volatile AprilTagFieldLayout cachedLayout = null;
+  private static volatile Field cachedLayout = null;
 
   /** Returns the AprilTag layout to use, loading it if necessary. Thread-safe. */
-  public static synchronized AprilTagFieldLayout getAprilTagLayout() {
+  public static synchronized Field getAprilTagLayout() {
     if (cachedLayout == null) {
       // Try to load custom layout only if requested and not connected to FMS
       if (USE_CUSTOM_APRIL_TAG_LAYOUT && !RobotState.isFMSAttached()) {
         try {
-          cachedLayout = new AprilTagFieldLayout(CUSTOM_APRIL_TAG_LAYOUT_PATH);
+          cachedLayout = Field.loadFromFile(Path.of(CUSTOM_APRIL_TAG_LAYOUT_PATH));
         } catch (IOException e) {
           System.err.println("Error loading custom AprilTag layout: " + e.getMessage());
         }
       }
       // Otherwise load default layout
       if (cachedLayout == null) {
-        cachedLayout = AprilTagFieldLayout.loadField(DEFAULT_APRIL_TAG_FIELD_LAYOUT);
+        cachedLayout = Field.loadField(DEFAULT_APRIL_TAG_FIELD_LAYOUT);
       }
     }
     return cachedLayout;

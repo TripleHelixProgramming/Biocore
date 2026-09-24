@@ -7,11 +7,16 @@
 
 package frc.lib.input;
 
+import java.util.Objects;
+import org.wpilib.driverstation.DriverStation;
 import org.wpilib.driverstation.GenericHID;
-import org.wpilib.util.sendable.Sendable;
-import org.wpilib.util.sendable.SendableBuilder;
+import org.wpilib.driverstation.HIDDevice;
+import org.wpilib.telemetry.TelemetryLoggable;
+import org.wpilib.telemetry.TelemetryTable;
 
-public class ZorroController extends GenericHID implements Sendable {
+/** Handle input from a RadioMaster Zorro controller connected to the Driver Station. */
+public class ZorroController implements HIDDevice, TelemetryLoggable {
+  private final GenericHID m_hid;
 
   // RadioMaster Zorro joystick axis
   public enum Axis {
@@ -74,121 +79,150 @@ public class ZorroController extends GenericHID implements Sendable {
    * @param port The port index on the Driver Station that the controller is plugged into (0-5).
    */
   public ZorroController(int port) {
-    super(port);
+    this(DriverStation.getGenericHID(port));
+  }
+
+  /**
+   * Construct an instance of a Zorro controller with a GenericHID object.
+   *
+   * @param hid The GenericHID object to use for this controller.
+   */
+  public ZorroController(GenericHID hid) {
+    m_hid = Objects.requireNonNull(hid, "Provided HID object cannot be null");
+  }
+
+  /**
+   * Get the underlying GenericHID object.
+   *
+   * @return the wrapped GenericHID object
+   */
+  @Override
+  public GenericHID getHID() {
+    return m_hid;
+  }
+
+  public int getPort() {
+    return m_hid.getPort();
+  }
+
+  public boolean isConnected() {
+    return m_hid.isConnected();
   }
 
   public double getLeftXAxis() {
-    return getRawAxis(Axis.kLeftXAxis.value);
+    return m_hid.getRawAxis(Axis.kLeftXAxis.value);
   }
 
   public double getLeftYAxis() {
-    return getRawAxis(Axis.kLeftYAxis.value);
+    return m_hid.getRawAxis(Axis.kLeftYAxis.value);
   }
 
   public double getRightXAxis() {
-    return getRawAxis(Axis.kRightXAxis.value);
+    return m_hid.getRawAxis(Axis.kRightXAxis.value);
   }
 
   public double getRightYAxis() {
-    return getRawAxis(Axis.kRightYAxis.value);
+    return m_hid.getRawAxis(Axis.kRightYAxis.value);
   }
 
   public double getLeftDial() {
-    return getRawAxis(Axis.kLeftDial.value);
+    return m_hid.getRawAxis(Axis.kLeftDial.value);
   }
 
   public double getRightDial() {
-    return getRawAxis(Axis.kRightDial.value);
+    return m_hid.getRawAxis(Axis.kRightDial.value);
   }
 
   public boolean getBDown() {
-    return getRawButton(Button.kBDown.value);
+    return m_hid.getRawButton(Button.kBDown.value);
   }
 
   public boolean getBMid() {
-    return getRawButton(Button.kBMid.value);
+    return m_hid.getRawButton(Button.kBMid.value);
   }
 
   public boolean getBUp() {
-    return getRawButton(Button.kBUp.value);
+    return m_hid.getRawButton(Button.kBUp.value);
   }
 
   public boolean getEDown() {
-    return getRawButton(Button.kEDown.value);
+    return m_hid.getRawButton(Button.kEDown.value);
   }
 
   public boolean getEUp() {
-    return getRawButton(Button.kEUp.value);
+    return m_hid.getRawButton(Button.kEUp.value);
   }
 
   public boolean getAIn() {
-    return getRawButton(Button.kAIn.value);
+    return m_hid.getRawButton(Button.kAIn.value);
   }
 
   public boolean getGIn() {
-    return getRawButton(Button.kGIn.value);
+    return m_hid.getRawButton(Button.kGIn.value);
   }
 
   public boolean getCDown() {
-    return getRawButton(Button.kCDown.value);
+    return m_hid.getRawButton(Button.kCDown.value);
   }
 
   public boolean getCMid() {
-    return getRawButton(Button.kCMid.value);
+    return m_hid.getRawButton(Button.kCMid.value);
   }
 
   public boolean getCUp() {
-    return getRawButton(Button.kCUp.value);
+    return m_hid.getRawButton(Button.kCUp.value);
   }
 
   public boolean getFDown() {
-    return getRawButton(Button.kFDown.value);
+    return m_hid.getRawButton(Button.kFDown.value);
   }
 
   public boolean getFUp() {
-    return getRawButton(Button.kFUp.value);
+    return m_hid.getRawButton(Button.kFUp.value);
   }
 
   public boolean getDIn() {
-    return getRawButton(Button.kDIn.value);
+    return m_hid.getRawButton(Button.kDIn.value);
   }
 
   public boolean getHIn() {
-    return getRawButton(Button.kHIn.value);
+    return m_hid.getRawButton(Button.kHIn.value);
   }
 
   @Override
-  public void initSendable(SendableBuilder builder) {
-    builder.setSmartDashboardType("HID");
-    builder.publishConstString("ControllerType", "Zorro");
+  public void logTo(TelemetryTable table) {
+    table.log("LeftXAxis", getLeftXAxis());
+    table.log("LeftYAxis", getLeftYAxis());
+    table.log("LeftDial", getLeftDial());
+    table.log("RightDial", getRightDial());
+    table.log("RightXAxis", getRightXAxis());
+    table.log("RightYAxis", getRightYAxis());
 
-    builder.addDoubleProperty("LeftXAxis", this::getLeftXAxis, null);
-    builder.addDoubleProperty("LeftYAxis", this::getLeftYAxis, null);
-    builder.addDoubleProperty("LeftDial", this::getLeftDial, null);
-    builder.addDoubleProperty("RightDial", this::getRightDial, null);
-    builder.addDoubleProperty("RightXAxis", this::getRightXAxis, null);
-    builder.addDoubleProperty("RightYAxis", this::getRightYAxis, null);
+    table.log("AIn", getAIn());
 
-    builder.addBooleanProperty("AIn", this::getAIn, null);
+    table.log("BDown", getBDown());
+    table.log("BMid", getBMid());
+    table.log("BUp", getBUp());
 
-    builder.addBooleanProperty("BDown", this::getBDown, null);
-    builder.addBooleanProperty("BMid", this::getBMid, null);
-    builder.addBooleanProperty("BUp", this::getBUp, null);
+    table.log("CDown", getCDown());
+    table.log("CMid", getCMid());
+    table.log("CUp", getCUp());
 
-    builder.addBooleanProperty("CDown", this::getCDown, null);
-    builder.addBooleanProperty("CMid", this::getCMid, null);
-    builder.addBooleanProperty("CUp", this::getCUp, null);
+    table.log("DIn", getDIn());
 
-    builder.addBooleanProperty("DIn", this::getDIn, null);
+    table.log("EDown", getEDown());
+    table.log("EUp", getEUp());
 
-    builder.addBooleanProperty("EDown", this::getEDown, null);
-    builder.addBooleanProperty("EUp", this::getEUp, null);
+    table.log("FDown", getFDown());
+    table.log("FUp", getFUp());
 
-    builder.addBooleanProperty("FDown", this::getFDown, null);
-    builder.addBooleanProperty("FUp", this::getFUp, null);
+    table.log("GIn", getGIn());
 
-    builder.addBooleanProperty("GIn", this::getGIn, null);
+    table.log("HIn", getHIn());
+  }
 
-    builder.addBooleanProperty("HIn", this::getHIn, null);
+  @Override
+  public String getTelemetryType() {
+    return "HID:Zorro";
   }
 }

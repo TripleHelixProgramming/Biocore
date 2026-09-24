@@ -9,6 +9,7 @@ package frc.lib.hardware;
 
 import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.hardware.pneumatic.Compressor;
 import org.wpilib.hardware.pneumatic.PneumaticsModuleType;
 
@@ -27,11 +28,11 @@ public class LoggedCompressor extends Compressor {
   /**
    * Creates a logged compressor.
    *
-   * @param busId the CAN bus ID (SystemCore transceiver number)
+   * @param busId the SystemCore CAN port
    * @param moduleType the type of pneumatics module
    * @param logKey the AdvantageKit log key prefix
    */
-  public LoggedCompressor(int busId, PneumaticsModuleType moduleType, String logKey) {
+  public LoggedCompressor(CANPort busId, PneumaticsModuleType moduleType, String logKey) {
     super(busId, moduleType);
     this.key = logKey;
   }

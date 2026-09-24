@@ -61,7 +61,7 @@ import org.wpilib.command2.SubsystemBase;
 import org.wpilib.command2.button.CommandGenericHID;
 import org.wpilib.command2.button.CommandNiDsXboxController;
 import org.wpilib.driverstation.Alliance;
-import org.wpilib.driverstation.GenericHID;
+import org.wpilib.driverstation.DriverStation;
 import org.wpilib.driverstation.internal.DriverStationBackend;
 import org.wpilib.event.EventLoop;
 import org.wpilib.framework.RobotBase;
@@ -412,7 +412,7 @@ public class Robot extends LoggedRobot {
           }
 
           public boolean getFieldRelativeInput() {
-            return zorroDriver.getHID().getEUp();
+            return zorroDriver.getZorroController().getEUp();
           }
         };
 
@@ -454,7 +454,7 @@ public class Robot extends LoggedRobot {
           }
 
           public boolean getFieldRelativeInput() {
-            return !xboxDriver.getHID().getLeftBumperButton();
+            return !xboxDriver.getNiDsXboxController().getLeftBumperButton();
           }
         };
 
@@ -540,7 +540,7 @@ public class Robot extends LoggedRobot {
 
   private static void logHIDs() {
     for (int port = 0; port < DriverStationBackend.JOYSTICK_PORTS; port++) {
-      var hid = new GenericHID(port);
+      var hid = DriverStation.getGenericHID(port);
       if (!hid.isConnected()) continue;
       String prefix = "HID/Port" + port;
       Logger.recordOutput(prefix + "/Name", hid.getName());

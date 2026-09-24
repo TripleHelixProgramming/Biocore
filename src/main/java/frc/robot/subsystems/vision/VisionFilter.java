@@ -18,9 +18,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.math.geometry.Rectangle2d;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.shape.Rectangle2d;
 import org.wpilib.math.util.MathUtil;
 
 /**
@@ -415,7 +415,7 @@ public class VisionFilter {
 
       if (cameraCount >= 2) {
         // Multiple cameras agree - compute weighted average pose
-        Translation2d sumTranslation = Translation2d.kZero;
+        Translation2d sumTranslation = Translation2d.ZERO;
         double sumSin = 0, sumCos = 0, sumTime = 0;
         double sumWeight = 0;
         double maxScore = 0;

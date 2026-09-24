@@ -8,6 +8,7 @@
 package frc.lib.hardware;
 
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.hardware.power.PowerDistribution;
 
 public class LoggedPowerDistribution extends PowerDistribution {
@@ -16,12 +17,12 @@ public class LoggedPowerDistribution extends PowerDistribution {
   /**
    * Creates a logged power distribution module.
    *
-   * @param busId the CAN bus ID (SystemCore transceiver number)
+   * @param busId the SystemCore CAN port
    * @param module the CAN device ID of the power distribution module
    * @param moduleType the type of power distribution module
    * @param logKey the AdvantageKit log key prefix
    */
-  public LoggedPowerDistribution(int busId, int module, ModuleType moduleType, String logKey) {
+  public LoggedPowerDistribution(CANPort busId, int module, ModuleType moduleType, String logKey) {
     super(busId, module, moduleType);
     this.key = logKey;
   }

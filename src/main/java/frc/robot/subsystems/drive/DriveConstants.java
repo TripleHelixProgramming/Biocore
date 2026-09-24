@@ -64,7 +64,7 @@ public class DriveConstants {
         new Translation2d(WHEEL_BASE.div(-2.0), TRACK_WIDTH.div(-2.0))
       };
   public static final Distance DRIVE_BASE_RADIUS =
-      Meters.of(Translation2d.kZero.getDistance(MODULE_TRANSLATIONS[0]));
+      Meters.of(Translation2d.ZERO.getDistance(MODULE_TRANSLATIONS[0]));
 
   // Drive motor configuration
   public static final Distance WHEEL_RADIUS = Inches.of(2);
@@ -256,7 +256,7 @@ public class DriveConstants {
   }
 
   public static final SwerveDrivetrainConstants DRIVETRAIN_CONSTANTS =
-      new SwerveDrivetrainConstants().withCANBusName(SC1.BUS.getName());
+      new SwerveDrivetrainConstants().withNetwork(SC1.BUS);
 
   private static final SwerveModuleConstantsFactory<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>

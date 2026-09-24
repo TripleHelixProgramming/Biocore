@@ -13,7 +13,6 @@ package frc.robot.subsystems.drive;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 import static org.wpilib.units.Units.*;
 
-import com.ctre.phoenix6.CANBus;
 import frc.lib.RobotMode;
 import frc.robot.Constants;
 import frc.robot.Constants.FeatureFlags;
@@ -27,8 +26,6 @@ import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.command2.button.Trigger;
 import org.wpilib.command2.sysid.SysIdRoutine;
-import org.wpilib.driverstation.Alliance;
-import org.wpilib.driverstation.MatchState;
 import org.wpilib.driverstation.RobotState;
 import org.wpilib.hardware.hal.HAL;
 import org.wpilib.math.controller.PIDController;
@@ -49,7 +46,7 @@ import org.wpilib.util.Alert;
 
 public class Drive extends SubsystemBase {
   static final double ODOMETRY_FREQUENCY =
-      new CANBus(DRIVETRAIN_CONSTANTS.CANBusName).isNetworkFD() ? 250.0 : 100.0;
+      DRIVETRAIN_CONSTANTS.Network.isNetworkFD() ? 250.0 : 100.0;
 
   protected static final Lock ODOMETRY_LOCK = new ReentrantLock();
   private final GyroIO gyroIO;
@@ -57,12 +54,15 @@ public class Drive extends SubsystemBase {
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final SysIdRoutine sysId;
   private final Alert gyroDisconnectedAlert =
-      new Alert("Disconnected gyro, using kinematics as fallback.", Alert.Level.HIGH);
+      new Alert(
+          "Drive/gyroDisconnected",
+          "Disconnected gyro, using kinematics as fallback.",
+          Alert.Level.HIGH);
 
   private final BooleanPublisher alignEncodersPub;
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(MODULE_TRANSLATIONS);
-  private Rotation2d rawGyroRotation = Rotation2d.kZero;
+  private Rotation2d rawGyroRotation = Rotation2d.ZERO;
   private SwerveModulePosition[] lastModulePositions = // For delta tracking
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
@@ -309,7 +309,7 @@ public class Drive extends SubsystemBase {
   public void stopWithX() {
     Rotation2d[] headings = new Rotation2d[4];
     for (int i = 0; i < 4; i++) {
-      headings[i] = MODULE_TRANSLATIONS[i].getAngle();
+      headings[i] = MODULE_TRANSLATIONS[i].getAngle().orElse(Rotation2d.ZERO);
     }
     kinematics.resetHeadings(headings);
     stop();
