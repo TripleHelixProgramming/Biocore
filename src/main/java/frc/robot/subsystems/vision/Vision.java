@@ -23,7 +23,6 @@ import java.util.EnumSet;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.SubsystemBase;
-import org.wpilib.driverstation.Alert;
 import org.wpilib.driverstation.RobotState;
 import org.wpilib.math.filter.LinearFilter;
 import org.wpilib.math.geometry.Pose2d;
@@ -33,6 +32,7 @@ import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.linalg.VecBuilder;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
+import org.wpilib.util.Alert;
 import org.wpilib.vision.apriltag.AprilTagFieldLayout;
 
 public class Vision extends SubsystemBase {

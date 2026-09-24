@@ -32,7 +32,6 @@ import org.wpilib.command2.Commands;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.command2.button.Trigger;
 import org.wpilib.command2.sysid.SysIdRoutine;
-import org.wpilib.driverstation.Alert;
 import org.wpilib.driverstation.Alliance;
 import org.wpilib.driverstation.MatchState;
 import org.wpilib.driverstation.RobotState;
@@ -51,6 +50,7 @@ import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
 import org.wpilib.networktables.BooleanPublisher;
 import org.wpilib.networktables.NetworkTableInstance;
+import org.wpilib.util.Alert;
 
 public class Drive extends SubsystemBase {
   static final double ODOMETRY_FREQUENCY =

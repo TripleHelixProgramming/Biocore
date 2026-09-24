@@ -14,10 +14,10 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 
 import frc.robot.Constants.FeatureFlags;
 import org.littletonrobotics.junction.Logger;
-import org.wpilib.driverstation.Alert;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.kinematics.SwerveModulePosition;
 import org.wpilib.math.kinematics.SwerveModuleVelocity;
+import org.wpilib.util.Alert;
 import org.wpilib.util.Preferences;
 
 public class Module {

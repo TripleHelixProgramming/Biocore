@@ -20,7 +20,7 @@ import org.wpilib.util.Color;
 /**
  * Custom LED patterns for the robot. These patterns follow the WPILib LEDPattern design: stateless
  * lambdas that can be applied to any buffer and composed with modifiers like {@code
- * .scrollAtRelativeSpeed()}, {@code .blink()}, etc.
+ * .scrollAtRelativeVelocity()}, {@code .blink()}, etc.
  */
 public final class LEDCustomPattern {
 
