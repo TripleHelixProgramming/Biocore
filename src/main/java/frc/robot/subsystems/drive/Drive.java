@@ -14,11 +14,6 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import static org.wpilib.units.Units.*;
 
 import com.ctre.phoenix6.CANBus;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.pathfinding.Pathfinding;
-import com.pathplanner.lib.util.PathPlannerLogging;
 import frc.lib.RobotMode;
 import frc.robot.Constants;
 import frc.robot.Constants.FeatureFlags;
@@ -94,9 +89,6 @@ public class Drive extends SubsystemBase {
       };
   private ChassisVelocities chassisVelocities;
 
-  // PathPlanner trajectory logging (stored each loop for AKit compatibility)
-  private Pose2d[] lastTrajectory = new Pose2d[0];
-
   private double totalDistanceTraveledMeters = 0.0;
 
   // PID controllers for following Choreo trajectories
@@ -122,23 +114,6 @@ public class Drive extends SubsystemBase {
 
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
-
-    // Configure AutoBuilder for PathPlanner
-    AutoBuilder.configure(
-        this::getPose,
-        this::setPose,
-        this::getRobotRelativeChassisVelocities,
-        this::runVelocity,
-        new PPHolonomicDriveController(
-            new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
-        PP_CONFIG,
-        () -> MatchState.getAlliance().orElse(Alliance.BLUE) == Alliance.RED,
-        this);
-    Pathfinding.setPathfinder(new LocalADStarAK());
-    PathPlannerLogging.setLogActivePathCallback(
-        (activePath) -> {
-          if (!activePath.isEmpty()) lastTrajectory = activePath.toArray(new Pose2d[0]);
-        });
 
     // Configure SysId
     sysId =
@@ -231,9 +206,6 @@ public class Drive extends SubsystemBase {
     boolean gyroDisconnected = !gyroInputs.connected && Constants.currentMode != RobotMode.SIM;
     gyroDisconnectedAlert.set(gyroDisconnected);
     Logger.recordOutput("Faults/Drive/GyroDisconnected", gyroDisconnected);
-
-    // Log PathPlanner trajectory (stored by callback, recorded here for AKit compatibility)
-    Logger.recordOutput("Odometry/Trajectory", lastTrajectory);
 
     // Profiling output
     if (FeatureFlags.PROFILING_ENABLED) {

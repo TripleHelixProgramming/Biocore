@@ -103,9 +103,8 @@ public class Robot extends LoggedRobot {
   private final LoggedCANBus sc1CANBus =
       new LoggedCANBus(Constants.CANBusPorts.SC1.NAME, Constants.CANBusPorts.SC1.BUS);
 
-  // Third-party library alerts (PathPlanner, Choreo, PhotonVision) still publish to SmartDashboard
+  // Third-party library alerts (Choreo, PhotonVision) still publish to SmartDashboard
   // via their own Alert objects, so we read them back from NT.
-  private final LoggedAlertGroup pathPlannerAlerts = new LoggedAlertGroup("PathPlanner");
   private final LoggedAlertGroup choreoAlerts = new LoggedAlertGroup("Choreo");
   private final LoggedAlertGroup photonAlerts = new LoggedAlertGroup("PhotonAlerts");
 
@@ -564,7 +563,6 @@ public class Robot extends LoggedRobot {
     Logger.recordOutput("Commands/ActiveCommands", activeCommands.toArray(new String[0]));
     logSubsystem("Drive", drive);
     if (vision != null) logSubsystem("Vision", vision);
-    pathPlannerAlerts.log();
     choreoAlerts.log();
     photonAlerts.log();
   }

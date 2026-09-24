@@ -22,7 +22,7 @@ Now there is one rotation: `getPose().getRotation()`. `getHeading()` returns exa
 
 ### `setPose(Pose2d pose)`
 
-Resets the full pose estimator: position, heading, and all internal state. It calls `visionPose.resetPosition(rawGyroRotation, getModulePositions(), pose)`. This is used by auto routines at the start of a trajectory — both Choreo's `resetOdometry()` and PathPlanner's `AutoBuilder` call `setPose()`, so every auto starts with the robot's pose initialized to the trajectory's expected starting position.
+Resets the full pose estimator: position, heading, and all internal state. It calls `visionPose.resetPosition(rawGyroRotation, getModulePositions(), pose)`. This is used by auto routines at the start of a trajectory — Choreo's `resetOdometry()` calls `setPose()`, so every auto starts with the robot's pose initialized to the trajectory's expected starting position.
 
 ### `addVisionMeasurement()`
 

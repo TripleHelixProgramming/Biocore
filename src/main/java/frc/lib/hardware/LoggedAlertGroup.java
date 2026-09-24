@@ -13,7 +13,7 @@ import org.wpilib.networktables.NetworkTable;
 import org.wpilib.networktables.NetworkTableInstance;
 
 /**
- * Reads back a third-party library's Alert group (e.g. PathPlanner, Choreo, PhotonVision) from the
+ * Reads back a third-party library's Alert group (e.g. Choreo, PhotonVision) from the
  * SmartDashboard NT table it publishes to, so it shows up in AdvantageKit logs.
  */
 public class LoggedAlertGroup {

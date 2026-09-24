@@ -32,9 +32,6 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants.DriveMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerFeedbackType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
-import com.pathplanner.lib.config.ModuleConfig;
-import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.path.PathConstraints;
 import frc.robot.Constants.CANBusPorts.SC1;
 import frc.robot.Constants.MotorConstants.KrakenX60Constants;
 import org.wpilib.math.geometry.Translation2d;
@@ -139,13 +136,6 @@ public class DriveConstants {
   public static final AngularAcceleration MAX_CHASSIS_ANGULAR_ACCELERATION =
       RadiansPerSecondPerSecond.of(30);
 
-  public static final PathConstraints PATH_FOLLOWING_CONSTRAINTS =
-      new PathConstraints(
-          MAX_CHASSIS_VELOCITY.in(MetersPerSecond),
-          MAX_CHASSIS_ACCELERATION.in(MetersPerSecondPerSecond),
-          MAX_CHASSIS_ANGULAR_VELOCITY.in(RadiansPerSecond),
-          MAX_CHASSIS_ANGULAR_ACCELERATION.in(RadiansPerSecondPerSecond));
-
   // Turn motor configuration
   public static final boolean TURN_INVERTED = false;
   public static final double TURN_MOTOR_REDUCTION = 26.0; // SDS MK5i
@@ -154,23 +144,11 @@ public class DriveConstants {
   // Absolute turn encoder configuration
   public static final boolean TURN_ENCODER_INVERTED = false;
 
-  // PathPlanner configuration
+  // Robot physical properties
   public static final Mass ROBOT_MASS = Pounds.of(35.4);
   public static final MomentOfInertia ROBOT_MOI =
       KilogramSquareMeters.of(2.5); // Mass*((Track_width/2)^2 + (Wheel_base/2)^2)
   public static final double WHEEL_COF = 1.2;
-  public static final RobotConfig PP_CONFIG =
-      new RobotConfig(
-          ROBOT_MASS.in(Kilograms),
-          ROBOT_MOI.in(KilogramSquareMeters),
-          new ModuleConfig(
-              WHEEL_RADIUS_METERS,
-              DRIVETRAIN_SPEED_LIMIT.in(MetersPerSecond),
-              WHEEL_COF,
-              DRIVE_GEARBOX.withReduction(SELECTED_RATIO.getDriveMotorReduction()),
-              KrakenX60Constants.DEFAULT_SUPPLY_CURRENT_LIMIT,
-              1),
-          MODULE_TRANSLATIONS);
 
   // The steer motor uses any SwerveModule.SteerRequestType control request with the
   // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput

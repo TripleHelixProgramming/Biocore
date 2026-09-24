@@ -13,7 +13,6 @@ Numerical errors like NaN (Not a Number) and Infinity can silently propagate thr
 | DriveCommands.java | FF characterization denominator | Division by zero when all velocity samples identical |
 | DriveCommands.java | Wheel radius wheelDelta check | Division by zero if wheels don't rotate |
 | DriveCommands.java | Wheel radius gyroDelta check | Division by zero if gyro doesn't register rotation |
-| PathCommands.java | Zero-length vector check | NaN from `getAngle()` on zero vector |
 | VisionIOPhotonVision.java | Target count check | Division by zero with empty targets list |
 | VisionIOPhotonVisionSim.java | Null pose check | NPE during subsystem initialization |
 | Launcher.java | `denominator < 1e-6` | Division by zero / numerical instability in ballistics |
@@ -89,21 +88,6 @@ double wheelRadius = (state.gyroDelta * driveBaseRadius.in(Meters)) / wheelDelta
 ```
 
 **Impact:** Prevents Infinity/NaN when characterization routine fails to move robot.
-
-### PathCommands.java - Zero Vector (NEW)
-
-**Before:**
-```java
-var heading = targetPoint.minus(initialPose.getTranslation()).getAngle();
-```
-
-**After:**
-```java
-Translation2d delta = targetPoint.minus(initialPose.getTranslation());
-Rotation2d heading = delta.getNorm() < 1e-6 ? initialPose.getRotation() : delta.getAngle();
-```
-
-**Impact:** Prevents NaN when robot is already at target position.
 
 ### VisionIOPhotonVision.java - Division Guard (NEW)
 
