@@ -18,8 +18,10 @@ import frc.robot.generated.ChoreoTraj;
 import frc.robot.subsystems.drive.Drive;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
 import org.wpilib.math.geometry.Pose2d;
@@ -71,11 +73,68 @@ public abstract class AutoMode implements NamedAuto {
     return getInitialTrajectory().getInitialPose();
   }
 
-  /** Returns the poses of every trajectory in the routine, in the order they were loaded. */
+  /**
+   * Returns every trajectory in the routine as one continuous path for plotting, starting from the
+   * initial trajectory. See {@link #exploreBranches}.
+   */
   public Pose2d[] getLoggableTrajectory() {
-    return trajectories.stream()
-        .flatMap(t -> Arrays.stream(t.getRawTrajectory().getPoses()))
-        .toArray(Pose2d[]::new);
+    List<Pose2d[]> paths = new ArrayList<>();
+    for (AutoTrajectory t : trajectories) paths.add(t.getRawTrajectory().getPoses());
+    return exploreBranches(paths, trajectories.indexOf(getInitialTrajectory()));
+  }
+
+  // A trajectory that starts within this distance of another's end continues from it
+  private static final double BRANCH_NODE_TOLERANCE_METERS = 0.01;
+
+  /**
+   * Joins paths into one continuous path, starting from the root. A path that starts where another
+   * ends is a branch of it. Where several branches leave the same node, every branch but the last
+   * is drawn out and back to the node before the next one, so the joined path never jumps from the
+   * end of one branch to the start of another. Each path is drawn forward once. A path that
+   * connects to nothing reachable from the root is appended after a jump.
+   *
+   * @param paths The poses of each trajectory
+   * @param root The index of the path the auto starts on
+   * @return The joined path
+   */
+  static Pose2d[] exploreBranches(List<Pose2d[]> paths, int root) {
+    List<Pose2d> joined = new ArrayList<>();
+    Set<Integer> visited = new HashSet<>();
+    explore(root, paths, visited, joined, false);
+    for (int i = 0; i < paths.size(); i++) {
+      if (!visited.contains(i)) explore(i, paths, visited, joined, false);
+    }
+    return joined.toArray(Pose2d[]::new);
+  }
+
+  private static void explore(
+      int node, List<Pose2d[]> paths, Set<Integer> visited, List<Pose2d> joined, boolean retrace) {
+    visited.add(node);
+    Pose2d[] path = paths.get(node);
+    joined.addAll(Arrays.asList(path));
+
+    List<Integer> branches = new ArrayList<>();
+    for (int i = 0; i < paths.size(); i++) {
+      if (!visited.contains(i) && continues(path, paths.get(i))) branches.add(i);
+    }
+    for (int b = 0; b < branches.size(); b++) {
+      int branch = branches.get(b);
+      // A branch can already be drawn if it rejoined through an earlier branch
+      if (visited.contains(branch)) continue;
+      boolean lastBranch = b == branches.size() - 1;
+      explore(branch, paths, visited, joined, retrace || !lastBranch);
+    }
+
+    if (retrace) {
+      for (int i = path.length - 1; i >= 0; i--) joined.add(path[i]);
+    }
+  }
+
+  private static boolean continues(Pose2d[] from, Pose2d[] to) {
+    return from.length > 0
+        && to.length > 0
+        && from[from.length - 1].getTranslation().getDistance(to[0].getTranslation())
+            < BRANCH_NODE_TOLERANCE_METERS;
   }
 
   /**
