@@ -43,8 +43,8 @@ public final class RobotStats {
   private double lastDriveDistanceMeters;
 
   private Mode mode = Mode.DISABLED;
-  private final Timer saveTimer = new Timer();
-  private final Timer elapsedTimer = new Timer();
+  private final Timer saveTimer = Timer.createStarted();
+  private final Timer elapsedTimer = Timer.createStarted();
 
   private final DoubleSupplier driveDistanceSupplier;
   private final BooleanPublisher clearStatsPub;
@@ -67,8 +67,6 @@ public final class RobotStats {
     distanceMeters = Preferences.getDouble(KEY_DISTANCE_M, 0.0);
 
     lastDriveDistanceMeters = driveDistanceSupplier.getAsDouble();
-    saveTimer.start();
-    elapsedTimer.start();
 
     var clearStatsTopic =
         NetworkTableInstance.getDefault().getTable("Triggers").getBooleanTopic("Clear Robot Stats");
