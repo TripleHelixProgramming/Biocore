@@ -7,8 +7,7 @@
 
 package frc.game;
 
-import static org.wpilib.units.Units.*;
-
+import frc.robot.generated.ChoreoVars;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.geometry.Pose2d;
@@ -17,14 +16,16 @@ import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.shape.Rectangle2d;
 import org.wpilib.units.measure.Distance;
 
+/**
+ * Field geometry. Every value comes from the variables in the Choreo project ({@code
+ * src/main/deploy/choreo/Rho.chor}) through the generated {@link ChoreoVars}, so that robot code
+ * and trajectories share one definition. Edit geometry in the Choreo GUI, not here.
+ */
 public class Field {
-  // Measured
-  public static final Distance centerField_x_pos = Inches.of(325.06);
-  public static final Distance centerField_y_pos = Inches.of(158.32);
-
-  // Constructed
-  public static final Distance field_x_len = centerField_x_pos.times(2);
-  public static final Distance field_y_len = centerField_y_pos.times(2);
+  public static final Distance field_x_len = ChoreoVars.FieldLength;
+  public static final Distance field_y_len = ChoreoVars.FieldWidth;
+  public static final Distance centerField_x_pos = ChoreoVars.FieldCenterX;
+  public static final Distance centerField_y_pos = ChoreoVars.FieldCenterY;
 
   // private static final Pose2d fieldCenter =
   //     new Pose2d(new Translation2d(centerField_x_pos, centerField_y_pos), Rotation2d.ZERO);

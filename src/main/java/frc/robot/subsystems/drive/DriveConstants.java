@@ -48,6 +48,7 @@ import org.wpilib.units.measure.LinearAcceleration;
 import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.units.measure.Mass;
 import org.wpilib.units.measure.MomentOfInertia;
+import org.wpilib.units.measure.Torque;
 import org.wpilib.units.measure.Voltage;
 
 public class DriveConstants {
@@ -146,10 +147,16 @@ public class DriveConstants {
   public static final boolean TURN_ENCODER_INVERTED = false;
 
   // Robot physical properties
-  public static final Mass ROBOT_MASS = Pounds.of(35.4);
-  public static final MomentOfInertia ROBOT_MOI =
-      KilogramSquareMeters.of(2.5); // Mass*((Track_width/2)^2 + (Wheel_base/2)^2)
+  public static final Mass ROBOT_MASS = Pounds.of(130);
+  // Estimate; the point-mass bound Mass*((Track_width/2)^2 + (Wheel_base/2)^2) is 9.46 kg*m^2
+  public static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(6);
   public static final double WHEEL_COF = 1.2;
+
+  // Deliberate derates in the Choreo robot config (Rho.chor) that keep planned paths below the
+  // drive's physical limits: motor speed and torque below DRIVE_GEARBOX, friction below WHEEL_COF
+  public static final AngularVelocity CHOREO_MOTOR_MAX_VELOCITY = RPM.of(3500);
+  public static final Torque CHOREO_MOTOR_MAX_TORQUE = NewtonMeters.of(0.25);
+  public static final double CHOREO_WHEEL_COF = 1.0;
 
   // The steer motor uses any SwerveModule.SteerRequestType control request with the
   // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
@@ -180,7 +187,9 @@ public class DriveConstants {
 
   // These are only used for simulation
   private static final MomentOfInertia STEER_INERTIA = KilogramSquareMeters.of(0.004);
-  private static final MomentOfInertia DRIVE_INERTIA = KilogramSquareMeters.of(0.025);
+  // Each wheel carries a quarter of the robot's translational inertia: (m / 4) * r^2
+  private static final MomentOfInertia DRIVE_INERTIA =
+      KilogramSquareMeters.of(ROBOT_MASS.in(Kilograms) / 4.0 * Math.pow(WHEEL_RADIUS_METERS, 2));
   private static final Voltage STEER_FRICTION_VOLTAGE = Volts.of(0.2);
   private static final Voltage DRIVE_FRICTION_VOLTAGE = Volts.of(0.2);
 
