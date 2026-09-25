@@ -32,6 +32,7 @@ public class ModuleIOSimWPI implements ModuleIO {
   private final double turnFrictionVolts;
   private final double driveKs;
   private final double driveKv;
+  private final double driveGearRatio;
 
   private boolean driveClosedLoop = false;
   private boolean turnClosedLoop = false;
@@ -52,7 +53,8 @@ public class ModuleIOSimWPI implements ModuleIO {
 
     // The drive model settles at w = V * Kv / G, so this feedforward inverts it exactly;
     // kS cancels the modeled static friction.
-    driveKv = constants.DriveMotorGearRatio / DriveConstants.DRIVE_GEARBOX.Kv;
+    driveGearRatio = constants.DriveMotorGearRatio;
+    driveKv = driveGearRatio / DriveConstants.DRIVE_GEARBOX.Kv;
     driveKs = driveFrictionVolts;
 
     // Enable wrapping for turn PID
@@ -128,9 +130,13 @@ public class ModuleIOSimWPI implements ModuleIO {
   }
 
   @Override
-  public void setDriveVelocity(double velocityRadPerSec) {
+  public void setDriveVelocity(double velocityRadPerSec, double feedforwardWheelTorqueNm) {
     driveClosedLoop = true;
-    driveFFVolts = driveKs * Math.signum(velocityRadPerSec) + driveKv * velocityRadPerSec;
+    double motorTorqueNm = feedforwardWheelTorqueNm / driveGearRatio;
+    driveFFVolts =
+        driveKs * Math.signum(velocityRadPerSec)
+            + driveKv * velocityRadPerSec
+            + DriveConstants.DRIVE_GEARBOX.getVoltage(motorTorqueNm, 0.0);
     driveController.setSetpoint(velocityRadPerSec);
   }
 

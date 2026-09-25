@@ -15,6 +15,7 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import frc.robot.Constants.FeatureFlags;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.kinematics.SwerveModulePosition;
 import org.wpilib.math.kinematics.SwerveModuleVelocity;
 import org.wpilib.preferences.Preferences;
@@ -24,6 +25,8 @@ public class Module {
   private final ModuleIO io;
   private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
   private final String name;
+  // Built once because runSetpoint logs it every loop
+  private final String feedforwardKey;
   private boolean encoderInitialized = false;
 
   private final Alert driveDisconnectedAlert;
@@ -33,6 +36,7 @@ public class Module {
   public Module(ModuleIO io, String name) {
     this.io = io;
     this.name = name;
+    feedforwardKey = "Drive/Module" + name + "/FeedforwardWheelTorqueNm";
     driveDisconnectedAlert =
         new Alert(
             "Module/" + name + "/driveDisconnected",
@@ -102,11 +106,36 @@ public class Module {
 
   /** Runs the module with the specified setpoint state. */
   public void runSetpoint(SwerveModuleVelocity state) {
+    runSetpoint(state, Translation2d.ZERO);
+  }
+
+  /**
+   * Runs the module with the specified setpoint state, adding a feedforward for the force the
+   * module must apply to the robot.
+   *
+   * @param state The setpoint state
+   * @param forceNewtons The force at the module, robot relative, in newtons
+   */
+  public void runSetpoint(SwerveModuleVelocity state, Translation2d forceNewtons) {
     state = state.optimize(getAngle());
     state = state.cosineScale(inputs.turnPosition);
 
-    io.setDriveVelocity(state.velocity / WHEEL_RADIUS_METERS);
+    double wheelTorqueNm = wheelTorque(forceNewtons, inputs.turnPosition);
+    Logger.recordOutput(feedforwardKey, wheelTorqueNm);
+    io.setDriveVelocity(state.velocity / WHEEL_RADIUS_METERS, wheelTorqueNm);
     io.setTurnPosition(state.angle);
+  }
+
+  /**
+   * Returns the torque the wheel must apply to push with the given force. Only the component of the
+   * force along the wheel's measured direction counts. That direction flips when the module is
+   * optimized to drive backward, which flips the torque with it.
+   */
+  static double wheelTorque(Translation2d forceNewtons, Rotation2d wheelDirection) {
+    double alongWheel =
+        forceNewtons.getX() * wheelDirection.getCos()
+            + forceNewtons.getY() * wheelDirection.getSin();
+    return alongWheel * WHEEL_RADIUS_METERS;
   }
 
   /** Runs the module with the specified output while controlling to zero degrees. */
