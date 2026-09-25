@@ -34,6 +34,62 @@
    }
   },
   "poses":{
+   "BlueBranchAEnd":{
+    "x":{
+     "exp":"6.5 m",
+     "val":6.5
+    },
+    "y":{
+     "exp":"7.0 m",
+     "val":7.0
+    },
+    "heading":{
+     "exp":"45 deg",
+     "val":0.7853981633974483
+    }
+   },
+   "BlueBranchBEnd":{
+    "x":{
+     "exp":"6.5 m",
+     "val":6.5
+    },
+    "y":{
+     "exp":"5.0 m",
+     "val":5.0
+    },
+    "heading":{
+     "exp":"-45 deg",
+     "val":-0.7853981633974483
+    }
+   },
+   "BlueBranchNode":{
+    "x":{
+     "exp":"5.0 m",
+     "val":5.0
+    },
+    "y":{
+     "exp":"6.0 m",
+     "val":6.0
+    },
+    "heading":{
+     "exp":"0 deg",
+     "val":0.0
+    }
+   },
+   "BlueBranchStart":{
+    "x":{
+     "exp":"3.5 m",
+     "val":3.5
+    },
+    "y":{
+     "exp":"6.0 m",
+     "val":6.0
+    },
+    "heading":{
+     "exp":"0 deg",
+     "val":0.0
+    }
+   },
    "BlueDriveOutEnd":{
     "x":{
      "exp":"5.5 m",
@@ -74,6 +130,62 @@
     "heading":{
      "exp":"0 deg",
      "val":0.0
+    }
+   },
+   "RedBranchAEnd":{
+    "x":{
+     "exp":"10.018 m",
+     "val":10.018
+    },
+    "y":{
+     "exp":"1.043 m",
+     "val":1.043
+    },
+    "heading":{
+     "exp":"-135 deg",
+     "val":-2.356194490192345
+    }
+   },
+   "RedBranchBEnd":{
+    "x":{
+     "exp":"10.018 m",
+     "val":10.018
+    },
+    "y":{
+     "exp":"3.043 m",
+     "val":3.043
+    },
+    "heading":{
+     "exp":"135 deg",
+     "val":2.356194490192345
+    }
+   },
+   "RedBranchNode":{
+    "x":{
+     "exp":"11.518 m",
+     "val":11.518
+    },
+    "y":{
+     "exp":"2.043 m",
+     "val":2.043
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
+    }
+   },
+   "RedBranchStart":{
+    "x":{
+     "exp":"13.018 m",
+     "val":13.018
+    },
+    "y":{
+     "exp":"2.043 m",
+     "val":2.043
+    },
+    "heading":{
+     "exp":"180 deg",
+     "val":3.141592653589793
     }
    },
    "RedDriveOutEnd":{

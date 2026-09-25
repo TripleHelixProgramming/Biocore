@@ -32,6 +32,8 @@ public class AutoSelector implements Supplier<Optional<AutoOption>> {
   private BooleanEvent autoSelectionChanged;
   private Pose2d lastLoggedInitialPose = null;
   private AutoOption lastLoggedTrajectoryOption = null;
+  private static final Pose2d[] NO_TRAJECTORY = new Pose2d[0];
+  private Pose2d[] loggedTrajectory = NO_TRAJECTORY;
 
   /**
    * Constructs an autonomous selector switch
@@ -98,9 +100,7 @@ public class AutoSelector implements Supplier<Optional<AutoOption>> {
           Logger.recordOutput("AutoSelector/SelectedAutoMode", ao.getName());
           if (ao != lastLoggedTrajectoryOption) {
             lastLoggedTrajectoryOption = ao;
-            ao.getInitialTrajectory()
-                .ifPresent(
-                    traj -> Logger.recordOutput("AutoSelector/AutonomousInitialTrajectory", traj));
+            logTrajectory(ao.getTrajectory().orElse(NO_TRAJECTORY));
           }
           ao.getInitialPose()
               .ifPresent(
@@ -113,12 +113,26 @@ public class AutoSelector implements Supplier<Optional<AutoOption>> {
         },
         () -> {
           Logger.recordOutput("AutoSelector/SelectedAutoMode", "No auto mode assigned");
-          lastLoggedTrajectoryOption = null;
+          // Outputs keep their last value, so erase the previous auto's trajectory from the field
+          if (lastLoggedTrajectoryOption != null) {
+            lastLoggedTrajectoryOption = null;
+            logTrajectory(NO_TRAJECTORY);
+          }
           if (!Pose2d.ZERO.equals(lastLoggedInitialPose)) {
             lastLoggedInitialPose = Pose2d.ZERO;
             Logger.recordOutput("AutoSelector/AutonomousInitialPose", Pose2d.ZERO);
           }
         });
+  }
+
+  private void logTrajectory(Pose2d[] trajectory) {
+    loggedTrajectory = trajectory;
+    Logger.recordOutput("AutoSelector/SelectedTrajectory", trajectory);
+  }
+
+  /** Returns the trajectory most recently logged for the selected auto. */
+  Pose2d[] getLoggedTrajectory() {
+    return loggedTrajectory;
   }
 
   public Optional<Pose2d> getInitialPose() {

@@ -74,7 +74,10 @@ public class AutoOption {
     return (autoMode == null) ? Optional.empty() : autoMode.getInitialPose();
   }
 
-  public Optional<Pose2d[]> getInitialTrajectory() {
+  /**
+   * @return The full trajectory of the autonomous mode, for plotting before the match
+   */
+  public Optional<Pose2d[]> getTrajectory() {
     return (autoMode == null) ? Optional.empty() : Optional.of(autoMode.getLoggableTrajectory());
   }
 

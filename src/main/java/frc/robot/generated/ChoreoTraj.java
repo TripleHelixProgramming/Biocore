@@ -24,26 +24,47 @@ public record ChoreoTraj(
     Pose2d initialPoseBlue,
     Pose2d endPoseBlue
 ) {
-    public static final ChoreoTraj RedDriveOut = new ChoreoTraj(
-        "RedDriveOut",
+    public static final ChoreoTraj BlueBranchTrunk = new ChoreoTraj(
+        "BlueBranchTrunk",
         OptionalInt.empty(),
-        3.49596,
-        new Pose2d(13.018, 6.043, Rotation2d.fromRadians(3.14159)),
-        new Pose2d(11.018, 5.043, Rotation2d.fromRadians(-1.5708))
+        1.72897,
+        new Pose2d(3.5, 6, Rotation2d.fromRadians(0)),
+        new Pose2d(5, 6, Rotation2d.fromRadians(0))
     );
-    public static final ChoreoTraj RedDriveOut$0 = new ChoreoTraj(
-        "RedDriveOut",
-        OptionalInt.of(0),
-        1.99566,
-        new Pose2d(13.018, 6.043, Rotation2d.fromRadians(3.14159)),
-        new Pose2d(11.018, 6.043, Rotation2d.fromRadians(3.14159))
+    public static final ChoreoTraj RedBranchTrunk = new ChoreoTraj(
+        "RedBranchTrunk",
+        OptionalInt.empty(),
+        1.72897,
+        new Pose2d(13.018, 2.043, Rotation2d.fromRadians(3.14159)),
+        new Pose2d(11.518, 2.043, Rotation2d.fromRadians(3.14159))
     );
-    public static final ChoreoTraj RedDriveOut$1 = new ChoreoTraj(
-        "RedDriveOut",
-        OptionalInt.of(1),
-        1.5003000000000002,
-        new Pose2d(11.018, 6.043, Rotation2d.fromRadians(3.14159)),
-        new Pose2d(11.018, 5.043, Rotation2d.fromRadians(-1.5708))
+    public static final ChoreoTraj BlueBranchB = new ChoreoTraj(
+        "BlueBranchB",
+        OptionalInt.empty(),
+        1.90575,
+        new Pose2d(5, 6, Rotation2d.fromRadians(0)),
+        new Pose2d(6.5, 5, Rotation2d.fromRadians(-0.7854))
+    );
+    public static final ChoreoTraj RedBranchB = new ChoreoTraj(
+        "RedBranchB",
+        OptionalInt.empty(),
+        1.90575,
+        new Pose2d(11.518, 2.043, Rotation2d.fromRadians(3.14159)),
+        new Pose2d(10.018, 3.043, Rotation2d.fromRadians(2.35619))
+    );
+    public static final ChoreoTraj BlueBranchA = new ChoreoTraj(
+        "BlueBranchA",
+        OptionalInt.empty(),
+        1.90575,
+        new Pose2d(5, 6, Rotation2d.fromRadians(0)),
+        new Pose2d(6.5, 7, Rotation2d.fromRadians(0.7854))
+    );
+    public static final ChoreoTraj RedBranchA = new ChoreoTraj(
+        "RedBranchA",
+        OptionalInt.empty(),
+        1.90575,
+        new Pose2d(11.518, 2.043, Rotation2d.fromRadians(3.14159)),
+        new Pose2d(10.018, 1.043, Rotation2d.fromRadians(-2.35619))
     );
     public static final ChoreoTraj BlueDriveOut = new ChoreoTraj(
         "BlueDriveOut",
@@ -66,18 +87,45 @@ public record ChoreoTraj(
         new Pose2d(5.5, 2, Rotation2d.fromRadians(0)),
         new Pose2d(5.5, 3, Rotation2d.fromRadians(1.5708))
     );
+    public static final ChoreoTraj RedDriveOut = new ChoreoTraj(
+        "RedDriveOut",
+        OptionalInt.empty(),
+        3.49596,
+        new Pose2d(13.018, 6.043, Rotation2d.fromRadians(3.14159)),
+        new Pose2d(11.018, 5.043, Rotation2d.fromRadians(-1.5708))
+    );
+    public static final ChoreoTraj RedDriveOut$0 = new ChoreoTraj(
+        "RedDriveOut",
+        OptionalInt.of(0),
+        1.99566,
+        new Pose2d(13.018, 6.043, Rotation2d.fromRadians(3.14159)),
+        new Pose2d(11.018, 6.043, Rotation2d.fromRadians(3.14159))
+    );
+    public static final ChoreoTraj RedDriveOut$1 = new ChoreoTraj(
+        "RedDriveOut",
+        OptionalInt.of(1),
+        1.5003000000000002,
+        new Pose2d(11.018, 6.043, Rotation2d.fromRadians(3.14159)),
+        new Pose2d(11.018, 5.043, Rotation2d.fromRadians(-1.5708))
+    );
 
     /**
      * A map between trajectory names and their corresponding data.
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-        Map.entry("RedDriveOut", RedDriveOut),
-        Map.entry("RedDriveOut$0", RedDriveOut$0),
-        Map.entry("RedDriveOut$1", RedDriveOut$1),
+        Map.entry("BlueBranchTrunk", BlueBranchTrunk),
+        Map.entry("RedBranchTrunk", RedBranchTrunk),
+        Map.entry("BlueBranchB", BlueBranchB),
+        Map.entry("RedBranchB", RedBranchB),
+        Map.entry("BlueBranchA", BlueBranchA),
+        Map.entry("RedBranchA", RedBranchA),
         Map.entry("BlueDriveOut", BlueDriveOut),
         Map.entry("BlueDriveOut$0", BlueDriveOut$0),
-        Map.entry("BlueDriveOut$1", BlueDriveOut$1)
+        Map.entry("BlueDriveOut$1", BlueDriveOut$1),
+        Map.entry("RedDriveOut", RedDriveOut),
+        Map.entry("RedDriveOut$0", RedDriveOut$0),
+        Map.entry("RedDriveOut$1", RedDriveOut$1)
     );
 
     /**
