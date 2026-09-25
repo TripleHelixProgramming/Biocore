@@ -11,12 +11,14 @@ import static frc.robot.subsystems.drive.DriveConstants.WHEEL_RADIUS_METERS;
 import static org.junit.jupiter.api.Assertions.*;
 
 import choreo.trajectory.SwerveSample;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.wpilib.hardware.hal.HAL;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.kinematics.SwerveModuleVelocity;
+import org.wpilib.math.system.DCMotor;
 
 /** Checks how Choreo module forces become drive feedforward torques. */
 class ForceFeedforwardTest {
@@ -30,23 +32,57 @@ class ForceFeedforwardTest {
   @Test
   void choreoModuleOrderIsRemapped() {
     // Choreo orders module forces FL, BL, BR, FR
-    var sample = sample(0.0, new double[] {1, 2, 3, 4}, new double[] {0, 0, 0, 0});
+    var sample = sample(0.0, new double[] {1, 2, 3, 4}, new double[] {10, 20, 30, 40});
     Translation2d[] forces = Drive.robotRelativeModuleForces(sample, Rotation2d.ZERO);
     // Our modules are FL, FR, BL, BR
-    assertEquals(1, forces[0].getX(), TOLERANCE, "FL");
-    assertEquals(4, forces[1].getX(), TOLERANCE, "FR");
-    assertEquals(2, forces[2].getX(), TOLERANCE, "BL");
-    assertEquals(3, forces[3].getX(), TOLERANCE, "BR");
+    assertEquals(new Translation2d(1, 10), forces[0], "FL");
+    assertEquals(new Translation2d(4, 40), forces[1], "FR");
+    assertEquals(new Translation2d(2, 20), forces[2], "BL");
+    assertEquals(new Translation2d(3, 30), forces[3], "BR");
   }
 
   @Test
   void fieldForcesRotateIntoTheRobotFrame() {
-    // A robot facing field +y has field +x on its right, which is robot -y
-    var sample = sample(Math.PI / 2, new double[] {10, 10, 10, 10}, new double[] {0, 0, 0, 0});
+    // A robot facing field +y has field +x on its right (robot -y) and field +y ahead (robot +x)
+    var sample = sample(Math.PI / 2, new double[] {10, 10, 10, 10}, new double[] {5, 5, 5, 5});
     for (Translation2d force : Drive.robotRelativeModuleForces(sample, Rotation2d.CCW_PI_2)) {
-      assertEquals(0, force.getX(), TOLERANCE);
+      assertEquals(5, force.getX(), TOLERANCE);
       assertEquals(-10, force.getY(), TOLERANCE);
     }
+  }
+
+  /** The TalonFX feedforward is in amps for TorqueCurrentFOC and in volts for Voltage. */
+  @Test
+  void talonFeedforwardConvertsWheelTorqueToMotorUnits() {
+    double gearRatio = 6.0;
+    double wheelTorqueNm = 1.2;
+    double motorTorqueNm = wheelTorqueNm / gearRatio;
+    DCMotor motor = DriveConstants.DRIVE_GEARBOX;
+    assertEquals(
+        motorTorqueNm / motor.Kt,
+        ModuleIOTalonFXBase.driveFeedforward(
+            ClosedLoopOutputType.TorqueCurrentFOC, wheelTorqueNm, gearRatio),
+        TOLERANCE);
+    assertEquals(
+        motorTorqueNm / motor.Kt * motor.R,
+        ModuleIOTalonFXBase.driveFeedforward(
+            ClosedLoopOutputType.Voltage, wheelTorqueNm, gearRatio),
+        TOLERANCE);
+  }
+
+  /** With no velocity to hold, the sim applies exactly the voltage that makes the torque. */
+  @Test
+  void simFeedforwardAppliesTheVoltageForTheTorque() {
+    var io = new ModuleIOSimWPI(DriveConstants.FRONT_LEFT);
+    var inputs = new ModuleIO.ModuleIOInputs();
+    double wheelTorqueNm = 1.2;
+    double gearRatio = DriveConstants.FRONT_LEFT.DriveMotorGearRatio;
+    DCMotor motor = DriveConstants.DRIVE_GEARBOX;
+
+    io.setDriveVelocity(0.0, wheelTorqueNm);
+    io.updateInputs(inputs);
+
+    assertEquals(wheelTorqueNm / gearRatio / motor.Kt * motor.R, inputs.driveAppliedVolts, 1e-6);
   }
 
   @Test

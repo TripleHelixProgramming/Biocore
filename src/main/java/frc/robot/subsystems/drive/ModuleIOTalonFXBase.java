@@ -26,6 +26,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
 import frc.robot.Constants.CANBusPorts.SC1;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.util.Units;
@@ -145,18 +146,37 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
   @Override
   public void setDriveVelocity(double velocityRadPerSec, double feedforwardWheelTorqueNm) {
     double velocityRotPerSec = Units.radiansToRotations(velocityRadPerSec);
-    double motorTorqueNm = feedforwardWheelTorqueNm / constants.DriveMotorGearRatio;
+    double feedforward =
+        driveFeedforward(
+            constants.DriveMotorClosedLoopOutput,
+            feedforwardWheelTorqueNm,
+            constants.DriveMotorGearRatio);
     driveTalon.setControl(
         switch (constants.DriveMotorClosedLoopOutput) {
           case Voltage ->
-              velocityVoltageRequest
-                  .withVelocity(velocityRotPerSec)
-                  .withFeedForward(DriveConstants.DRIVE_GEARBOX.getVoltage(motorTorqueNm, 0.0));
+              velocityVoltageRequest.withVelocity(velocityRotPerSec).withFeedForward(feedforward);
           case TorqueCurrentFOC ->
               velocityTorqueCurrentRequest
                   .withVelocity(velocityRotPerSec)
-                  .withFeedForward(DriveConstants.DRIVE_GEARBOX.getCurrent(motorTorqueNm));
+                  .withFeedForward(feedforward);
         });
+  }
+
+  /**
+   * Returns the drive feedforward that makes the wheel apply the given torque, in the units of the
+   * closed-loop output: volts for Voltage, amps for TorqueCurrentFOC.
+   *
+   * @param outputType The drive motor's closed-loop output type
+   * @param wheelTorqueNm Torque at the wheel in newton meters
+   * @param gearRatio Drive motor rotations per wheel rotation
+   */
+  static double driveFeedforward(
+      ClosedLoopOutputType outputType, double wheelTorqueNm, double gearRatio) {
+    double motorTorqueNm = wheelTorqueNm / gearRatio;
+    return switch (outputType) {
+      case Voltage -> DriveConstants.DRIVE_GEARBOX.getVoltage(motorTorqueNm, 0.0);
+      case TorqueCurrentFOC -> DriveConstants.DRIVE_GEARBOX.getCurrent(motorTorqueNm);
+    };
   }
 
   @Override

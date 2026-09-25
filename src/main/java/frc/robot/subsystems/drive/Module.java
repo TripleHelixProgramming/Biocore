@@ -25,6 +25,8 @@ public class Module {
   private final ModuleIO io;
   private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
   private final String name;
+  // Built once because runSetpoint logs it every loop
+  private final String feedforwardKey;
   private boolean encoderInitialized = false;
 
   private final Alert driveDisconnectedAlert;
@@ -34,6 +36,7 @@ public class Module {
   public Module(ModuleIO io, String name) {
     this.io = io;
     this.name = name;
+    feedforwardKey = "Drive/Module" + name + "/FeedforwardWheelTorqueNm";
     driveDisconnectedAlert =
         new Alert(
             "Module/" + name + "/driveDisconnected",
@@ -118,7 +121,7 @@ public class Module {
     state = state.cosineScale(inputs.turnPosition);
 
     double wheelTorqueNm = wheelTorque(forceNewtons, inputs.turnPosition);
-    Logger.recordOutput("Drive/Module" + name + "/FeedforwardWheelTorqueNm", wheelTorqueNm);
+    Logger.recordOutput(feedforwardKey, wheelTorqueNm);
     io.setDriveVelocity(state.velocity / WHEEL_RADIUS_METERS, wheelTorqueNm);
     io.setTurnPosition(state.angle);
   }
