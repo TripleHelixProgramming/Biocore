@@ -13,10 +13,10 @@ package frc.robot.subsystems.drive;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 import static org.wpilib.units.Units.*;
 
+import choreo.trajectory.SwerveSample;
 import frc.lib.RobotMode;
 import frc.robot.Constants;
 import frc.robot.Constants.FeatureFlags;
-import frc.robot.auto.SwerveSample;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -277,14 +277,15 @@ public class Drive extends SubsystemBase {
   public void followTrajectory(SwerveSample sample) {
     // Get the current pose of the robot
     Pose2d pose = getPose();
+    Logger.recordOutput("Drive/TrajectorySetpoint", sample.getPose());
 
     // Generate the next velocities for the robot
     ChassisVelocities velocities =
         new ChassisVelocities(
-            sample.vx() + xController.calculate(pose.getX(), sample.x()),
-            sample.vy() + yController.calculate(pose.getY(), sample.y()),
-            sample.omega()
-                + headingController.calculate(pose.getRotation().getRadians(), sample.heading()));
+            sample.vx + xController.calculate(pose.getX(), sample.x),
+            sample.vy + yController.calculate(pose.getY(), sample.y),
+            sample.omega
+                + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
 
     // Apply the generated velocities
     runVelocity(velocities.toRobotRelative(pose.getRotation()));

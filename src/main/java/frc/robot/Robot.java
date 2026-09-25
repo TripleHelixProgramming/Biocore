@@ -17,6 +17,7 @@ import frc.game.Field;
 import frc.game.GameState;
 import frc.lib.RobotMode;
 import frc.lib.autoselect.AllianceSelector;
+import frc.lib.autoselect.AutoOption;
 import frc.lib.autoselect.AutoSelector;
 import frc.lib.hardware.KernelLogMonitor;
 import frc.lib.hardware.LoggedAlertGroup;
@@ -32,6 +33,8 @@ import frc.lib.stats.RobotStats;
 import frc.robot.Constants.CANBusPorts.SC0;
 import frc.robot.Constants.DIOPorts;
 import frc.robot.Constants.FeatureFlags;
+import frc.robot.auto.B_DriveOutAuto;
+import frc.robot.auto.R_DriveOutAuto;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -526,7 +529,10 @@ public class Robot extends LoggedRobot {
 
   public void bindXboxOperator(int port, DriverController driver, EventLoop loop) {}
 
-  public void configureAutoOptions() {}
+  public void configureAutoOptions() {
+    autoSelector.addAuto(new AutoOption(Alliance.BLUE, 1, new B_DriveOutAuto(drive)));
+    autoSelector.addAuto(new AutoOption(Alliance.RED, 1, new R_DriveOutAuto(drive)));
+  }
 
   public static Alliance getAlliance() {
     return allianceSelector.getAllianceColor();
