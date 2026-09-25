@@ -33,6 +33,8 @@ public class ModuleIOSimWPI implements ModuleIO {
   private static final double TURN_KD = 0.0;
   private final DCMotorSim driveSim;
   private final DCMotorSim turnSim;
+  private final double driveFrictionVolts;
+  private final double turnFrictionVolts;
 
   private boolean driveClosedLoop = false;
   private boolean turnClosedLoop = false;
@@ -48,6 +50,8 @@ public class ModuleIOSimWPI implements ModuleIO {
     // Create drive and turn sim models
     driveSim = DriveConstants.createDriveSim();
     turnSim = DriveConstants.createTurnSim();
+    driveFrictionVolts = constants.DriveFrictionVoltage;
+    turnFrictionVolts = constants.SteerFrictionVoltage;
 
     // Enable wrapping for turn PID
     turnController.enableContinuousInput(-Math.PI, Math.PI);
@@ -69,8 +73,10 @@ public class ModuleIOSimWPI implements ModuleIO {
 
     // Update simulation state
     double busVoltage = RoboRioSim.getVInVoltage();
-    driveSim.setInputVoltage(Math.clamp(driveAppliedVolts, -busVoltage, busVoltage));
-    turnSim.setInputVoltage(Math.clamp(turnAppliedVolts, -busVoltage, busVoltage));
+    driveSim.setInputVoltage(
+        applyFriction(Math.clamp(driveAppliedVolts, -busVoltage, busVoltage), driveFrictionVolts));
+    turnSim.setInputVoltage(
+        applyFriction(Math.clamp(turnAppliedVolts, -busVoltage, busVoltage), turnFrictionVolts));
     driveSim.update(0.02);
     turnSim.update(0.02);
 
@@ -94,6 +100,17 @@ public class ModuleIOSimWPI implements ModuleIO {
     inputs.odometryTimestamps = new double[] {Timer.getTimestamp()};
     inputs.odometryDrivePositionsRad = new double[] {inputs.drivePositionRad};
     inputs.odometryTurnPositions = new Rotation2d[] {inputs.turnPosition};
+  }
+
+  /**
+   * Models static friction the same way as Phoenix's SimSwerveDrivetrain: voltages below the
+   * friction voltage produce no motion, and larger voltages lose the friction voltage.
+   */
+  static double applyFriction(double volts, double frictionVolts) {
+    if (Math.abs(volts) < frictionVolts) {
+      return 0.0;
+    }
+    return volts - Math.copySign(frictionVolts, volts);
   }
 
   @Override

@@ -48,6 +48,7 @@ import org.wpilib.units.measure.LinearAcceleration;
 import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.units.measure.Mass;
 import org.wpilib.units.measure.MomentOfInertia;
+import org.wpilib.units.measure.Voltage;
 
 public class DriveConstants {
 
@@ -180,6 +181,8 @@ public class DriveConstants {
   // These are only used for simulation
   private static final MomentOfInertia STEER_INERTIA = KilogramSquareMeters.of(0.004);
   private static final MomentOfInertia DRIVE_INERTIA = KilogramSquareMeters.of(0.025);
+  private static final Voltage STEER_FRICTION_VOLTAGE = Volts.of(0.2);
+  private static final Voltage DRIVE_FRICTION_VOLTAGE = Volts.of(0.2);
 
   private static final TalonFXConfiguration DRIVE_INITIAL_CONFIGS =
       new TalonFXConfiguration()
@@ -283,7 +286,9 @@ public class DriveConstants {
               .withDriveMotorInitialConfigs(DRIVE_INITIAL_CONFIGS)
               .withSteerMotorInitialConfigs(STEER_INITIAL_CONFIGS)
               .withSteerInertia(STEER_INERTIA)
-              .withDriveInertia(DRIVE_INERTIA);
+              .withDriveInertia(DRIVE_INERTIA)
+              .withSteerFrictionVoltage(STEER_FRICTION_VOLTAGE)
+              .withDriveFrictionVoltage(DRIVE_FRICTION_VOLTAGE);
 
   public static final SwerveModuleConstants<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
