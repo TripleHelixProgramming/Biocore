@@ -191,7 +191,8 @@ spotless {
     java {
         target fileTree(".") {
             include "**/*.java"
-            exclude "**/build/**", "**/build-*/**"
+            // Code generators such as Choreo write to generated/; formatting it would fight regeneration
+            exclude "**/build/**", "**/build-*/**", "**/generated/**"
         }
         googleJavaFormat('1.35.0')
         removeUnusedImports()

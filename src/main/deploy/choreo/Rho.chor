@@ -3,62 +3,119 @@
  "version":2,
  "type":"Swerve",
  "variables":{
-  "expressions":{},
+  "expressions":{
+   "FieldCenterX":{
+    "dimension":"Length",
+    "var":{
+     "exp":"FieldLength / 2",
+     "val":8.259
+    }
+   },
+   "FieldCenterY":{
+    "dimension":"Length",
+    "var":{
+     "exp":"FieldWidth / 2",
+     "val":4.0215
+    }
+   },
+   "FieldLength":{
+    "dimension":"Length",
+    "var":{
+     "exp":"16.518 m",
+     "val":16.518
+    }
+   },
+   "FieldWidth":{
+    "dimension":"Length",
+    "var":{
+     "exp":"8.043 m",
+     "val":8.043
+    }
+   }
+  },
   "poses":{
-   "BLTransition":{
+   "BlueDriveOutEnd":{
     "x":{
-     "exp":"4 m",
-     "val":4.0
+     "exp":"5.5 m",
+     "val":5.5
     },
     "y":{
-     "exp":"7.5 m",
-     "val":7.5
+     "exp":"3.0 m",
+     "val":3.0
+    },
+    "heading":{
+     "exp":"90 deg",
+     "val":1.5707963267948966
+    }
+   },
+   "BlueDriveOutSplit":{
+    "x":{
+     "exp":"5.5 m",
+     "val":5.5
+    },
+    "y":{
+     "exp":"2.0 m",
+     "val":2.0
+    },
+    "heading":{
+     "exp":"0 deg",
+     "val":0.0
+    }
+   },
+   "BlueDriveOutStart":{
+    "x":{
+     "exp":"3.5 m",
+     "val":3.5
+    },
+    "y":{
+     "exp":"2.0 m",
+     "val":2.0
+    },
+    "heading":{
+     "exp":"0 deg",
+     "val":0.0
+    }
+   },
+   "RedDriveOutEnd":{
+    "x":{
+     "exp":"11.018 m",
+     "val":11.018
+    },
+    "y":{
+     "exp":"5.043 m",
+     "val":5.043
+    },
+    "heading":{
+     "exp":"-90 deg",
+     "val":-1.5707963267948966
+    }
+   },
+   "RedDriveOutSplit":{
+    "x":{
+     "exp":"11.018 m",
+     "val":11.018
+    },
+    "y":{
+     "exp":"6.043 m",
+     "val":6.043
     },
     "heading":{
      "exp":"180 deg",
      "val":3.141592653589793
     }
    },
-   "BRTransition":{
+   "RedDriveOutStart":{
     "x":{
-     "exp":"4.1 m",
-     "val":4.1
+     "exp":"13.018 m",
+     "val":13.018
     },
     "y":{
-     "exp":"0.65 m",
-     "val":0.65
+     "exp":"6.043 m",
+     "val":6.043
     },
     "heading":{
-     "exp":"0 deg",
-     "val":0.0
-    }
-   },
-   "RLTransition":{
-    "x":{
-     "exp":"13 m",
-     "val":13.0
-    },
-    "y":{
-     "exp":"0.6 m",
-     "val":0.6
-    },
-    "heading":{
-     "exp":"0 deg",
-     "val":0.0
-    }
-   },
-   "RRTransition":{
-    "x":{
-     "exp":"12.5 m",
-     "val":12.5
-    },
-    "y":{
-     "exp":"7.5 m",
-     "val":7.5
-    },
-    "heading":{
-     "exp":"-180 deg",
-     "val":-3.141592653589793
+     "exp":"180 deg",
+     "val":3.141592653589793
     }
    }
   }
@@ -66,22 +123,22 @@
  "config":{
   "frontLeft":{
    "x":{
-    "exp":"11.25 in",
-    "val":0.28575
+    "exp":"11.875 in",
+    "val":0.301625
    },
    "y":{
-    "exp":"9.75 in",
-    "val":0.24765
+    "exp":"10.375 in",
+    "val":0.263525
    }
   },
   "backLeft":{
    "x":{
-    "exp":"-11.25 in",
-    "val":-0.28575
+    "exp":"-11.875 in",
+    "val":-0.301625
    },
    "y":{
-    "exp":"9.75 in",
-    "val":0.24765
+    "exp":"10.375 in",
+    "val":0.263525
    }
   },
   "mass":{
@@ -93,8 +150,8 @@
    "val":6.0
   },
   "gearing":{
-   "exp":"6.75",
-   "val":6.75
+   "exp":"54 / 14 * 25 / 32 * 30 / 15",
+   "val":6.026785714285714
   },
   "radius":{
    "exp":"2 in",
@@ -133,7 +190,7 @@
  },
  "generationFeatures":[],
  "codegen":{
-  "root":null,
+  "root":"../../java/frc/robot/generated",
   "genVars":true,
   "genTrajData":true,
   "useChoreoLib":true
