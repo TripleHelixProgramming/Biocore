@@ -247,6 +247,10 @@ public class DriveConstants {
       configureModule(
           SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
               constants) {
+    // The factory hands every module the same config objects; give each module its own copy
+    // before setting per-module fields.
+    constants.withDriveMotorInitialConfigs(constants.DriveMotorInitialConfigs.clone());
+    constants.withSteerMotorInitialConfigs(constants.SteerMotorInitialConfigs.clone());
     constants.DriveMotorInitialConfigs.MotorOutput.Inverted =
         constants.DriveMotorInverted
             ? InvertedValue.Clockwise_Positive
