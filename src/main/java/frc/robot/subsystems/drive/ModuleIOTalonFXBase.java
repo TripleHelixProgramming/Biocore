@@ -143,12 +143,19 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
   }
 
   @Override
-  public void setDriveVelocity(double velocityRadPerSec) {
+  public void setDriveVelocity(double velocityRadPerSec, double feedforwardWheelTorqueNm) {
     double velocityRotPerSec = Units.radiansToRotations(velocityRadPerSec);
+    double motorTorqueNm = feedforwardWheelTorqueNm / constants.DriveMotorGearRatio;
     driveTalon.setControl(
         switch (constants.DriveMotorClosedLoopOutput) {
-          case Voltage -> velocityVoltageRequest.withVelocity(velocityRotPerSec);
-          case TorqueCurrentFOC -> velocityTorqueCurrentRequest.withVelocity(velocityRotPerSec);
+          case Voltage ->
+              velocityVoltageRequest
+                  .withVelocity(velocityRotPerSec)
+                  .withFeedForward(DriveConstants.DRIVE_GEARBOX.getVoltage(motorTorqueNm, 0.0));
+          case TorqueCurrentFOC ->
+              velocityTorqueCurrentRequest
+                  .withVelocity(velocityRotPerSec)
+                  .withFeedForward(DriveConstants.DRIVE_GEARBOX.getCurrent(motorTorqueNm));
         });
   }
 

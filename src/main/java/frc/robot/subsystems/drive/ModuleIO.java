@@ -43,7 +43,18 @@ public interface ModuleIO {
   public default void setTurnOpenLoop(double output) {}
 
   /** Run the drive motor at the specified velocity. */
-  public default void setDriveVelocity(double velocityRadPerSec) {}
+  public default void setDriveVelocity(double velocityRadPerSec) {
+    setDriveVelocity(velocityRadPerSec, 0.0);
+  }
+
+  /**
+   * Run the drive motor at the specified velocity, adding a feedforward for the torque the wheel
+   * must apply.
+   *
+   * @param velocityRadPerSec Wheel velocity in radians per second
+   * @param feedforwardWheelTorqueNm Torque at the wheel in newton meters
+   */
+  public default void setDriveVelocity(double velocityRadPerSec, double feedforwardWheelTorqueNm) {}
 
   /** Run the turn motor to the specified rotation. */
   public default void setTurnPosition(Rotation2d rotation) {}

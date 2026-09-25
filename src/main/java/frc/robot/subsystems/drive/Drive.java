@@ -32,6 +32,7 @@ import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.estimator.SwerveDrivePoseEstimator;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.geometry.Twist2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.math.kinematics.SwerveDriveKinematics;
@@ -76,6 +77,11 @@ public class Drive extends SubsystemBase {
   private boolean poseInitialized = false;
 
   private static final ChassisVelocities ZERO_VELOCITIES = new ChassisVelocities();
+  private static final Translation2d[] NO_MODULE_FORCES = {
+    Translation2d.ZERO, Translation2d.ZERO, Translation2d.ZERO, Translation2d.ZERO
+  };
+  // For each module (FL, FR, BL, BR), its index in Choreo's module order (FL, BL, BR, FR)
+  private static final int[] CHOREO_MODULE_INDEX = {0, 3, 1, 2};
   private final SwerveModuleVelocity[] emptyModuleStates = new SwerveModuleVelocity[] {};
   // Pre-allocated for getModuleStates()/getModulePositions() to avoid array allocation each call
   private final SwerveModuleVelocity[] measuredStates = new SwerveModuleVelocity[4];
@@ -237,6 +243,17 @@ public class Drive extends SubsystemBase {
    * @param velocities Velocities in meters/sec
    */
   public void runVelocity(ChassisVelocities velocities) {
+    runVelocity(velocities, NO_MODULE_FORCES);
+  }
+
+  /**
+   * Runs the drive at the desired velocity, adding a feedforward for the force each module must
+   * apply.
+   *
+   * @param velocities Velocities in meters/sec
+   * @param moduleForcesNewtons Robot-relative force at each module (FL, FR, BL, BR), in newtons
+   */
+  public void runVelocity(ChassisVelocities velocities, Translation2d[] moduleForcesNewtons) {
 
     // 1️: Convert continuous velocities to module states
     SwerveModuleVelocity[] states = kinematics.toSwerveModuleVelocities(velocities);
@@ -267,7 +284,7 @@ public class Drive extends SubsystemBase {
 
     // 6: Send to modules
     for (int i = 0; i < 4; i++) {
-      modules[i].runSetpoint(finalStates[i]);
+      modules[i].runSetpoint(finalStates[i], moduleForcesNewtons[i]);
     }
 
     // Log optimized setpoints (runSetpoint mutates each state)
@@ -288,7 +305,29 @@ public class Drive extends SubsystemBase {
                 + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
 
     // Apply the generated velocities
-    runVelocity(velocities.toRobotRelative(pose.getRotation()));
+    runVelocity(
+        velocities.toRobotRelative(pose.getRotation()),
+        FeatureFlags.TRAJECTORY_FORCE_FF
+            ? robotRelativeModuleForces(sample, pose.getRotation())
+            : NO_MODULE_FORCES);
+  }
+
+  /**
+   * Returns the force at each module (FL, FR, BL, BR) in a trajectory sample, rotated into the
+   * robot frame. Choreo stores the forces in the field frame and orders the modules FL, BL, BR, FR
+   * (module_translations in Choreo's src-core/src/spec/project.rs), not FL, FR, BL, BR as the
+   * ChoreoLib javadoc says (SleipnirGroup/Choreo#1525).
+   */
+  static Translation2d[] robotRelativeModuleForces(SwerveSample sample, Rotation2d heading) {
+    Translation2d[] forces = new Translation2d[4];
+    for (int i = 0; i < 4; i++) {
+      int choreoIndex = CHOREO_MODULE_INDEX[i];
+      forces[i] =
+          new Translation2d(
+                  sample.moduleForcesX()[choreoIndex], sample.moduleForcesY()[choreoIndex])
+              .rotateBy(heading.unaryMinus());
+    }
+    return forces;
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
