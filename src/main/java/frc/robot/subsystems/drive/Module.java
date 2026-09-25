@@ -24,6 +24,7 @@ public class Module {
   private final ModuleIO io;
   private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
   private final String name;
+  private boolean encoderInitialized = false;
 
   private final Alert driveDisconnectedAlert;
   private final Alert turnDisconnectedAlert;
@@ -42,17 +43,6 @@ public class Module {
             "Module/" + name + "/turnDisconnected",
             "Disconnected turn motor on module " + name + ".",
             Alert.Level.HIGH);
-
-    // Set turn zero from preferences
-    Rotation2d turnZeroFromCancoder = inputs.turnZero;
-    Preferences.initDouble(ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians());
-    Rotation2d turnZeroFromPreferences =
-        new Rotation2d(
-            Preferences.getDouble(
-                ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians()));
-    io.setTurnZero(turnZeroFromPreferences);
-    Logger.recordOutput(
-        "Drive/Module" + name + "/TurnZeroRad", turnZeroFromPreferences.getRadians());
   }
 
   public void periodic() {
@@ -61,6 +51,20 @@ public class Module {
     long t1 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
     Logger.processInputs("Drive/Module" + name, inputs);
     long t2 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
+
+    if (!encoderInitialized) {
+      // Set turn zero from preferences
+      Rotation2d turnZeroFromCancoder = inputs.turnZero;
+      Preferences.initDouble(ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians());
+      Rotation2d turnZeroFromPreferences =
+          new Rotation2d(
+              Preferences.getDouble(
+                  ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians()));
+      io.setTurnZero(turnZeroFromPreferences);
+      Logger.recordOutput(
+          "Drive/Module" + name + "/TurnZeroRad", turnZeroFromPreferences.getRadians());
+      encoderInitialized = true;
+    }
 
     // Calculate positions for odometry
     int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
