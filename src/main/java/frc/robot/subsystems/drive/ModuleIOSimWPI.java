@@ -15,7 +15,6 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.util.Units;
 import org.wpilib.simulation.DCMotorSim;
 import org.wpilib.simulation.RoboRioSim;
 import org.wpilib.system.Timer;
@@ -25,16 +24,14 @@ public class ModuleIOSimWPI implements ModuleIO {
   // TunerConstants doesn't support separate sim constants, so they are declared locally
   private static final double DRIVE_KP = 0.05;
   private static final double DRIVE_KD = 0.0;
-  private static final double DRIVE_KS = 0.0;
-  private static final double DRIVE_KV_ROT =
-      0.91035; // Same units as TunerConstants: (volt * secs) / rotation
-  private static final double DRIVE_KV = 1.0 / Units.rotationsToRadians(1.0 / DRIVE_KV_ROT);
   private static final double TURN_KP = 8.0;
   private static final double TURN_KD = 0.0;
   private final DCMotorSim driveSim;
   private final DCMotorSim turnSim;
   private final double driveFrictionVolts;
   private final double turnFrictionVolts;
+  private final double driveKs;
+  private final double driveKv;
 
   private boolean driveClosedLoop = false;
   private boolean turnClosedLoop = false;
@@ -52,6 +49,11 @@ public class ModuleIOSimWPI implements ModuleIO {
     turnSim = DriveConstants.createTurnSim();
     driveFrictionVolts = constants.DriveFrictionVoltage;
     turnFrictionVolts = constants.SteerFrictionVoltage;
+
+    // The drive model settles at w = V * Kv / G, so this feedforward inverts it exactly;
+    // kS cancels the modeled static friction.
+    driveKv = constants.DriveMotorGearRatio / DriveConstants.DRIVE_GEARBOX.Kv;
+    driveKs = driveFrictionVolts;
 
     // Enable wrapping for turn PID
     turnController.enableContinuousInput(-Math.PI, Math.PI);
@@ -128,7 +130,7 @@ public class ModuleIOSimWPI implements ModuleIO {
   @Override
   public void setDriveVelocity(double velocityRadPerSec) {
     driveClosedLoop = true;
-    driveFFVolts = DRIVE_KS * Math.signum(velocityRadPerSec) + DRIVE_KV * velocityRadPerSec;
+    driveFFVolts = driveKs * Math.signum(velocityRadPerSec) + driveKv * velocityRadPerSec;
     driveController.setSetpoint(velocityRadPerSec);
   }
 

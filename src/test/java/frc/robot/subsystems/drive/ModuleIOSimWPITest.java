@@ -47,6 +47,19 @@ class ModuleIOSimWPITest {
     assertTrue(spinDrive(1.0) > 0.0);
   }
 
+  @Test
+  void closedLoopDriveTracksSetpoint() {
+    for (double setpoint : new double[] {5.0, 40.0, 80.0}) {
+      var io = new ModuleIOSimWPI(DriveConstants.FRONT_LEFT);
+      var inputs = new ModuleIO.ModuleIOInputs();
+      io.setDriveVelocity(setpoint);
+      for (int i = 0; i < 150; i++) {
+        io.updateInputs(inputs);
+      }
+      assertEquals(setpoint, inputs.driveVelocityRadPerSec, setpoint * 0.001);
+    }
+  }
+
   /** Runs the drive motor open-loop for one second and returns its final velocity (rad/s). */
   private static double spinDrive(double volts) {
     var io = new ModuleIOSimWPI(DriveConstants.FRONT_LEFT);
