@@ -486,7 +486,7 @@ public class Robot extends LoggedRobot {
     //   Axis 1: W (negative) / S (positive)        — forward/back
     //   Axis 2: Left arrow (decrease) / Right arrow (increase) — rotation
     //           (configure in DS sim keyboard editor; see README for settings)
-    //   Button 1 (Z): reset heading
+    //   Button 0 (Z): reset heading
     var controller =
         new DriverController() {
           public double getXTranslationInput() {
@@ -515,9 +515,9 @@ public class Robot extends LoggedRobot {
             () -> controller.getFieldRelativeInput(),
             allianceSelector::fieldRotated));
 
-    // Reset heading to 0° when Z (button 1) is pressed
+    // Reset heading to 0° when Z (button 0) is pressed
     keyboard
-        .button(1, loop)
+        .button(0, loop)
         .onTrue(
             Commands.runOnce(() -> DriveCommands.resetDriverForward(drive)).ignoringDisable(true));
 

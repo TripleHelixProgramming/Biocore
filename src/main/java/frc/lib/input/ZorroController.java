@@ -45,20 +45,20 @@ public class ZorroController implements HIDDevice, TelemetryLoggable {
 
   // RadioMaster Zorro buttons
   public enum Button {
-    kBDown(1),
-    kBMid(2),
-    kBUp(3),
-    kEDown(4),
-    kEUp(5),
-    kAIn(6),
-    kGIn(7),
-    kCDown(8),
-    kCMid(9),
-    kCUp(10),
-    kFDown(11),
-    kFUp(12),
-    kDIn(13),
-    kHIn(14);
+    kBDown(0),
+    kBMid(1),
+    kBUp(2),
+    kEDown(3),
+    kEUp(4),
+    kAIn(5),
+    kGIn(6),
+    kCDown(7),
+    kCMid(8),
+    kCUp(9),
+    kFDown(10),
+    kFUp(11),
+    kDIn(12),
+    kHIn(13);
 
     public final int value;
 
