@@ -33,7 +33,9 @@ import frc.lib.stats.RobotStats;
 import frc.robot.Constants.CANBusPorts.SC0;
 import frc.robot.Constants.DIOPorts;
 import frc.robot.Constants.FeatureFlags;
+import frc.robot.auto.B_BranchExampleAuto;
 import frc.robot.auto.B_DriveOutAuto;
+import frc.robot.auto.R_BranchExampleAuto;
 import frc.robot.auto.R_DriveOutAuto;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
@@ -532,6 +534,11 @@ public class Robot extends LoggedRobot {
   public void configureAutoOptions() {
     autoSelector.addAuto(new AutoOption(Alliance.BLUE, 1, new B_DriveOutAuto(drive)));
     autoSelector.addAuto(new AutoOption(Alliance.RED, 1, new R_DriveOutAuto(drive)));
+    // Always takes branch A until a sensor exists to choose the branch
+    autoSelector.addAuto(
+        new AutoOption(Alliance.BLUE, 2, new B_BranchExampleAuto(drive, () -> true)));
+    autoSelector.addAuto(
+        new AutoOption(Alliance.RED, 2, new R_BranchExampleAuto(drive, () -> true)));
   }
 
   public static Alliance getAlliance() {

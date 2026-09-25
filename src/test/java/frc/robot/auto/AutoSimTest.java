@@ -21,8 +21,11 @@ import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.ModuleIOSimWPI;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -38,18 +41,23 @@ import org.wpilib.simulation.DriverStationSim;
 import org.wpilib.simulation.SimHooks;
 
 /**
- * Runs the placeholder autos on the simulated drivetrain, stepping the robot loop in fixed 20 ms
- * increments, and checks that each one follows its path and stops at the end.
+ * Runs the autos on the simulated drivetrain, stepping the robot loop in fixed 20 ms increments,
+ * and checks that each one follows its path and stops at the end.
  */
-class DriveOutAutoSimTest {
+class AutoSimTest {
   private static final double LOOP_PERIOD_SECS = 0.02;
   private static final List<String> initializedCommands = new ArrayList<>();
+  private static final AtomicBoolean takeBranchA = new AtomicBoolean(true);
 
   // Drive and the autos allocate uniquely named Alerts, so each can only be built once per JVM,
   // just as on the robot
   private static Drive drive;
-  private static AutoMode blueAuto;
-  private static AutoMode redAuto;
+  private static AutoMode blueDriveOut;
+  private static AutoMode redDriveOut;
+  private static AutoMode blueBranch;
+  private static AutoMode redBranch;
+
+  private double maxDeviation;
 
   @BeforeAll
   static void setUpRobot() {
@@ -64,8 +72,10 @@ class DriveOutAutoSimTest {
             new ModuleIOSimWPI(DriveConstants.FRONT_RIGHT),
             new ModuleIOSimWPI(DriveConstants.BACK_LEFT),
             new ModuleIOSimWPI(DriveConstants.BACK_RIGHT));
-    blueAuto = new B_DriveOutAuto(drive);
-    redAuto = new R_DriveOutAuto(drive);
+    blueDriveOut = new B_DriveOutAuto(drive);
+    redDriveOut = new R_DriveOutAuto(drive);
+    blueBranch = new B_BranchExampleAuto(drive, takeBranchA::get);
+    redBranch = new R_BranchExampleAuto(drive, takeBranchA::get);
   }
 
   @AfterEach
@@ -81,13 +91,25 @@ class DriveOutAutoSimTest {
   }
 
   @Test
-  void blueAutoFollowsItsPath() {
-    runAndCheck(blueAuto, ChoreoTraj.BlueDriveOut);
+  void blueDriveOutFollowsItsPath() {
+    checkDriveOut(blueDriveOut, ChoreoTraj.BlueDriveOut);
   }
 
   @Test
-  void redAutoFollowsItsPath() {
-    runAndCheck(redAuto, ChoreoTraj.RedDriveOut);
+  void redDriveOutFollowsItsPath() {
+    checkDriveOut(redDriveOut, ChoreoTraj.RedDriveOut);
+  }
+
+  @Test
+  void blueBranchExampleTakesEitherBranch() {
+    checkBranches(
+        blueBranch, ChoreoTraj.BlueBranchTrunk, ChoreoTraj.BlueBranchA, ChoreoTraj.BlueBranchB);
+  }
+
+  @Test
+  void redBranchExampleTakesEitherBranch() {
+    checkBranches(
+        redBranch, ChoreoTraj.RedBranchTrunk, ChoreoTraj.RedBranchA, ChoreoTraj.RedBranchB);
   }
 
   /**
@@ -99,8 +121,8 @@ class DriveOutAutoSimTest {
     var allianceSelector = new AllianceSelector(DIOPorts.ALLIANCE_COLOR_SELECTOR);
     var autoSelector =
         new AutoSelector(DIOPorts.AUTONOMOUS_MODE_SELECTOR, allianceSelector::getAllianceColor);
-    autoSelector.addAuto(new AutoOption(Alliance.BLUE, 1, blueAuto));
-    autoSelector.addAuto(new AutoOption(Alliance.RED, 1, redAuto));
+    autoSelector.addAuto(new AutoOption(Alliance.BLUE, 1, blueDriveOut));
+    autoSelector.addAuto(new AutoOption(Alliance.RED, 1, redDriveOut));
 
     setSwitches(true, 1);
     assertEquals(
@@ -110,6 +132,122 @@ class DriveOutAutoSimTest {
         "B_DriveOutAuto", selected(allianceSelector, autoSelector).map(AutoOption::getName).get());
     setSwitches(false, 0);
     assertTrue(selected(allianceSelector, autoSelector).isEmpty());
+  }
+
+  /** Bindings are made once, in the constructor, so a second run schedules the same commands. */
+  @Test
+  void secondRunSchedulesTheSameCommands() {
+    List<String> first = runOnce(blueDriveOut, ChoreoTraj.BlueDriveOut.totalTimeSecs());
+    setMode(false);
+    step(0.5);
+    List<String> second = runOnce(blueDriveOut, ChoreoTraj.BlueDriveOut.totalTimeSecs());
+    assertEquals(first, second);
+  }
+
+  private void checkDriveOut(AutoMode auto, ChoreoTraj path) {
+    // The trajectory plotted before the match covers every segment, not just the first
+    // (each segment includes the split sample, so the joined plot repeats that one pose)
+    assertArrayEquals(
+        concat(poses(path.segment(0)), poses(path.segment(1))), auto.getLoggableTrajectory());
+
+    List<String> commands = runOnce(auto, path.totalTimeSecs());
+
+    // The routine command, then reset odometry followed by segment 0, then segment 1, then stop
+    assertEquals(
+        List.of(
+            "ConditionalCommand",
+            "SequentialCommandGroup",
+            "Trajectory_" + path.name() + "[1]",
+            "Stop Drive"),
+        commands);
+    assertEndsAt(path);
+  }
+
+  private void checkBranches(AutoMode auto, ChoreoTraj trunk, ChoreoTraj a, ChoreoTraj b) {
+    // Branch A is drawn out and back to the node, then branch B, with no line between their ends
+    assertArrayEquals(
+        concat(poses(trunk), poses(a), reversed(poses(a)), poses(b)), auto.getLoggableTrajectory());
+
+    for (boolean branchA : new boolean[] {true, false}) {
+      takeBranchA.set(branchA);
+      ChoreoTraj branch = branchA ? a : b;
+      List<String> commands = runOnce(auto, trunk.totalTimeSecs() + branch.totalTimeSecs());
+
+      // The routine command, then reset odometry followed by the trunk, then the branch, then stop
+      assertEquals(
+          List.of(
+              "ConditionalCommand",
+              "SequentialCommandGroup",
+              "Trajectory_" + branch.name(),
+              "Stop Drive"),
+          commands);
+      assertEndsAt(branch);
+      setMode(false);
+      step(1.0);
+    }
+  }
+
+  /** Checks the robot stopped at the end of the path and never strayed far from the auto. */
+  private void assertEndsAt(ChoreoTraj path) {
+    Pose2d end = drive.getPose();
+    Pose2d expected = path.endPoseBlue();
+    double endErrorMeters = end.getTranslation().getDistance(expected.getTranslation());
+    double endErrorDegrees = end.getRotation().minus(expected.getRotation()).getDegrees();
+    System.out.printf(
+        "%s: ended %.4f m and %.3f deg from the end; strayed %.4f m at most%n",
+        path.name(), endErrorMeters, endErrorDegrees, maxDeviation);
+    assertTrue(endErrorMeters < 0.025, "Ended " + endErrorMeters + " m from the path end");
+    assertTrue(
+        Math.abs(endErrorDegrees) < 2.0, "Ended " + endErrorDegrees + " deg from the path end");
+    assertTrue(maxDeviation < 0.10, "Strayed " + maxDeviation + " m from the path");
+  }
+
+  /**
+   * Enables autonomous and runs the auto for the given time plus one second. Records how far the
+   * robot strays from the auto's plotted path, and returns the commands that were initialized.
+   */
+  private List<String> runOnce(AutoMode auto, double seconds) {
+    Pose2d[] plotted = auto.getLoggableTrajectory();
+    initializedCommands.clear();
+    setMode(true);
+    CommandScheduler.getInstance().schedule(auto.getAutoCommand());
+    maxDeviation = 0.0;
+    int steps = (int) Math.ceil((seconds + 1.0) / LOOP_PERIOD_SECS);
+    for (int i = 0; i < steps; i++) {
+      // The pose is only on the path once the sequence has reset odometry
+      boolean odometryReset = initializedCommands.contains("SequentialCommandGroup");
+      step(LOOP_PERIOD_SECS);
+      if (odometryReset) {
+        maxDeviation = Math.max(maxDeviation, distanceToPath(drive.getPose(), plotted));
+      }
+    }
+    return List.copyOf(initializedCommands);
+  }
+
+  private static double distanceToPath(Pose2d pose, Pose2d[] pathPoses) {
+    double best = Double.POSITIVE_INFINITY;
+    for (Pose2d p : pathPoses) {
+      best = Math.min(best, pose.getTranslation().getDistance(p.getTranslation()));
+    }
+    return best;
+  }
+
+  private static Pose2d[] poses(ChoreoTraj path) {
+    var whole = Choreo.<SwerveSample>loadTrajectory(path.name()).orElseThrow();
+    if (path.segment().isEmpty()) return whole.getPoses();
+    return whole.getSplit(path.segment().getAsInt()).orElseThrow().getPoses();
+  }
+
+  private static Pose2d[] reversed(Pose2d[] path) {
+    Pose2d[] copy = path.clone();
+    Collections.reverse(Arrays.asList(copy));
+    return copy;
+  }
+
+  private static Pose2d[] concat(Pose2d[]... paths) {
+    List<Pose2d> all = new ArrayList<>();
+    for (Pose2d[] path : paths) all.addAll(Arrays.asList(path));
+    return all.toArray(Pose2d[]::new);
   }
 
   private static void setSwitches(boolean red, int position) {
@@ -128,82 +266,6 @@ class DriveOutAutoSimTest {
       autoSelector.disabledPeriodic();
     }
     return autoSelector.get();
-  }
-
-  /** Bindings are made once, in the constructor, so a second run schedules the same commands. */
-  @Test
-  void secondRunSchedulesTheSameCommands() {
-    List<String> first = runOnce(blueAuto, ChoreoTraj.BlueDriveOut);
-    setMode(false);
-    step(0.5);
-    List<String> second = runOnce(blueAuto, ChoreoTraj.BlueDriveOut);
-    assertEquals(first, second);
-  }
-
-  private void runAndCheck(AutoMode auto, ChoreoTraj path) {
-    // The trajectory plotted before the match covers every segment, not just the first
-    Pose2d[] plotted = auto.getLoggableTrajectory();
-    assertTrue(
-        plotted[0].getTranslation().getDistance(path.initialPoseBlue().getTranslation()) < 1e-4,
-        "The plotted trajectory does not start where the auto starts");
-    assertTrue(
-        plotted[plotted.length - 1]
-                .getTranslation()
-                .getDistance(path.endPoseBlue().getTranslation())
-            < 1e-4,
-        "The plotted trajectory stops short of the end of the auto");
-
-    List<String> commands = runOnce(auto, path);
-
-    // The routine command, then reset odometry followed by segment 0, then segment 1, then stop
-    assertEquals(
-        List.of(
-            "ConditionalCommand",
-            "SequentialCommandGroup",
-            "Trajectory_" + path.name() + "[1]",
-            "Stop Drive"),
-        commands);
-
-    // Measured in sim when written: 7.5 mm and 0.71 deg at the end, 4.8 cm from the path at most
-    Pose2d end = drive.getPose();
-    Pose2d expected = path.endPoseBlue();
-    double endErrorMeters = end.getTranslation().getDistance(expected.getTranslation());
-    double endErrorDegrees = end.getRotation().minus(expected.getRotation()).getDegrees();
-    assertTrue(endErrorMeters < 0.025, "Ended " + endErrorMeters + " m from the path end");
-    assertTrue(
-        Math.abs(endErrorDegrees) < 2.0, "Ended " + endErrorDegrees + " deg from the path end");
-    assertTrue(maxDeviation < 0.10, "Strayed " + maxDeviation + " m from the path");
-  }
-
-  private double maxDeviation;
-
-  /**
-   * Enables autonomous, runs the auto for the path's duration plus one second, returns commands.
-   */
-  private List<String> runOnce(AutoMode auto, ChoreoTraj path) {
-    Pose2d[] pathPoses = Choreo.<SwerveSample>loadTrajectory(path.name()).orElseThrow().getPoses();
-    initializedCommands.clear();
-    setMode(true);
-    CommandScheduler.getInstance().schedule(auto.getAutoCommand());
-    maxDeviation = 0.0;
-    int steps = (int) Math.ceil((path.totalTimeSecs() + 1.0) / LOOP_PERIOD_SECS);
-    for (int i = 0; i < steps; i++) {
-      // The pose is only on the path once the sequence has reset odometry
-      boolean odometryReset = initializedCommands.contains("SequentialCommandGroup");
-      step(LOOP_PERIOD_SECS);
-      if (odometryReset) {
-        maxDeviation = Math.max(maxDeviation, distanceToPath(drive.getPose(), pathPoses));
-      }
-    }
-    return List.copyOf(initializedCommands);
-  }
-
-  private static double distanceToPath(Pose2d pose, Pose2d[] pathPoses) {
-    double best = Double.POSITIVE_INFINITY;
-    for (Pose2d p : pathPoses) {
-      best = Math.min(best, pose.getTranslation().getDistance(p.getTranslation()));
-    }
-    return best;
   }
 
   private static void setMode(boolean autonomousEnabled) {
