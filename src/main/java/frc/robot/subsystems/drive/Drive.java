@@ -159,7 +159,9 @@ public class Drive extends SubsystemBase {
     long t4 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
     ODOMETRY_LOCK.unlock();
 
-    // Stop moving when disabled
+    // Stop the modules on every loop while disabled. Phoenix keeps re-sending a motor's last
+    // control request, so this keeps an old setpoint from resuming at enable. It also keeps each
+    // motor's setControl status current, which the firmware-blocked alerts in Module read.
     if (RobotState.isDisabled()) {
       for (var module : modules) {
         module.stop();

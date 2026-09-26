@@ -31,6 +31,21 @@ public interface ModuleIO {
     public double[] odometryTimestamps = new double[] {};
     public double[] odometryDrivePositionsRad = new double[] {};
     public Rotation2d[] odometryTurnPositions = new Rotation2d[] {};
+
+    // Phoenix StatusCode names from device setup. "OK" means no known failure.
+    public String driveInitStatus = "OK";
+    public String turnConfigStatus = "OK";
+    public String turnEncoderRefreshStatus = "OK";
+    public String turnEncoderApplyStatus = "OK";
+
+    // Phoenix StatusCode names returned by the most recent setControl call on each motor
+    public String driveControlStatus = "OK";
+    public String turnControlStatus = "OK";
+
+    // Firmware versions as "major.minor.bugfix.build", or "" when unknown
+    public String driveFirmware = "";
+    public String turnFirmware = "";
+    public String turnEncoderFirmware = "";
   }
 
   /** Updates the set of loggable inputs. */
