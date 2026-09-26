@@ -210,24 +210,32 @@ class PreMatchDisplayTest {
             Optional.empty(),
             Optional.of(new PoseSeekError(-1654, -808, -179.6)),
             0);
-    // The longest auto name, with every line present
-    var longest =
+    // A long auto name, with every line present
+    var longName =
+        new AutoOption(Alliance.BLUE, 3, new FakeAuto("B_ThreePieceAmpSideWithBackupAuto"));
+    var named =
         new Snapshot(
             Alliance.BLUE,
             Optional.empty(),
             false,
             3,
-            Optional.of(NAMED),
+            Optional.of(longName),
             Optional.of(new PoseSeekError(-1654, -808, -179.6)),
             0);
 
-    for (var s : List.of(worst, longest, withOption(2, Optional.of(RESERVED)))) {
+    for (var s : List.of(worst, named, withOption(2, Optional.of(RESERVED)))) {
       var lines = PreMatchDisplay.format(s);
       assertTrue(lines.size() <= MAX_VISIBLE_LINES, "too many lines: " + lines.size());
       for (var l : lines) {
         var shown = visible(l.text());
         assertTrue(shown.chars().allMatch(c -> c >= 0x20 && c < 0x7f), "non-ASCII: " + shown);
-        assertTrue(shown.length() <= MAX_VISIBLE_CHARS, "too long: " + shown);
+        // An auto name may run past the edge, since the DS scrolls sideways; the rest must fit
+        var fixed = s.option().filter(AutoOption::hasAutoMode).map(AutoOption::getName);
+        var measured =
+            l.key().equals("Auto") && fixed.isPresent()
+                ? shown.substring(0, shown.length() - fixed.get().length())
+                : shown;
+        assertTrue(measured.length() <= MAX_VISIBLE_CHARS, "too long: " + shown);
       }
     }
   }
