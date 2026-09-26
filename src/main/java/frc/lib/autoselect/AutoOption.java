@@ -81,6 +81,14 @@ public class AutoOption {
     return (autoMode == null) ? Optional.empty() : Optional.of(autoMode.getLoggableTrajectory());
   }
 
+  /**
+   * @return Whether the option runs an autonomous mode, as opposed to reserving its slot for no
+   *     auto
+   */
+  public boolean hasAutoMode() {
+    return autoMode != null;
+  }
+
   public synchronized String getName() {
     return (autoMode == null) ? "None; this slot reserved for no auto" : autoMode.getName();
   }

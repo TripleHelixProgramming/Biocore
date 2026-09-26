@@ -54,6 +54,11 @@ public final class Constants {
     public static final double Y_TOL_CM = 6.0;
   }
 
+  public static final class USBStorageConstants {
+    /** Free space on the USB log drive below which the robot warns the drive team. */
+    public static final long LOW_FREE_BYTES = 2048L * 1024 * 1024;
+  }
+
   public static final class MotorConstants {
     public static final class NEOConstants {
       public static final int DEFAULT_SUPPLY_CURRENT_LIMIT = 40;

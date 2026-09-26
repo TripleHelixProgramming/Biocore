@@ -194,7 +194,7 @@ public class LEDController extends SubsystemBase {
             });
 
     // Display orange-red warning pixel if USB storage is low
-    if (isUSBStorageLow()) {
+    if (Robot.isUSBStorageLow()) {
       LEDSeries.WARNING_STORAGE.applyPattern(solidOrangeRedPattern);
     } else {
       LEDSeries.WARNING_STORAGE.applyPattern(solidBlackPattern);
@@ -247,11 +247,6 @@ public class LEDController extends SubsystemBase {
       pattern = spindexing ? bounceRippleYellowPattern : solidYellowPattern;
     }
     LEDSeries.Y_AXIS.applyPattern(pattern);
-  }
-
-  /** Returns true when the USB stick at /U has less than 2 GB free. */
-  private boolean isUSBStorageLow() {
-    return Robot.getUSBStorageFreeSpace() < 2048L * 1024 * 1024;
   }
 
   /** Clears all LEDs by applying solid black. */

@@ -135,6 +135,11 @@ public class AutoSelector implements Supplier<Optional<AutoOption>> {
     return loggedTrajectory;
   }
 
+  /** Returns the position read from the auto selector switches. */
+  public int getSwitchPosition() {
+    return inputs.autoSwitchPosition;
+  }
+
   public Optional<Pose2d> getInitialPose() {
     return currentAutoOption.isPresent()
         ? currentAutoOption.get().getInitialPose()

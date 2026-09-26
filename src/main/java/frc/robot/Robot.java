@@ -33,6 +33,7 @@ import frc.lib.stats.RobotStats;
 import frc.robot.Constants.CANBusPorts.SC0;
 import frc.robot.Constants.DIOPorts;
 import frc.robot.Constants.FeatureFlags;
+import frc.robot.Constants.USBStorageConstants;
 import frc.robot.auto.B_BranchExampleAuto;
 import frc.robot.auto.B_DriveOutAuto;
 import frc.robot.auto.R_BranchExampleAuto;
@@ -317,6 +318,7 @@ public class Robot extends LoggedRobot {
   public void disabledPeriodic() {
     allianceSelector.disabledPeriodic();
     autoSelector.disabledPeriodic();
+    PreMatchDisplay.show(allianceSelector, autoSelector, drive.getPose());
     ControllerSelector.getInstance().scan(false);
     if (leds != null) leds.displayAutoSelection();
     var autoOption = autoSelector.get();
@@ -549,6 +551,11 @@ public class Robot extends LoggedRobot {
   public static long getUSBStorageFreeSpace() {
     if (Constants.currentMode != RobotMode.REAL) return Long.MAX_VALUE;
     return new java.io.File("/U").getFreeSpace();
+  }
+
+  /** Returns true when the USB log drive at /U has less free space than the warning threshold. */
+  public static boolean isUSBStorageLow() {
+    return getUSBStorageFreeSpace() < USBStorageConstants.LOW_FREE_BYTES;
   }
 
   private static void logHIDs() {
