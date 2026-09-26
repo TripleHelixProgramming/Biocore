@@ -7,10 +7,11 @@
 
 package frc.robot.subsystems.leds;
 
-import static org.wpilib.units.Units.Centimeters;
 import static org.wpilib.units.Units.Seconds;
 
 import frc.game.GameState;
+import frc.lib.autoselect.PoseSeekError;
+import frc.robot.Constants.PoseSeekConstants;
 import frc.robot.Robot;
 import java.util.function.Supplier;
 import org.wpilib.command2.SubsystemBase;
@@ -19,7 +20,6 @@ import org.wpilib.driverstation.MatchState;
 import org.wpilib.driverstation.RobotState;
 import org.wpilib.hardware.led.LEDPattern;
 import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.math.util.MathUtil;
 import org.wpilib.util.Color;
 
 /**
@@ -73,17 +73,12 @@ public class LEDController extends SubsystemBase {
    * @param targetPose the target pose to reach
    */
   public void displayPoseSeek(Pose2d currentPose, Pose2d targetPose) {
-    var delta = targetPose.minus(currentPose);
-
-    // Transform field-relative delta to robot-relative coordinates
-    var robotRelativeDelta =
-        delta.getTranslation().rotateBy(currentPose.getRotation().unaryMinus());
+    var error = PoseSeekError.between(currentPose, targetPose);
 
     // X feedback on center LEDs (robot-relative: positive = forward)
-    var x = robotRelativeDelta.getMeasureX().in(Centimeters);
-    if (Math.abs(x) < LEDConstants.POSE_SEEK_X_TOL_CM) {
+    if (error.forwardOk(PoseSeekConstants.X_TOL_CM)) {
       LEDSeries.POSE_X.applyPattern(solidWhitePattern);
-    } else if (x > 0) {
+    } else if (error.forwardCm() > 0) {
       // Need to move forward
       LEDSeries.POSE_X.applyPattern(solidGreenPattern);
     } else {
@@ -92,10 +87,9 @@ public class LEDController extends SubsystemBase {
     }
 
     // Heading feedback on rotation LEDs (angular error is frame-independent)
-    var theta = MathUtil.inputModulus(delta.getRotation().getDegrees(), -180, 180);
-    if (Math.abs(theta) < LEDConstants.POSE_SEEK_HEADING_TOL_DEGREES) {
+    if (error.headingOk(PoseSeekConstants.HEADING_TOL_DEGREES)) {
       LEDSeries.POSE_ROTATION.applyPattern(solidWhitePattern);
-    } else if (theta > 0) {
+    } else if (error.headingDeg() > 0) {
       // Need to rotate CCW
       LEDSeries.POSE_ROTATION_X.applyPattern(solidGreenPattern);
       LEDSeries.POSE_ROTATION_Y.applyPattern(solidRedPattern);
@@ -106,10 +100,9 @@ public class LEDController extends SubsystemBase {
     }
 
     // Y feedback on end LEDs (robot-relative: positive = move left)
-    var y = robotRelativeDelta.getMeasureY().in(Centimeters);
-    if (Math.abs(y) < LEDConstants.POSE_SEEK_Y_TOL_CM) {
+    if (error.leftOk(PoseSeekConstants.Y_TOL_CM)) {
       LEDSeries.POSE_Y.applyPattern(solidWhitePattern);
-    } else if (y > 0) {
+    } else if (error.leftCm() > 0) {
       // Need to move left
       LEDSeries.POSE_Y.applyPattern(solidRedPattern);
     } else {

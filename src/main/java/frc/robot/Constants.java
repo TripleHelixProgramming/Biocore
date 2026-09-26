@@ -39,6 +39,21 @@ public final class Constants {
     public static final double NOMINAL_VOLTAGE = 12.0;
   }
 
+  /**
+   * Tolerances for pre-match feedback on how far the robot is from its auto start pose, shown on
+   * the LEDs and the Driver Station display.
+   */
+  public static final class PoseSeekConstants {
+    /** Heading tolerance in degrees. */
+    public static final double HEADING_TOL_DEGREES = 3.0;
+
+    /** Robot-relative forward/backward position tolerance in centimeters. */
+    public static final double X_TOL_CM = 5.0;
+
+    /** Robot-relative left/right position tolerance in centimeters. */
+    public static final double Y_TOL_CM = 6.0;
+  }
+
   public static final class MotorConstants {
     public static final class NEOConstants {
       public static final int DEFAULT_SUPPLY_CURRENT_LIMIT = 40;
