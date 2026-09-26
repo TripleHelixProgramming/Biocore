@@ -12,6 +12,7 @@ package frc.robot.subsystems.drive;
 
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
+import frc.lib.hardware.PhoenixFirmware;
 import frc.robot.Constants.FeatureFlags;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.geometry.Rotation2d;
@@ -31,6 +32,12 @@ public class Module {
 
   private final Alert driveDisconnectedAlert;
   private final Alert turnDisconnectedAlert;
+  private final Alert turnEncoderDisconnectedAlert;
+  private final Alert driveInitFailedAlert;
+  private final Alert turnConfigFailedAlert;
+  private final Alert turnEncoderConfigFailedAlert;
+  private final Alert driveFirmwareBlockedAlert;
+  private final Alert turnFirmwareBlockedAlert;
   private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
 
   public Module(ModuleIO io, String name) {
@@ -47,6 +54,19 @@ public class Module {
             "Module/" + name + "/turnDisconnected",
             "Disconnected turn motor on module " + name + ".",
             Alert.Level.HIGH);
+    turnEncoderDisconnectedAlert =
+        new Alert(
+            "Module/" + name + "/turnEncoderDisconnected",
+            "Disconnected turn encoder on module " + name + ".",
+            Alert.Level.HIGH);
+    driveInitFailedAlert = new Alert("Module/" + name + "/driveInitFailed", "", Alert.Level.HIGH);
+    turnConfigFailedAlert = new Alert("Module/" + name + "/turnConfigFailed", "", Alert.Level.HIGH);
+    turnEncoderConfigFailedAlert =
+        new Alert("Module/" + name + "/turnEncoderConfigFailed", "", Alert.Level.HIGH);
+    driveFirmwareBlockedAlert =
+        new Alert("Module/" + name + "/driveFirmwareBlocked", "", Alert.Level.HIGH);
+    turnFirmwareBlockedAlert =
+        new Alert("Module/" + name + "/turnFirmwareBlocked", "", Alert.Level.HIGH);
   }
 
   public void periodic() {
@@ -57,9 +77,13 @@ public class Module {
     long t2 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
     if (!encoderInitialized) {
-      // Set turn zero from preferences
+      // Set turn zero from preferences. The CANcoder's zero seeds a missing preference only when
+      // its config was read. After a failed read the zero is a default, and saving it would
+      // replace the module's calibration.
       Rotation2d turnZeroFromCancoder = inputs.turnZero;
-      Preferences.initDouble(ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians());
+      if ("OK".equals(inputs.turnEncoderRefreshStatus)) {
+        Preferences.initDouble(ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians());
+      }
       Rotation2d turnZeroFromPreferences =
           new Rotation2d(
               Preferences.getDouble(
@@ -82,6 +106,30 @@ public class Module {
     // Update alerts
     driveDisconnectedAlert.set(!inputs.driveConnected);
     turnDisconnectedAlert.set(!inputs.turnConnected);
+    turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
+    setStatusAlert(
+        driveInitFailedAlert,
+        inputs.driveInitStatus,
+        "Drive motor setup failed on module " + name + " (" + inputs.driveInitStatus + ").");
+    setStatusAlert(
+        turnConfigFailedAlert,
+        inputs.turnConfigStatus,
+        "Turn motor config failed on module " + name + " (" + inputs.turnConfigStatus + ").");
+    boolean turnEncoderReadOk = "OK".equals(inputs.turnEncoderRefreshStatus);
+    String turnEncoderStatus =
+        turnEncoderReadOk ? inputs.turnEncoderApplyStatus : inputs.turnEncoderRefreshStatus;
+    setStatusAlert(
+        turnEncoderConfigFailedAlert,
+        turnEncoderStatus,
+        turnEncoderReadOk
+            ? "Turn encoder config write failed on module " + name + " (" + turnEncoderStatus + ")."
+            : "Turn encoder config read failed on module "
+                + name
+                + " ("
+                + turnEncoderStatus
+                + "); turn zero not saved.");
+    setBlockedAlert(driveFirmwareBlockedAlert, inputs.driveControlStatus, "drive motor");
+    setBlockedAlert(turnFirmwareBlockedAlert, inputs.turnControlStatus, "turn motor");
     Logger.recordOutput("Faults/Module" + name + "/DriveDisconnected", !inputs.driveConnected);
     Logger.recordOutput("Faults/Module" + name + "/TurnDisconnected", !inputs.turnConnected);
     long t3 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
@@ -102,6 +150,30 @@ public class Module {
                 + "ms");
       }
     }
+  }
+
+  /** Activates the alert when the Phoenix status isn't "OK", with text naming the status. */
+  private static void setStatusAlert(Alert alert, String status, String text) {
+    boolean failed = !"OK".equals(status);
+    if (failed && !text.equals(alert.getText())) alert.setText(text);
+    alert.set(failed);
+  }
+
+  /** Activates the alert when the setControl status shows Phoenix blocking the motor's output. */
+  private void setBlockedAlert(Alert alert, String controlStatus, String device) {
+    boolean blocked = PhoenixFirmware.isBlocked(controlStatus);
+    if (blocked) {
+      String text =
+          "Phoenix is blocking "
+              + device
+              + " output on module "
+              + name
+              + ": "
+              + controlStatus
+              + ". Update the motor firmware or the Phoenix library.";
+      if (!text.equals(alert.getText())) alert.setText(text);
+    }
+    alert.set(blocked);
   }
 
   /** Runs the module with the specified setpoint state. */

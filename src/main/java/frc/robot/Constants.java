@@ -33,6 +33,9 @@ public final class Constants {
 
     /** Enable to add the module forces from Choreo trajectories as drive feedforward. */
     public static final boolean TRAJECTORY_FORCE_FF = false;
+
+    /** Enable to let Phoenix write .hoot signal logs. Off by default. */
+    public static final boolean HOOT_LOGGING_ENABLED = false;
   }
 
   public final class RobotConstants {
