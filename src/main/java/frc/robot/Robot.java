@@ -20,7 +20,6 @@ import frc.lib.autoselect.AllianceSelector;
 import frc.lib.autoselect.AutoOption;
 import frc.lib.autoselect.AutoSelector;
 import frc.lib.hardware.KernelLogMonitor;
-import frc.lib.hardware.LoggedAlertGroup;
 import frc.lib.hardware.LoggedCANBus;
 import frc.lib.hardware.LoggedPowerDistribution;
 import frc.lib.input.CommandZorroController;
@@ -108,11 +107,6 @@ public class Robot extends LoggedRobot {
       new LoggedCANBus(Constants.CANBusPorts.SC0.NAME, Constants.CANBusPorts.SC0.BUS);
   private final LoggedCANBus sc1CANBus =
       new LoggedCANBus(Constants.CANBusPorts.SC1.NAME, Constants.CANBusPorts.SC1.BUS);
-
-  // Third-party library alerts (Choreo, PhotonVision) still publish to SmartDashboard
-  // via their own Alert objects, so we read them back from NT.
-  private final LoggedAlertGroup choreoAlerts = new LoggedAlertGroup("Choreo");
-  private final LoggedAlertGroup photonAlerts = new LoggedAlertGroup("PhotonAlerts");
 
   private final java.util.Set<String> activeCommands = new java.util.LinkedHashSet<>();
 
@@ -583,8 +577,6 @@ public class Robot extends LoggedRobot {
     Logger.recordOutput("Commands/ActiveCommands", activeCommands.toArray(new String[0]));
     logSubsystem("Drive", drive);
     if (vision != null) logSubsystem("Vision", vision);
-    choreoAlerts.log();
-    photonAlerts.log();
   }
 
   /**
