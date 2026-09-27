@@ -19,6 +19,7 @@ import frc.lib.RobotMode;
 import frc.lib.autoselect.AllianceSelector;
 import frc.lib.autoselect.AutoOption;
 import frc.lib.autoselect.AutoSelector;
+import frc.lib.hardware.CANChain;
 import frc.lib.hardware.KernelLogMonitor;
 import frc.lib.hardware.LoggedCANBus;
 import frc.lib.hardware.LoggedPowerDistribution;
@@ -30,6 +31,7 @@ import frc.lib.input.ControllerSelector.DriverController;
 import frc.lib.input.ControllerSelector.OperatorConfig;
 import frc.lib.stats.RobotStats;
 import frc.robot.Constants.CANBusPorts.SC0;
+import frc.robot.Constants.CANBusPorts.SC1;
 import frc.robot.Constants.DIOPorts;
 import frc.robot.Constants.FeatureFlags;
 import frc.robot.Constants.USBStorageConstants;
@@ -53,6 +55,9 @@ import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.subsystems.vision.VisionThread;
 import frc.robot.util.odometry.CanandgyroThread;
 import frc.robot.util.odometry.SparkOdometryThread;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -101,12 +106,12 @@ public class Robot extends LoggedRobot {
   public static final AutoSelector autoSelector =
       new AutoSelector(DIOPorts.AUTONOMOUS_MODE_SELECTOR, allianceSelector::getAllianceColor);
   public final LoggedPowerDistribution powerDistribution =
-      new LoggedPowerDistribution(SC0.BUS_ID, SC0.PD, ModuleType.REV, "PD");
+      new LoggedPowerDistribution(SC0.PD, ModuleType.REV, "PD");
 
   private final LoggedCANBus sc0CANBus =
-      new LoggedCANBus(Constants.CANBusPorts.SC0.NAME, Constants.CANBusPorts.SC0.BUS);
+      new LoggedCANBus(SC0.CHAIN, SC0.BUS, SC0.CHAIN_ORDER_TRACED);
   private final LoggedCANBus sc1CANBus =
-      new LoggedCANBus(Constants.CANBusPorts.SC1.NAME, Constants.CANBusPorts.SC1.BUS);
+      new LoggedCANBus(SC1.CHAIN, SC1.BUS, SC1.CHAIN_ORDER_TRACED);
 
   private final java.util.Set<String> activeCommands = new java.util.LinkedHashSet<>();
 
@@ -223,6 +228,12 @@ public class Robot extends LoggedRobot {
         break;
     }
 
+    // Watch each bus's daisy chain, now that the devices reporting connection states exist
+    Map<CANChain.Device, BooleanSupplier> canConnections = new HashMap<>(drive.canConnections());
+    canConnections.putAll(powerDistribution.canConnections());
+    sc0CANBus.monitorChain(canConnections);
+    sc1CANBus.monitorChain(canConnections);
+
     // Start background threads (for non-blocking CAN/network reads)
     SparkOdometryThread.getInstance().start();
     if (FeatureFlags.VISION_ENABLED) VisionThread.getInstance().start();
@@ -259,9 +270,9 @@ public class Robot extends LoggedRobot {
     ControllerSelector.getInstance().getBindingLoop().poll();
     long t1 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
+    powerDistribution.log(); // Before the buses, whose chain checks read its connection state
     sc0CANBus.log();
     sc1CANBus.log();
-    powerDistribution.log();
     logHIDs();
     logScheduler();
     GameState.logValues();

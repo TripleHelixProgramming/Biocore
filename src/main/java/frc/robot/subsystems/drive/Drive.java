@@ -15,10 +15,16 @@ import static org.wpilib.units.Units.*;
 
 import choreo.trajectory.SwerveSample;
 import frc.lib.RobotMode;
+import frc.lib.hardware.CANChain;
 import frc.robot.Constants;
+import frc.robot.Constants.CANBusPorts.SC0;
 import frc.robot.Constants.FeatureFlags;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
@@ -141,6 +147,24 @@ public class Drive extends SubsystemBase {
     alignEncodersPub.set(false);
     new Trigger(alignEncodersSub::get)
         .onTrue(Commands.runOnce(this::zeroAbsoluteEncoders, this).ignoringDisable(true));
+  }
+
+  /**
+   * Returns the connection state of every CAN device the drive owns, on any bus. The states come
+   * from logged inputs, so they replay.
+   */
+  public Map<CANChain.Device, BooleanSupplier> canConnections() {
+    var moduleConstants = List.of(FRONT_LEFT, FRONT_RIGHT, BACK_LEFT, BACK_RIGHT);
+    Map<CANChain.Device, BooleanSupplier> connections = new HashMap<>();
+    for (int i = 0; i < modules.length; i++) {
+      Module module = modules[i];
+      var devices = DriveConstants.devices(moduleConstants.get(i));
+      connections.put(devices.drive(), module::isDriveConnected);
+      connections.put(devices.turn(), module::isTurnConnected);
+      connections.put(devices.turnEncoder(), module::isTurnEncoderConnected);
+    }
+    connections.put(SC0.GYRO, () -> gyroInputs.connected);
+    return connections;
   }
 
   @Override

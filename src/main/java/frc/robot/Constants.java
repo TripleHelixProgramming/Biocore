@@ -12,6 +12,7 @@ package frc.robot;
 
 import com.ctre.phoenix6.CANBus;
 import frc.lib.RobotMode;
+import frc.lib.hardware.CANChain;
 import org.wpilib.framework.RobotBase;
 import org.wpilib.hardware.bus.CANPort;
 
@@ -88,6 +89,20 @@ public final class Constants {
     public static final int ALLIANCE_COLOR_SELECTOR = 3;
   }
 
+  /**
+   * The CAN buses and the devices on them.
+   *
+   * <p>Each bus declares its {@code CHAIN}, which names the bus and its port, then its devices in
+   * daisy-chain order: the first device is wired closest to the SystemCore port, and each next line
+   * is the next device along the cable. Java runs these lines in the order written, so the order of
+   * the lines is the chain order, and a device's position is its CAN index (see {@link CANChain}).
+   *
+   * <p>To trace a bus: start at its SystemCore port and follow the CAN wires to the terminator,
+   * reordering the device lines to match. The bus is assumed to be one line with the SystemCore at
+   * one end. A device on a side branch goes at the point where the branch leaves the main line.
+   * Then set {@code CHAIN_ORDER_TRACED} to the date and your name. While it is null, the robot
+   * doesn't trust the order and gives no break-location hint for that bus.
+   */
   public static final class CANBusPorts {
 
     /**
@@ -95,15 +110,16 @@ public final class Constants {
      * distribution and gyro.
      */
     public static final class SC0 {
-      public static final String NAME = "SC0";
-      public static final CANPort BUS_ID = CANPort.CAN_S0;
-      public static final CANBus BUS = new CANBus(BUS_ID);
+      // Devices in daisy-chain order from the SystemCore
+      public static final CANChain CHAIN = new CANChain("SC0", CANPort.CAN_S0);
+      public static final CANChain.Device PD = CHAIN.add(1, "Power distribution");
+      public static final CANChain.Device GYRO = CHAIN.add(0, "Gyro");
 
-      // Power distribution
-      public static final int PD = 1;
+      /** When and by whom the chain order was traced from the wiring, or null if not yet. */
+      public static final String CHAIN_ORDER_TRACED = null;
 
-      // Drivetrain
-      public static final int GYRO = 0;
+      /** The Phoenix bus on this port. Code that needs it uses this instance. */
+      public static final CANBus BUS = new CANBus(CHAIN.port());
     }
 
     /**
@@ -111,25 +127,30 @@ public final class Constants {
      * controllers and CANcoders.
      */
     public static final class SC1 {
-      public static final String NAME = "SC1";
-      public static final CANPort BUS_ID = CANPort.CAN_S1;
-      public static final CANBus BUS = new CANBus(BUS_ID);
+      // Devices in daisy-chain order from the SystemCore
+      public static final CANChain CHAIN = new CANChain("SC1", CANPort.CAN_S1);
+      public static final CANChain.Device BACK_LEFT_DRIVE = CHAIN.add(10, "BackLeft drive");
+      public static final CANChain.Device BACK_RIGHT_DRIVE = CHAIN.add(18, "BackRight drive");
+      public static final CANChain.Device FRONT_RIGHT_DRIVE = CHAIN.add(20, "FrontRight drive");
+      public static final CANChain.Device FRONT_LEFT_DRIVE = CHAIN.add(28, "FrontLeft drive");
+      public static final CANChain.Device BACK_LEFT_TURN = CHAIN.add(11, "BackLeft turn");
+      public static final CANChain.Device BACK_RIGHT_TURN = CHAIN.add(19, "BackRight turn");
+      public static final CANChain.Device FRONT_RIGHT_TURN = CHAIN.add(21, "FrontRight turn");
+      public static final CANChain.Device FRONT_LEFT_TURN = CHAIN.add(29, "FrontLeft turn");
+      public static final CANChain.Device BACK_RIGHT_TURN_ABS_ENC =
+          CHAIN.add(31, "BackRight turn encoder");
+      public static final CANChain.Device FRONT_RIGHT_TURN_ABS_ENC =
+          CHAIN.add(33, "FrontRight turn encoder");
+      public static final CANChain.Device FRONT_LEFT_TURN_ABS_ENC =
+          CHAIN.add(43, "FrontLeft turn encoder");
+      public static final CANChain.Device BACK_LEFT_TURN_ABS_ENC =
+          CHAIN.add(45, "BackLeft turn encoder");
 
-      // Drivetrain
-      public static final int BACK_LEFT_DRIVE = 10;
-      public static final int BACK_RIGHT_DRIVE = 18;
-      public static final int FRONT_RIGHT_DRIVE = 20;
-      public static final int FRONT_LEFT_DRIVE = 28;
+      /** When and by whom the chain order was traced from the wiring, or null if not yet. */
+      public static final String CHAIN_ORDER_TRACED = null;
 
-      public static final int BACK_LEFT_TURN = 11;
-      public static final int BACK_RIGHT_TURN = 19;
-      public static final int FRONT_RIGHT_TURN = 21;
-      public static final int FRONT_LEFT_TURN = 29;
-
-      public static final int BACK_RIGHT_TURN_ABS_ENC = 31;
-      public static final int FRONT_RIGHT_TURN_ABS_ENC = 33;
-      public static final int FRONT_LEFT_TURN_ABS_ENC = 43;
-      public static final int BACK_LEFT_TURN_ABS_ENC = 45;
+      /** The Phoenix bus on this port. Code that needs it uses this instance. */
+      public static final CANBus BUS = new CANBus(CHAIN.port());
     }
   }
 }

@@ -8,9 +8,13 @@
 package frc.lib.hardware;
 
 import com.ctre.phoenix6.CANBus;
+import java.util.Map;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.system.Timer;
 
+/** Logs a CAN bus's status and watches its daisy chain for a break. */
 public class LoggedCANBus {
   @AutoLog
   public static class CANBusStatusInputs {
@@ -21,19 +25,39 @@ public class LoggedCANBus {
     public long transmitErrorCount = 0;
   }
 
-  private final CANBus bus;
   private final String key;
+  private final CANBus bus;
+  private final CANChain chain;
+  private final String chainOrderTraced;
   private final CANBusStatusInputsAutoLogged inputs = new CANBusStatusInputsAutoLogged();
+  private CANChainMonitor chainMonitor = null;
 
   /**
    * Creates a logged CAN bus status reporter.
    *
-   * @param name the bus name (used as the log key)
-   * @param bus the CAN bus to report status for
+   * @param chain the bus's devices in daisy-chain order, which also names the bus
+   * @param bus the Phoenix bus on the chain's port
+   * @param chainOrderTraced when and by whom the chain order was traced, or null if not yet
    */
-  public LoggedCANBus(String name, CANBus bus) {
+  public LoggedCANBus(CANChain chain, CANBus bus, String chainOrderTraced) {
+    this.key = "CANBus/" + chain.name();
     this.bus = bus;
-    this.key = "CANBus/" + name;
+    this.chain = chain;
+    this.chainOrderTraced = chainOrderTraced;
+  }
+
+  /**
+   * Starts watching the daisy chain for a break. Call once, after the devices that report the
+   * connection states exist. Does nothing while the chain order is untraced.
+   *
+   * @param connections each device's connection state, on any bus. The states should come from
+   *     logged inputs, so replay reproduces the alert.
+   */
+  public void monitorChain(Map<CANChain.Device, BooleanSupplier> connections) {
+    if (chainOrderTraced == null) return;
+    chainMonitor =
+        new CANChainMonitor(
+            chain, chainOrderTraced, connections, CANChainMonitor.DEFAULT_STABLE_SECONDS);
   }
 
   public void log() {
@@ -44,5 +68,7 @@ public class LoggedCANBus {
     inputs.receiveErrorCount = status.REC;
     inputs.transmitErrorCount = status.TEC;
     Logger.processInputs(key, inputs);
+
+    if (chainMonitor != null) chainMonitor.update(Timer.getTimestamp());
   }
 }

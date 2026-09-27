@@ -150,6 +150,21 @@ public class Module {
     io.setTurnOpenLoop(0.0);
   }
 
+  /** Returns true while the drive motor is connected. */
+  public boolean isDriveConnected() {
+    return inputs.driveConnected;
+  }
+
+  /** Returns true while the turn motor is connected. */
+  public boolean isTurnConnected() {
+    return inputs.turnConnected;
+  }
+
+  /** Returns true while the turn encoder is connected. */
+  public boolean isTurnEncoderConnected() {
+    return inputs.turnEncoderConnected;
+  }
+
   /** Returns the current turn angle of the module. */
   public Rotation2d getAngle() {
     return inputs.turnPosition;

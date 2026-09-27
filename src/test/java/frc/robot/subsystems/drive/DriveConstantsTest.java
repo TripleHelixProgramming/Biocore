@@ -14,6 +14,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.wpilib.hardware.bus.CANPort;
 
 class DriveConstantsTest {
 
@@ -44,6 +45,37 @@ class DriveConstantsTest {
             MODULES.get(i).SteerMotorInitialConfigs, MODULES.get(j).SteerMotorInitialConfigs);
         assertNotSame(
             MODULES.get(i).DriveMotorInitialConfigs, MODULES.get(j).DriveMotorInitialConfigs);
+      }
+    }
+  }
+
+  @Test
+  void moduleConstantsUseTheirDevicesIds() {
+    for (var module : MODULES) {
+      var devices = DriveConstants.devices(module);
+      assertEquals(devices.drive().id(), module.DriveMotorId);
+      assertEquals(devices.turn().id(), module.SteerMotorId);
+      assertEquals(devices.turnEncoder().id(), module.EncoderId);
+    }
+  }
+
+  @Test
+  void moduleIdsMatchTheWiredDevices() {
+    // drive, turn, turn encoder
+    int[][] expected = {{28, 29, 43}, {20, 21, 33}, {10, 11, 45}, {18, 19, 31}};
+    for (int i = 0; i < MODULES.size(); i++) {
+      var module = MODULES.get(i);
+      assertArrayEquals(
+          expected[i], new int[] {module.DriveMotorId, module.SteerMotorId, module.EncoderId});
+    }
+  }
+
+  @Test
+  void allModuleDevicesAreOnTheDrivetrainBus() {
+    for (var module : MODULES) {
+      var devices = DriveConstants.devices(module);
+      for (var device : List.of(devices.drive(), devices.turn(), devices.turnEncoder())) {
+        assertEquals(CANPort.CAN_S1, device.port(), device.label());
       }
     }
   }
