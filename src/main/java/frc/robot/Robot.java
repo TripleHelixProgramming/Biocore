@@ -19,7 +19,6 @@ import frc.lib.RobotMode;
 import frc.lib.autoselect.AllianceSelector;
 import frc.lib.autoselect.AutoOption;
 import frc.lib.autoselect.AutoSelector;
-import frc.lib.hardware.CANChainMonitor;
 import frc.lib.hardware.KernelLogMonitor;
 import frc.lib.hardware.LoggedCANBus;
 import frc.lib.hardware.LoggedPowerDistribution;
@@ -55,9 +54,7 @@ import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.subsystems.vision.VisionThread;
 import frc.robot.util.odometry.CanandgyroThread;
 import frc.robot.util.odometry.SparkOdometryThread;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -79,7 +76,6 @@ import org.wpilib.hardware.power.PowerDistribution.ModuleType;
 import org.wpilib.math.filter.LinearFilter;
 import org.wpilib.simulation.BatterySim;
 import org.wpilib.simulation.RoboRioSim;
-import org.wpilib.system.Timer;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -110,13 +106,9 @@ public class Robot extends LoggedRobot {
       new LoggedPowerDistribution(SC0.BUS_ID, SC0.PD, ModuleType.REV, "PD");
 
   private final LoggedCANBus sc0CANBus =
-      new LoggedCANBus(Constants.CANBusPorts.SC0.NAME, Constants.CANBusPorts.SC0.BUS);
+      new LoggedCANBus(SC0.NAME, SC0.BUS, SC0.CHAIN, SC0.CHAIN_ORDER_TRACED);
   private final LoggedCANBus sc1CANBus =
-      new LoggedCANBus(Constants.CANBusPorts.SC1.NAME, Constants.CANBusPorts.SC1.BUS);
-
-  // Break-location hints for each bus's daisy chain. Built once the drive exists.
-  private CANChainMonitor sc0Chain;
-  private CANChainMonitor sc1Chain;
+      new LoggedCANBus(SC1.NAME, SC1.BUS, SC1.CHAIN, SC1.CHAIN_ORDER_TRACED);
 
   private final java.util.Set<String> activeCommands = new java.util.LinkedHashSet<>();
 
@@ -233,23 +225,10 @@ public class Robot extends LoggedRobot {
         break;
     }
 
-    Map<Integer, BooleanSupplier> sc0Connections = new HashMap<>();
-    sc0Connections.put(SC0.PD, powerDistribution::isConnected);
-    sc0Connections.put(SC0.GYRO, drive::isGyroConnected);
-    sc0Chain =
-        new CANChainMonitor(
-            SC0.NAME,
-            SC0.CHAIN,
-            SC0.CHAIN_ORDER_TRACED,
-            sc0Connections,
-            CANChainMonitor.DEFAULT_STABLE_SECONDS);
-    sc1Chain =
-        new CANChainMonitor(
-            SC1.NAME,
-            SC1.CHAIN,
-            SC1.CHAIN_ORDER_TRACED,
-            drive.sc1Connections(),
-            CANChainMonitor.DEFAULT_STABLE_SECONDS);
+    // Watch each bus's daisy chain, now that the devices reporting connection states exist
+    sc0CANBus.monitorChain(
+        Map.of(SC0.PD, powerDistribution::isConnected, SC0.GYRO, drive::isGyroConnected));
+    sc1CANBus.monitorChain(drive.sc1Connections());
 
     // Start background threads (for non-blocking CAN/network reads)
     SparkOdometryThread.getInstance().start();
@@ -287,11 +266,9 @@ public class Robot extends LoggedRobot {
     ControllerSelector.getInstance().getBindingLoop().poll();
     long t1 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
+    powerDistribution.log(); // Before the buses, whose chain checks read its connection state
     sc0CANBus.log();
     sc1CANBus.log();
-    powerDistribution.log();
-    sc0Chain.update(Timer.getTimestamp());
-    sc1Chain.update(Timer.getTimestamp());
     logHIDs();
     logScheduler();
     GameState.logValues();
