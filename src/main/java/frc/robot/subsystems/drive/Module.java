@@ -244,11 +244,12 @@ public class Module {
   }
 
   /**
-   * Sets the zero position of the turn axis to the current rotation. Does nothing when the turn
-   * encoder's config could not be read, because the current zero is then a default.
+   * Sets the zero position of the turn axis to the current rotation. Does nothing before the first
+   * {@link #periodic()}, when the inputs still hold defaults, or when the turn encoder's config
+   * could not be read, because the current zero is then a default.
    */
   public void setTurnZero() {
-    if (!canUseTurnZero(inputs.turnEncoderRefreshStatus)) return;
+    if (!encoderInitialized || !canUseTurnZero(inputs.turnEncoderRefreshStatus)) return;
     Rotation2d newTurnZero = inputs.turnZero.minus(inputs.turnPosition);
     io.setTurnZero(newTurnZero);
     Preferences.setDouble(ZERO_ROTATION_KEY + "/" + name, newTurnZero.getRadians());
