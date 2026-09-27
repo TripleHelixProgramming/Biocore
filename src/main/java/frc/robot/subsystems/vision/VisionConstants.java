@@ -33,38 +33,38 @@ public class VisionConstants {
       new CameraConfig(
           "OV2311_TH_2026_FR",
           new Transform3d(
-              Inches.of(-10.572),
-              Inches.of(-12.337),
-              Inches.of(16.688),
-              // pitch 20 degrees up, yaw 55 degrees right
-              new Rotation3d(new Quaternion(0.8735, -0.0802, -0.1540, -0.4547))));
+              Inches.of(11.471),
+              Inches.of(-9.971),
+              Inches.of(8.158),
+              // pitch 20 degrees up, yaw 45 degrees right
+              new Rotation3d(new Quaternion(0.9098, -0.0665, -0.1604, -0.3769))));
   public static CameraConfig FRONT_LEFT_CAMERA =
       new CameraConfig(
           "OV2311_TH_2026_FL",
           new Transform3d(
-              Inches.of(-10.572),
-              Inches.of(12.337),
-              Inches.of(16.688),
-              // pitch 20 degrees up, yaw 55 degrees left
-              new Rotation3d(new Quaternion(0.8735, 0.0802, -0.1540, 0.4547))));
+              Inches.of(11.471),
+              Inches.of(9.971),
+              Inches.of(8.158),
+              // pitch 20 degrees up, yaw 45 degrees left
+              new Rotation3d(new Quaternion(0.9098, 0.0665, -0.1604, 0.3769))));
   public static CameraConfig BACK_RIGHT_CAMERA =
       new CameraConfig(
           "OV2311_TH_2026_RR",
           new Transform3d(
-              Inches.of(-13.1623),
-              Inches.of(-12.1623),
-              Inches.of(20.26674),
-              // pitch 15 degrees up, yaw 135 degrees right
-              new Rotation3d(new Quaternion(-0.3794, 0.1206, 0.0500, 0.9160))));
+              Inches.of(-11.471),
+              Inches.of(-9.971),
+              Inches.of(8.158),
+              // pitch 20 degrees up, yaw 135 degrees right
+              new Rotation3d(new Quaternion(0.3769, -0.1604, -0.0665, -0.9098))));
   public static CameraConfig BACK_LEFT_CAMERA =
       new CameraConfig(
           "OV2311_TH_2026_RL",
           new Transform3d(
-              Inches.of(-13.1623),
-              Inches.of(12.1623),
-              Inches.of(20.26674),
-              // pitch 15 degrees up, yaw 135 degrees left
-              new Rotation3d(new Quaternion(0.3794, 0.1206, -0.0500, 0.9160))));
+              Inches.of(-11.471),
+              Inches.of(9.971),
+              Inches.of(8.158),
+              // pitch 20 degrees up, yaw 135 degrees left
+              new Rotation3d(new Quaternion(0.3769, 0.1604, -0.0665, 0.9098))));
 
   public static Distance MIN_ROBOT_WIDTH = Inches.of(36.875);
 
