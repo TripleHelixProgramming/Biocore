@@ -28,7 +28,6 @@ public class LoggedCANBus {
 
   private final String name;
   private final CANBus bus;
-  private final String key;
   private final CANChain chain;
   private final String chainOrderTraced;
   private final CANBusStatusInputsAutoLogged inputs = new CANBusStatusInputsAutoLogged();
@@ -45,7 +44,6 @@ public class LoggedCANBus {
   public LoggedCANBus(String name, CANBus bus, CANChain chain, String chainOrderTraced) {
     this.name = name;
     this.bus = bus;
-    this.key = "CANBus/" + name;
     this.chain = chain;
     this.chainOrderTraced = chainOrderTraced;
   }
@@ -83,7 +81,7 @@ public class LoggedCANBus {
     inputs.txFullCount = status.TxFullCount;
     inputs.receiveErrorCount = status.REC;
     inputs.transmitErrorCount = status.TEC;
-    Logger.processInputs(key, inputs);
+    Logger.processInputs("CANBus/" + name, inputs);
 
     if (chainMonitor != null) chainMonitor.update(Timer.getTimestamp());
   }
