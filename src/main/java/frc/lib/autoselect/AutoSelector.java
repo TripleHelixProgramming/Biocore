@@ -26,6 +26,8 @@ public class AutoSelector implements Supplier<Optional<AutoOption>> {
   private final AutoSelectorIOInputsAutoLogged inputs = new AutoSelectorIOInputsAutoLogged();
 
   private Optional<AutoOption> currentAutoOption;
+  // getAutoCommand() builds a new command on each call, so keep the one that was scheduled
+  private Command scheduledAuto = null;
   private Supplier<Alliance> allianceColorSupplier;
   private List<AutoOption> autoOptions = new ArrayList<>();
   private EventLoop eventLoop = new EventLoop();
@@ -81,13 +83,21 @@ public class AutoSelector implements Supplier<Optional<AutoOption>> {
 
   /** Schedules the command corresponding to the selected autonomous mode */
   public void scheduleAuto() {
-    currentAutoOption.ifPresent(
-        ao -> ao.getAutoCommand().ifPresent(CommandScheduler.getInstance()::schedule));
+    currentAutoOption
+        .flatMap(AutoOption::getAutoCommand)
+        .ifPresent(
+            command -> {
+              scheduledAuto = command;
+              CommandScheduler.getInstance().schedule(command);
+            });
   }
 
-  /** Deschedules the command corresponding to the selected autonomous mode */
+  /** Deschedules the command that {@link #scheduleAuto()} scheduled */
   public void cancelAuto() {
-    currentAutoOption.ifPresent(ao -> ao.getAutoCommand().ifPresent(Command::cancel));
+    if (scheduledAuto != null) {
+      scheduledAuto.cancel();
+      scheduledAuto = null;
+    }
   }
 
   public void disabledPeriodic() {
