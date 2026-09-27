@@ -239,6 +239,10 @@ public class Robot extends LoggedRobot {
     SparkOdometryThread.getInstance().start();
     if (FeatureFlags.VISION_ENABLED) VisionThread.getInstance().start();
     CanandgyroThread.getInstance().start();
+    if (Constants.currentMode == RobotMode.REAL) {
+      sc0CANBus.start();
+      sc1CANBus.start();
+    }
 
     // Start AdvantageKit logger
     Logger.start();

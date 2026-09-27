@@ -43,26 +43,26 @@ class CANChainMonitorTest {
   @Test
   void healthyChainShowsNothing() {
     var monitor = monitor("test");
-    for (double t = 0; t < 5; t += STEP) assertEquals(-1, monitor.update(t));
+    for (double t = 0; t < 5; t += STEP) assertEquals(-1, monitor.update(t, false));
   }
 
   @Test
   void breakShowsOnlyAfterTheHoldTime() {
     var monitor = monitor("test");
     breakAt(3);
-    assertEquals(-1, monitor.update(10.0));
-    assertEquals(-1, monitor.update(12.49));
-    assertEquals(3, monitor.update(12.5));
+    assertEquals(-1, monitor.update(10.0, false));
+    assertEquals(-1, monitor.update(12.49, false));
+    assertEquals(3, monitor.update(12.5, false));
   }
 
   @Test
   void recoveryClearsImmediately() {
     var monitor = monitor("test");
     breakAt(3);
-    monitor.update(0.0);
-    assertEquals(3, monitor.update(3.0));
+    monitor.update(0.0, false);
+    assertEquals(3, monitor.update(3.0, false));
     breakAt(DEVICES);
-    assertEquals(-1, monitor.update(3.02));
+    assertEquals(-1, monitor.update(3.02, false));
   }
 
   /**
@@ -74,16 +74,35 @@ class CANChainMonitorTest {
     var monitor = monitor("test");
     double t = 0.0;
     breakAt(4);
-    for (; t < 1.5; t += STEP) assertEquals(-1, monitor.update(t));
+    for (; t < 1.5; t += STEP) assertEquals(-1, monitor.update(t, false));
     breakAt(3);
-    for (; t < 6.0; t += STEP) assertNotEquals(4, monitor.update(t));
-    assertEquals(3, monitor.update(t));
+    for (; t < 6.0; t += STEP) assertNotEquals(4, monitor.update(t, false));
+    assertEquals(3, monitor.update(t, false));
   }
 
   @Test
   void untracedChainStaysOff() {
     var monitor = monitor(null);
     breakAt(3);
-    for (double t = 0; t < 5; t += STEP) assertEquals(-1, monitor.update(t));
+    for (double t = 0; t < 5; t += STEP) assertEquals(-1, monitor.update(t, false));
+  }
+
+  @Test
+  void busFaultHidesABreakAlongTheChain() {
+    var monitor = monitor("test");
+    breakAt(3);
+    for (double t = 0; t < 3.0; t += STEP) assertEquals(-1, monitor.update(t, true));
+    assertEquals(-1, monitor.update(3.0, false));
+    assertEquals(-1, monitor.update(5.49, false));
+    assertEquals(3, monitor.update(5.5, false));
+  }
+
+  @Test
+  void busFaultStillShowsABreakAtTheSystemCore() {
+    var monitor = monitor("test");
+    breakAt(0);
+    assertEquals(-1, monitor.update(0.0, true));
+    assertEquals(-1, monitor.update(2.49, true));
+    assertEquals(0, monitor.update(2.5, true));
   }
 }

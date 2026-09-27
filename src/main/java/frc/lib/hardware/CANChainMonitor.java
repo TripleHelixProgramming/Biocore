@@ -27,6 +27,11 @@ import org.wpilib.util.Alert;
  * show a split further along the chain than the real one. The hold time must be longer than the gap
  * between the slowest and fastest devices on the bus, so the reported break is the settled one.
  *
+ * <p>While the bus itself is faulted (the bus-health HIGH alert), a break further along the chain
+ * is not trusted: a bus fault can drop devices anywhere. Only a break at the SystemCore end is
+ * still shown, because "check the SystemCore port and plug" is also the right advice for a bus
+ * fault.
+ *
  * <p>The monitor stays off when the chain order hasn't been traced. It also stays off when a device
  * on the chain has no connection source, which is reported once to the Driver Station.
  */
@@ -80,17 +85,19 @@ public class CANChainMonitor {
    * Checks the chain for a break and updates the alert.
    *
    * @param now the current timestamp in seconds
+   * @param busFaulted whether the bus-health HIGH alert is active
    * @return the index of the break the alert shows, or -1 when it shows none
    */
-  public int update(double now) {
+  public int update(double now, boolean busFaulted) {
     if (!enabled) return -1;
     boolean[] connected = new boolean[sources.length];
     for (int i = 0; i < sources.length; i++) connected[i] = sources[i].getAsBoolean();
     int breakIndex = CANChain.findBreak(connected);
     Logger.recordOutput(indexKey, breakIndex);
 
-    if (breakIndex != rawBreak) {
-      rawBreak = breakIndex;
+    int candidate = busFaulted && breakIndex > 0 ? -1 : breakIndex;
+    if (candidate != rawBreak) {
+      rawBreak = candidate;
       rawBreakSince = now;
     }
     int settledBreak = rawBreak >= 0 && now - rawBreakSince >= stableSeconds ? rawBreak : -1;
