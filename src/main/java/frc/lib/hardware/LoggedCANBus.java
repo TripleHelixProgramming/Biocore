@@ -59,10 +59,10 @@ public class LoggedCANBus {
    * reproduces the alert. If two sources report the same device, the chain check stays off and the
    * Driver Station gets one warning.
    *
-   * @param sources each subsystem's connection states, keyed by address
+   * @param sources each subsystem's connection states, keyed by device
    */
   @SafeVarargs
-  public final void monitorChain(Map<CANChain.Address, BooleanSupplier>... sources) {
+  public final void monitorChain(Map<CANChain.Device, BooleanSupplier>... sources) {
     Map<Integer, BooleanSupplier> connections;
     try {
       connections = CANChain.connectionsOn(chain.port(), sources);

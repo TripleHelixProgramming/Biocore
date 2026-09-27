@@ -116,8 +116,8 @@ public final class Constants {
 
       // Devices in daisy-chain order from the SystemCore
       public static final CANChain CHAIN = new CANChain(BUS_ID);
-      public static final int PD = CHAIN.add(1, "Power distribution");
-      public static final int GYRO = CHAIN.add(0, "Gyro");
+      public static final CANChain.Device PD = CHAIN.add(1, "Power distribution");
+      public static final CANChain.Device GYRO = CHAIN.add(0, "Gyro");
 
       /** When and by whom the chain order was traced from the wiring, or null if not yet. */
       public static final String CHAIN_ORDER_TRACED = null;
@@ -134,18 +134,22 @@ public final class Constants {
 
       // Devices in daisy-chain order from the SystemCore
       public static final CANChain CHAIN = new CANChain(BUS_ID);
-      public static final int BACK_LEFT_DRIVE = CHAIN.add(10, "BackLeft drive");
-      public static final int BACK_RIGHT_DRIVE = CHAIN.add(18, "BackRight drive");
-      public static final int FRONT_RIGHT_DRIVE = CHAIN.add(20, "FrontRight drive");
-      public static final int FRONT_LEFT_DRIVE = CHAIN.add(28, "FrontLeft drive");
-      public static final int BACK_LEFT_TURN = CHAIN.add(11, "BackLeft turn");
-      public static final int BACK_RIGHT_TURN = CHAIN.add(19, "BackRight turn");
-      public static final int FRONT_RIGHT_TURN = CHAIN.add(21, "FrontRight turn");
-      public static final int FRONT_LEFT_TURN = CHAIN.add(29, "FrontLeft turn");
-      public static final int BACK_RIGHT_TURN_ABS_ENC = CHAIN.add(31, "BackRight turn encoder");
-      public static final int FRONT_RIGHT_TURN_ABS_ENC = CHAIN.add(33, "FrontRight turn encoder");
-      public static final int FRONT_LEFT_TURN_ABS_ENC = CHAIN.add(43, "FrontLeft turn encoder");
-      public static final int BACK_LEFT_TURN_ABS_ENC = CHAIN.add(45, "BackLeft turn encoder");
+      public static final CANChain.Device BACK_LEFT_DRIVE = CHAIN.add(10, "BackLeft drive");
+      public static final CANChain.Device BACK_RIGHT_DRIVE = CHAIN.add(18, "BackRight drive");
+      public static final CANChain.Device FRONT_RIGHT_DRIVE = CHAIN.add(20, "FrontRight drive");
+      public static final CANChain.Device FRONT_LEFT_DRIVE = CHAIN.add(28, "FrontLeft drive");
+      public static final CANChain.Device BACK_LEFT_TURN = CHAIN.add(11, "BackLeft turn");
+      public static final CANChain.Device BACK_RIGHT_TURN = CHAIN.add(19, "BackRight turn");
+      public static final CANChain.Device FRONT_RIGHT_TURN = CHAIN.add(21, "FrontRight turn");
+      public static final CANChain.Device FRONT_LEFT_TURN = CHAIN.add(29, "FrontLeft turn");
+      public static final CANChain.Device BACK_RIGHT_TURN_ABS_ENC =
+          CHAIN.add(31, "BackRight turn encoder");
+      public static final CANChain.Device FRONT_RIGHT_TURN_ABS_ENC =
+          CHAIN.add(33, "FrontRight turn encoder");
+      public static final CANChain.Device FRONT_LEFT_TURN_ABS_ENC =
+          CHAIN.add(43, "FrontLeft turn encoder");
+      public static final CANChain.Device BACK_LEFT_TURN_ABS_ENC =
+          CHAIN.add(45, "BackLeft turn encoder");
 
       /** When and by whom the chain order was traced from the wiring, or null if not yet. */
       public static final String CHAIN_ORDER_TRACED = null;

@@ -18,7 +18,6 @@ import frc.lib.RobotMode;
 import frc.lib.hardware.CANChain;
 import frc.robot.Constants;
 import frc.robot.Constants.CANBusPorts.SC0;
-import frc.robot.Constants.CANBusPorts.SC1;
 import frc.robot.Constants.FeatureFlags;
 import java.util.HashMap;
 import java.util.List;
@@ -154,20 +153,17 @@ public class Drive extends SubsystemBase {
    * Returns the connection state of every CAN device the drive owns, on any bus. The states come
    * from logged inputs, so they replay.
    */
-  public Map<CANChain.Address, BooleanSupplier> canConnections() {
+  public Map<CANChain.Device, BooleanSupplier> canConnections() {
     var moduleConstants = List.of(FRONT_LEFT, FRONT_RIGHT, BACK_LEFT, BACK_RIGHT);
-    Map<CANChain.Address, BooleanSupplier> connections = new HashMap<>();
+    Map<CANChain.Device, BooleanSupplier> connections = new HashMap<>();
     for (int i = 0; i < modules.length; i++) {
       Module module = modules[i];
-      var constants = moduleConstants.get(i);
-      connections.put(
-          new CANChain.Address(SC1.BUS_ID, constants.DriveMotorId), module::isDriveConnected);
-      connections.put(
-          new CANChain.Address(SC1.BUS_ID, constants.SteerMotorId), module::isTurnConnected);
-      connections.put(
-          new CANChain.Address(SC1.BUS_ID, constants.EncoderId), module::isTurnEncoderConnected);
+      var devices = DriveConstants.devices(moduleConstants.get(i));
+      connections.put(devices.drive(), module::isDriveConnected);
+      connections.put(devices.turn(), module::isTurnConnected);
+      connections.put(devices.turnEncoder(), module::isTurnEncoderConnected);
     }
-    connections.put(new CANChain.Address(SC0.BUS_ID, SC0.GYRO), () -> gyroInputs.connected);
+    connections.put(SC0.GYRO, () -> gyroInputs.connected);
     return connections;
   }
 

@@ -102,7 +102,7 @@ public class Robot extends LoggedRobot {
   public static final AutoSelector autoSelector =
       new AutoSelector(DIOPorts.AUTONOMOUS_MODE_SELECTOR, allianceSelector::getAllianceColor);
   public final LoggedPowerDistribution powerDistribution =
-      new LoggedPowerDistribution(SC0.BUS_ID, SC0.PD, ModuleType.REV, "PD");
+      new LoggedPowerDistribution(SC0.PD, ModuleType.REV, "PD");
 
   private final LoggedCANBus sc0CANBus =
       new LoggedCANBus(SC0.NAME, SC0.BUS, SC0.CHAIN, SC0.CHAIN_ORDER_TRACED);

@@ -19,11 +19,11 @@ import org.wpilib.hardware.bus.CANPort;
 class CANChainTest {
   private static final List<CANChain.Device> CHAIN =
       List.of(
-          new CANChain.Device(28, "FrontLeft drive"),
-          new CANChain.Device(29, "FrontLeft turn"),
-          new CANChain.Device(43, "FrontLeft turn encoder"),
-          new CANChain.Device(20, "FrontRight drive"),
-          new CANChain.Device(21, "FrontRight turn"));
+          new CANChain.Device(CANPort.CAN_S1, 28, "FrontLeft drive"),
+          new CANChain.Device(CANPort.CAN_S1, 29, "FrontLeft turn"),
+          new CANChain.Device(CANPort.CAN_S1, 43, "FrontLeft turn encoder"),
+          new CANChain.Device(CANPort.CAN_S1, 20, "FrontRight drive"),
+          new CANChain.Device(CANPort.CAN_S1, 21, "FrontRight turn"));
 
   private static boolean[] up(boolean... connected) {
     return connected;
@@ -112,13 +112,18 @@ class CANChainTest {
 
   @Test
   void duplicateChainIdIsReported() {
-    var chain = List.of(new CANChain.Device(10, "A"), new CANChain.Device(10, "B"));
+    var chain =
+        List.of(
+            new CANChain.Device(CANPort.CAN_S1, 10, "A"),
+            new CANChain.Device(CANPort.CAN_S1, 10, "B"));
     assertEquals("CAN ID 10 appears twice in the chain", CANChain.validate(chain, Set.of(10)));
   }
 
   @Test
-  void addReturnsTheId() {
-    assertEquals(28, new CANChain(CANPort.CAN_S1).add(28, "FrontLeft drive"));
+  void addReturnsTheDeviceOnTheChainsPort() {
+    assertEquals(
+        new CANChain.Device(CANPort.CAN_S1, 28, "FrontLeft drive"),
+        new CANChain(CANPort.CAN_S1).add(28, "FrontLeft drive"));
   }
 
   @Test
@@ -129,9 +134,9 @@ class CANChainTest {
     chain.add(10, "BackLeft drive");
     assertEquals(
         List.of(
-            new CANChain.Device(28, "FrontLeft drive"),
-            new CANChain.Device(29, "FrontLeft turn"),
-            new CANChain.Device(10, "BackLeft drive")),
+            new CANChain.Device(CANPort.CAN_S1, 28, "FrontLeft drive"),
+            new CANChain.Device(CANPort.CAN_S1, 29, "FrontLeft turn"),
+            new CANChain.Device(CANPort.CAN_S1, 10, "BackLeft drive")),
         chain.devices());
   }
 
@@ -150,7 +155,7 @@ class CANChainTest {
     chain.add(28, "FrontLeft drive");
     assertThrows(
         UnsupportedOperationException.class,
-        () -> chain.devices().add(new CANChain.Device(1, "extra")));
+        () -> chain.devices().add(new CANChain.Device(CANPort.CAN_S1, 1, "extra")));
   }
 
   @Test
@@ -159,9 +164,9 @@ class CANChainTest {
     BooleanSupplier down = () -> false;
     var drive =
         Map.of(
-            new CANChain.Address(CANPort.CAN_S1, 28), up,
-            new CANChain.Address(CANPort.CAN_S0, 0), down);
-    var pd = Map.of(new CANChain.Address(CANPort.CAN_S0, 1), up);
+            new CANChain.Device(CANPort.CAN_S1, 28, "test"), up,
+            new CANChain.Device(CANPort.CAN_S0, 0, "test"), down);
+    var pd = Map.of(new CANChain.Device(CANPort.CAN_S0, 1, "test"), up);
 
     var sc1 = CANChain.connectionsOn(CANPort.CAN_S1, drive, pd);
     assertEquals(Set.of(28), sc1.keySet());
@@ -174,15 +179,15 @@ class CANChainTest {
 
   @Test
   void sameIdOnDifferentBusesIsAllowed() {
-    var a = Map.of(new CANChain.Address(CANPort.CAN_S0, 10), (BooleanSupplier) () -> true);
-    var b = Map.of(new CANChain.Address(CANPort.CAN_S1, 10), (BooleanSupplier) () -> false);
+    var a = Map.of(new CANChain.Device(CANPort.CAN_S0, 10, "test"), (BooleanSupplier) () -> true);
+    var b = Map.of(new CANChain.Device(CANPort.CAN_S1, 10, "test"), (BooleanSupplier) () -> false);
     assertEquals(Set.of(10), CANChain.connectionsOn(CANPort.CAN_S1, a, b).keySet());
   }
 
   @Test
-  void sameAddressFromTwoSourcesThrows() {
-    var a = Map.of(new CANChain.Address(CANPort.CAN_S1, 10), (BooleanSupplier) () -> true);
-    var b = Map.of(new CANChain.Address(CANPort.CAN_S1, 10), (BooleanSupplier) () -> false);
+  void sameDeviceFromTwoSourcesThrows() {
+    var a = Map.of(new CANChain.Device(CANPort.CAN_S1, 10, "test"), (BooleanSupplier) () -> true);
+    var b = Map.of(new CANChain.Device(CANPort.CAN_S1, 10, "test"), (BooleanSupplier) () -> false);
     var error =
         assertThrows(
             IllegalArgumentException.class, () -> CANChain.connectionsOn(CANPort.CAN_S1, a, b));

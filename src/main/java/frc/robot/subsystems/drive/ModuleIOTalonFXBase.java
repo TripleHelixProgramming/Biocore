@@ -13,6 +13,7 @@ package frc.robot.subsystems.drive;
 import static frc.robot.util.odometry.PhoenixUtil.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -27,7 +28,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
-import frc.robot.Constants.CANBusPorts.SC1;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.util.Units;
 import org.wpilib.units.measure.Angle;
@@ -71,9 +71,10 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
           constants) {
     this.constants = constants;
-    driveTalon = new TalonFX(constants.DriveMotorId, SC1.BUS);
-    turnTalon = new TalonFX(constants.SteerMotorId, SC1.BUS);
-    cancoder = new CANcoder(constants.EncoderId, SC1.BUS);
+    var devices = DriveConstants.devices(constants);
+    driveTalon = new TalonFX(devices.drive().id(), new CANBus(devices.drive().port()));
+    turnTalon = new TalonFX(devices.turn().id(), new CANBus(devices.turn().port()));
+    cancoder = new CANcoder(devices.turnEncoder().id(), new CANBus(devices.turnEncoder().port()));
 
     tryUntilOk(
         5, () -> driveTalon.getConfigurator().apply(constants.DriveMotorInitialConfigs, 0.25));

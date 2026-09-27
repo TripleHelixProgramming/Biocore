@@ -24,13 +24,14 @@ import org.wpilib.hardware.bus.CANPort;
  *
  * <pre>{@code
  * public static final CANChain CHAIN = new CANChain(BUS_ID);
- * public static final int FRONT_LEFT_DRIVE = CHAIN.add(28, "FrontLeft drive");
- * public static final int FRONT_LEFT_TURN = CHAIN.add(29, "FrontLeft turn");
+ * public static final CANChain.Device FRONT_LEFT_DRIVE = CHAIN.add(28, "FrontLeft drive");
+ * public static final CANChain.Device FRONT_LEFT_TURN = CHAIN.add(29, "FrontLeft turn");
  * }</pre>
  *
  * <p>Java runs static field initializers in the order they are written, so the order of the {@code
- * add} lines is the chain order, and a device's position is its CAN index. The chain freezes the
- * first time {@link #devices()} is read; a later {@code add} throws.
+ * add} lines is the chain order, and a device's position is its CAN index. Each device carries its
+ * bus, so code that uses a device never has to name the bus again. The chain freezes the first time
+ * {@link #devices()} is read; a later {@code add} throws.
  *
  * <p>A single break in the cable leaves every device before it connected and every device after it
  * disconnected. The static methods find that split and describe where to look. Apart from the
@@ -38,20 +39,13 @@ import org.wpilib.hardware.bus.CANPort;
  */
 public class CANChain {
   /**
-   * A device on the chain.
-   *
-   * @param id the device's CAN ID
-   * @param label a name that tells the pit crew where the device is, e.g. "FrontLeft drive"
-   */
-  public record Device(int id, String label) {}
-
-  /**
-   * Where a device sits: its bus and CAN ID. A CAN ID is only unique within one bus.
+   * A device on the chain. A CAN ID is only unique within one bus, so the device carries both.
    *
    * @param port the SystemCore CAN port the device is wired to
    * @param id the device's CAN ID
+   * @param label a name that tells the pit crew where the device is, e.g. "FrontLeft drive"
    */
-  public record Address(CANPort port, int id) {}
+  public record Device(CANPort port, int id, String label) {}
 
   private final CANPort port;
   private final List<Device> devices = new ArrayList<>();
@@ -74,15 +68,16 @@ public class CANChain {
    *
    * @param id the device's CAN ID
    * @param label a name that tells the pit crew where the device is
-   * @return the CAN ID, so the constant holds the ID
+   * @return the device, on this chain's port
    */
-  public int add(int id, String label) {
+  public Device add(int id, String label) {
     if (frozen) {
       throw new IllegalStateException(
           label + " (ID " + id + ") was added after the chain was first read.");
     }
-    devices.add(new Device(id, label));
-    return id;
+    Device device = new Device(port, id, label);
+    devices.add(device);
+    return device;
   }
 
   /** Returns the devices in chain order. No devices can be added afterward. */
@@ -182,21 +177,21 @@ public class CANChain {
    * port}, keyed by CAN ID.
    *
    * @param port the bus to collect
-   * @param sources each subsystem's connection states, keyed by address
+   * @param sources each subsystem's connection states, keyed by device
    * @return the connection states on {@code port}, keyed by CAN ID
-   * @throws IllegalArgumentException if two sources report the same address
+   * @throws IllegalArgumentException if two sources report the same bus and CAN ID
    */
   @SafeVarargs
   public static Map<Integer, BooleanSupplier> connectionsOn(
-      CANPort port, Map<Address, BooleanSupplier>... sources) {
+      CANPort port, Map<Device, BooleanSupplier>... sources) {
     Map<Integer, BooleanSupplier> onPort = new HashMap<>();
-    for (Map<Address, BooleanSupplier> source : sources) {
+    for (Map<Device, BooleanSupplier> source : sources) {
       for (var entry : source.entrySet()) {
-        Address address = entry.getKey();
-        if (address.port() != port) continue;
-        if (onPort.put(address.id(), entry.getValue()) != null) {
+        Device device = entry.getKey();
+        if (device.port() != port) continue;
+        if (onPort.put(device.id(), entry.getValue()) != null) {
           throw new IllegalArgumentException(
-              "CAN ID " + address.id() + " on " + port + " is reported twice");
+              "CAN ID " + device.id() + " on " + port + " is reported twice");
         }
       }
     }

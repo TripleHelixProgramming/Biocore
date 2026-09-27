@@ -29,7 +29,7 @@ class CANChainMonitorTest {
     Map<Integer, BooleanSupplier> sources = new HashMap<>();
     for (int i = 0; i < DEVICES; i++) {
       int index = i;
-      int id = chain.add(i + 1, "Device " + (i + 1));
+      int id = chain.add(i + 1, "Device " + (i + 1)).id();
       sources.put(id, () -> connected[index]);
     }
     busCount++;

@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.Logger;
-import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.hardware.power.PowerDistribution;
 import org.wpilib.math.filter.Debouncer;
 import org.wpilib.util.Alert;
@@ -33,7 +32,7 @@ public class LoggedPowerDistribution extends PowerDistribution {
   }
 
   private final String key;
-  private final CANChain.Address address;
+  private final CANChain.Device device;
   private final PowerDistributionInputsAutoLogged inputs = new PowerDistributionInputsAutoLogged();
   private final Debouncer connectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.FALLING);
   private final Alert disconnectedAlert;
@@ -41,19 +40,18 @@ public class LoggedPowerDistribution extends PowerDistribution {
   /**
    * Creates a logged power distribution module.
    *
-   * @param busId the SystemCore CAN port
-   * @param module the CAN device ID of the power distribution module
+   * @param device the power distribution module's CAN device
    * @param moduleType the type of power distribution module
    * @param logKey the AdvantageKit log key prefix
    */
-  public LoggedPowerDistribution(CANPort busId, int module, ModuleType moduleType, String logKey) {
-    super(busId, module, moduleType);
+  public LoggedPowerDistribution(CANChain.Device device, ModuleType moduleType, String logKey) {
+    super(device.port(), device.id(), moduleType);
     this.key = logKey;
-    this.address = new CANChain.Address(busId, module);
+    this.device = device;
     disconnectedAlert =
         new Alert(
             logKey + "/disconnected",
-            "Power distribution (ID " + module + ") not responding on " + busId + ".",
+            "Power distribution (ID " + device.id() + ") not responding on " + device.port() + ".",
             Alert.Level.HIGH);
   }
 
@@ -62,9 +60,9 @@ public class LoggedPowerDistribution extends PowerDistribution {
     return inputs.connected;
   }
 
-  /** Returns this module's connection state, keyed by its address, from the logged input. */
-  public Map<CANChain.Address, BooleanSupplier> canConnections() {
-    return Map.of(address, this::isConnected);
+  /** Returns this module's connection state, keyed by its device, from the logged input. */
+  public Map<CANChain.Device, BooleanSupplier> canConnections() {
+    return Map.of(device, this::isConnected);
   }
 
   public void log() {
