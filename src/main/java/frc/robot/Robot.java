@@ -137,8 +137,6 @@ public class Robot extends LoggedRobot {
     Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
     Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
     Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
-    // CAN FD's fast data phase is less tolerant of wiring faults, so record the bus mode
-    Logger.recordMetadata("SC1NetworkFD", Boolean.toString(SC1.BUS.isNetworkFD()));
     switch (BuildConstants.DIRTY) {
       case 0:
         Logger.recordMetadata("GitDirty", "All changes committed");
