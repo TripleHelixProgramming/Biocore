@@ -14,15 +14,13 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class CANChainTest {
-  private record Device(int id, String name) implements CANChainDevice {}
-
-  private static final List<Device> CHAIN =
+  private static final List<CANChainDevice> CHAIN =
       List.of(
-          new Device(28, "FRONT_LEFT_DRIVE"),
-          new Device(29, "FRONT_LEFT_TURN"),
-          new Device(43, "FRONT_LEFT_TURN_ABS_ENC"),
-          new Device(20, "FRONT_RIGHT_DRIVE"),
-          new Device(21, "FRONT_RIGHT_TURN"));
+          new CANChainDevice(28, "FrontLeft drive"),
+          new CANChainDevice(29, "FrontLeft turn"),
+          new CANChainDevice(43, "FrontLeft turn encoder"),
+          new CANChainDevice(20, "FrontRight drive"),
+          new CANChainDevice(21, "FrontRight turn"));
 
   private static boolean[] up(boolean... connected) {
     return connected;
@@ -76,8 +74,8 @@ class CANChainTest {
   void hintNamesBothSidesOfTheBreak() {
     assertEquals(
         "CAN chain break on SC1 (order traced 2026-10-03 A.Student): #0–#2 respond, #3–#4 don't."
-            + " Check #2 FRONT_LEFT_TURN_ABS_ENC (ID 43)'s outgoing connector, the cable, and"
-            + " #3 FRONT_RIGHT_DRIVE (ID 20)'s incoming connector.",
+            + " Check #2 FrontLeft turn encoder (ID 43)'s outgoing connector, the cable, and"
+            + " #3 FrontRight drive (ID 20)'s incoming connector.",
         CANChain.hint("SC1", CHAIN, 3, "2026-10-03 A.Student"));
   }
 
@@ -86,7 +84,7 @@ class CANChainTest {
     assertEquals(
         "CAN chain break on SC1 (order traced 2026-10-03 A.Student): no device responds."
             + " Check the SystemCore SC1 port and plug, and the cable to"
-            + " #0 FRONT_LEFT_DRIVE (ID 28).",
+            + " #0 FrontLeft drive (ID 28).",
         CANChain.hint("SC1", CHAIN, 0, "2026-10-03 A.Student"));
   }
 
@@ -98,7 +96,7 @@ class CANChainTest {
   @Test
   void missingSourceIsReported() {
     assertEquals(
-        "FRONT_RIGHT_TURN (ID 21) has no connection source",
+        "FrontRight turn (ID 21) has no connection source",
         CANChain.validate(CHAIN, Set.of(28, 29, 43, 20)));
   }
 
@@ -111,7 +109,7 @@ class CANChainTest {
 
   @Test
   void duplicateChainIdIsReported() {
-    var chain = List.of(new Device(10, "A"), new Device(10, "B"));
+    var chain = List.of(new CANChainDevice(10, "A"), new CANChainDevice(10, "B"));
     assertEquals("CAN ID 10 appears twice in the chain", CANChain.validate(chain, Set.of(10)));
   }
 }

@@ -78,7 +78,7 @@ public final class CANChain {
 
   private static String describe(List<? extends CANChainDevice> chain, int index) {
     CANChainDevice device = chain.get(index);
-    return "#" + index + " " + device.name() + " (ID " + device.id() + ")";
+    return "#" + index + " " + device.label() + " (ID " + device.id() + ")";
   }
 
   /**
@@ -95,7 +95,7 @@ public final class CANChain {
         return "CAN ID " + device.id() + " appears twice in the chain";
       }
       if (!sourceIds.contains(device.id())) {
-        return device.name() + " (ID " + device.id() + ") has no connection source";
+        return device.label() + " (ID " + device.id() + ") has no connection source";
       }
     }
     for (int id : sourceIds) {

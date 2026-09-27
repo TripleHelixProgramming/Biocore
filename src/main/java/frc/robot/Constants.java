@@ -12,7 +12,9 @@ package frc.robot;
 
 import com.ctre.phoenix6.CANBus;
 import frc.lib.RobotMode;
+import frc.lib.hardware.CANChainBuilder;
 import frc.lib.hardware.CANChainDevice;
+import java.util.List;
 import org.wpilib.framework.RobotBase;
 import org.wpilib.hardware.bus.CANPort;
 
@@ -92,15 +94,15 @@ public final class Constants {
   /**
    * The CAN buses and the devices on them.
    *
-   * <p>Each bus lists its devices in a {@code Chain} enum, in daisy-chain order: the first constant
-   * is the device wired closest to the SystemCore port, and each next constant is the next device
-   * along the cable. A device's position in the enum is its CAN index, and the robot uses that
-   * position for nothing else. The CAN ID and name of every device live only here, so device code
-   * reads its ID from the enum, e.g. {@code SC1.Chain.FRONT_LEFT_DRIVE.id()}.
+   * <p>Each bus declares its devices in daisy-chain order: the first device is wired closest to the
+   * SystemCore port, and each next line is the next device along the cable. Java runs these lines
+   * in the order written, so the order of the lines is the chain order, and a device's position in
+   * {@code CHAIN} is its CAN index. {@code CHAIN} must come after the last device (see {@link
+   * CANChainBuilder}).
    *
    * <p>To trace a bus: start at its SystemCore port and follow the CAN wires to the terminator,
-   * reordering the enum constants to match. The bus is assumed to be one line with the SystemCore
-   * at one end. A device on a side branch goes at the point where the branch leaves the main line.
+   * reordering the device lines to match. The bus is assumed to be one line with the SystemCore at
+   * one end. A device on a side branch goes at the point where the branch leaves the main line.
    * Then set {@code CHAIN_ORDER_TRACED} to the date and your name. While it is null, the robot
    * doesn't trust the order and gives no break-location hint for that bus.
    */
@@ -115,25 +117,14 @@ public final class Constants {
       public static final CANPort BUS_ID = CANPort.CAN_S0;
       public static final CANBus BUS = new CANBus(BUS_ID);
 
-      /** When and by whom the Chain order was traced from the wiring, or null if not yet. */
+      // Devices in daisy-chain order from the SystemCore
+      private static final CANChainBuilder CHAIN_BUILDER = new CANChainBuilder();
+      public static final int PD = CHAIN_BUILDER.add(1, "Power distribution");
+      public static final int GYRO = CHAIN_BUILDER.add(0, "Gyro");
+      public static final List<CANChainDevice> CHAIN = CHAIN_BUILDER.build();
+
+      /** When and by whom the chain order was traced from the wiring, or null if not yet. */
       public static final String CHAIN_ORDER_TRACED = null;
-
-      /** SC0 devices in daisy-chain order from the SystemCore. */
-      public enum Chain implements CANChainDevice {
-        PD(1),
-        GYRO(0);
-
-        private final int id;
-
-        Chain(int id) {
-          this.id = id;
-        }
-
-        @Override
-        public int id() {
-          return id;
-        }
-      }
     }
 
     /**
@@ -145,35 +136,28 @@ public final class Constants {
       public static final CANPort BUS_ID = CANPort.CAN_S1;
       public static final CANBus BUS = new CANBus(BUS_ID);
 
-      /** When and by whom the Chain order was traced from the wiring, or null if not yet. */
+      // Devices in daisy-chain order from the SystemCore
+      private static final CANChainBuilder CHAIN_BUILDER = new CANChainBuilder();
+      public static final int BACK_LEFT_DRIVE = CHAIN_BUILDER.add(10, "BackLeft drive");
+      public static final int BACK_RIGHT_DRIVE = CHAIN_BUILDER.add(18, "BackRight drive");
+      public static final int FRONT_RIGHT_DRIVE = CHAIN_BUILDER.add(20, "FrontRight drive");
+      public static final int FRONT_LEFT_DRIVE = CHAIN_BUILDER.add(28, "FrontLeft drive");
+      public static final int BACK_LEFT_TURN = CHAIN_BUILDER.add(11, "BackLeft turn");
+      public static final int BACK_RIGHT_TURN = CHAIN_BUILDER.add(19, "BackRight turn");
+      public static final int FRONT_RIGHT_TURN = CHAIN_BUILDER.add(21, "FrontRight turn");
+      public static final int FRONT_LEFT_TURN = CHAIN_BUILDER.add(29, "FrontLeft turn");
+      public static final int BACK_RIGHT_TURN_ABS_ENC =
+          CHAIN_BUILDER.add(31, "BackRight turn encoder");
+      public static final int FRONT_RIGHT_TURN_ABS_ENC =
+          CHAIN_BUILDER.add(33, "FrontRight turn encoder");
+      public static final int FRONT_LEFT_TURN_ABS_ENC =
+          CHAIN_BUILDER.add(43, "FrontLeft turn encoder");
+      public static final int BACK_LEFT_TURN_ABS_ENC =
+          CHAIN_BUILDER.add(45, "BackLeft turn encoder");
+      public static final List<CANChainDevice> CHAIN = CHAIN_BUILDER.build();
+
+      /** When and by whom the chain order was traced from the wiring, or null if not yet. */
       public static final String CHAIN_ORDER_TRACED = null;
-
-      /** SC1 devices in daisy-chain order from the SystemCore. */
-      public enum Chain implements CANChainDevice {
-        BACK_LEFT_DRIVE(10),
-        BACK_RIGHT_DRIVE(18),
-        FRONT_RIGHT_DRIVE(20),
-        FRONT_LEFT_DRIVE(28),
-        BACK_LEFT_TURN(11),
-        BACK_RIGHT_TURN(19),
-        FRONT_RIGHT_TURN(21),
-        FRONT_LEFT_TURN(29),
-        BACK_RIGHT_TURN_ABS_ENC(31),
-        FRONT_RIGHT_TURN_ABS_ENC(33),
-        FRONT_LEFT_TURN_ABS_ENC(43),
-        BACK_LEFT_TURN_ABS_ENC(45);
-
-        private final int id;
-
-        Chain(int id) {
-          this.id = id;
-        }
-
-        @Override
-        public int id() {
-          return id;
-        }
-      }
     }
   }
 }

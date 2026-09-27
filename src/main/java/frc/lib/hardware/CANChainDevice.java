@@ -8,13 +8,9 @@
 package frc.lib.hardware;
 
 /**
- * A device on a CAN bus daisy chain. Enum constants implement {@link #name()} automatically, so
- * each device's name in alerts is its constant name, e.g. FRONT_LEFT_DRIVE.
+ * A device on a CAN bus daisy chain.
+ *
+ * @param id the device's CAN ID
+ * @param label a name that tells the pit crew where the device is, e.g. "FrontLeft drive"
  */
-public interface CANChainDevice {
-  /** Returns the device's CAN ID. */
-  int id();
-
-  /** Returns the device's name, as written in the code. */
-  String name();
-}
+public record CANChainDevice(int id, String label) {}

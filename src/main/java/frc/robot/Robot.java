@@ -56,7 +56,6 @@ import frc.robot.subsystems.vision.VisionThread;
 import frc.robot.util.odometry.CanandgyroThread;
 import frc.robot.util.odometry.SparkOdometryThread;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -108,7 +107,7 @@ public class Robot extends LoggedRobot {
   public static final AutoSelector autoSelector =
       new AutoSelector(DIOPorts.AUTONOMOUS_MODE_SELECTOR, allianceSelector::getAllianceColor);
   public final LoggedPowerDistribution powerDistribution =
-      new LoggedPowerDistribution(SC0.BUS_ID, SC0.Chain.PD.id(), ModuleType.REV, "PD");
+      new LoggedPowerDistribution(SC0.BUS_ID, SC0.PD, ModuleType.REV, "PD");
 
   private final LoggedCANBus sc0CANBus =
       new LoggedCANBus(Constants.CANBusPorts.SC0.NAME, Constants.CANBusPorts.SC0.BUS);
@@ -237,19 +236,19 @@ public class Robot extends LoggedRobot {
     }
 
     Map<Integer, BooleanSupplier> sc0Connections = new HashMap<>();
-    sc0Connections.put(SC0.Chain.PD.id(), powerDistribution::isConnected);
-    sc0Connections.put(SC0.Chain.GYRO.id(), drive::isGyroConnected);
+    sc0Connections.put(SC0.PD, powerDistribution::isConnected);
+    sc0Connections.put(SC0.GYRO, drive::isGyroConnected);
     sc0Chain =
         new CANChainMonitor(
             SC0.NAME,
-            List.of(SC0.Chain.values()),
+            SC0.CHAIN,
             SC0.CHAIN_ORDER_TRACED,
             sc0Connections,
             CANChainMonitor.DEFAULT_STABLE_SECONDS);
     sc1Chain =
         new CANChainMonitor(
             SC1.NAME,
-            List.of(SC1.Chain.values()),
+            SC1.CHAIN,
             SC1.CHAIN_ORDER_TRACED,
             drive.sc1Connections(),
             CANChainMonitor.DEFAULT_STABLE_SECONDS);
