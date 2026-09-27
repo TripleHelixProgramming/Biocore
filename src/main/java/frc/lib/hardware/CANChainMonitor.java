@@ -42,6 +42,7 @@ public class CANChainMonitor {
   private final CANChain chain;
   private final String traced;
   private final BooleanSupplier[] sources;
+  private final boolean[] connected;
   private final boolean enabled;
   private final double stableSeconds;
   private final Alert alert;
@@ -76,6 +77,7 @@ public class CANChainMonitor {
     }
     enabled = traced != null && problem == null;
     sources = new BooleanSupplier[devices.size()];
+    connected = new boolean[devices.size()];
     if (enabled) {
       for (int i = 0; i < sources.length; i++) sources[i] = connections.get(devices.get(i));
     }
@@ -90,7 +92,6 @@ public class CANChainMonitor {
    */
   public int update(double now, boolean busFaulted) {
     if (!enabled) return -1;
-    boolean[] connected = new boolean[sources.length];
     for (int i = 0; i < sources.length; i++) connected[i] = sources[i].getAsBoolean();
     int breakIndex = CANChain.findBreak(connected);
     Logger.recordOutput(indexKey, breakIndex);

@@ -114,13 +114,12 @@ public class CANChain {
    * @param traced when and by whom the chain order was traced from the wiring
    */
   public String hint(int k, String traced) {
-    String bus = name;
     int last = devices.size() - 1;
-    String prefix = "CAN chain break on " + bus + " (order traced " + traced + "): ";
+    String prefix = "CAN chain break on " + name + " (order traced " + traced + "): ";
     if (k == 0) {
       return prefix
           + "no device responds. Check the SystemCore "
-          + bus
+          + name
           + " port and plug, and the cable to "
           + describe(0)
           + ".";
