@@ -304,9 +304,9 @@ public class DriveConstants {
       FRONT_LEFT =
           configureModule(
               CONSTANT_CREATOR.createModuleConstants(
-                  SC1.FRONT_LEFT_TURN,
-                  SC1.FRONT_LEFT_DRIVE,
-                  SC1.FRONT_LEFT_TURN_ABS_ENC,
+                  SC1.Chain.FRONT_LEFT_TURN.id(),
+                  SC1.Chain.FRONT_LEFT_DRIVE.id(),
+                  SC1.Chain.FRONT_LEFT_TURN_ABS_ENC.id(),
                   Rotations.of(0),
                   WHEEL_BASE.div(2.0),
                   TRACK_WIDTH.div(2.0),
@@ -318,9 +318,9 @@ public class DriveConstants {
       FRONT_RIGHT =
           configureModule(
               CONSTANT_CREATOR.createModuleConstants(
-                  SC1.FRONT_RIGHT_TURN,
-                  SC1.FRONT_RIGHT_DRIVE,
-                  SC1.FRONT_RIGHT_TURN_ABS_ENC,
+                  SC1.Chain.FRONT_RIGHT_TURN.id(),
+                  SC1.Chain.FRONT_RIGHT_DRIVE.id(),
+                  SC1.Chain.FRONT_RIGHT_TURN_ABS_ENC.id(),
                   Rotations.of(0),
                   WHEEL_BASE.div(2.0),
                   TRACK_WIDTH.div(-2.0),
@@ -332,9 +332,9 @@ public class DriveConstants {
       BACK_LEFT =
           configureModule(
               CONSTANT_CREATOR.createModuleConstants(
-                  SC1.BACK_LEFT_TURN,
-                  SC1.BACK_LEFT_DRIVE,
-                  SC1.BACK_LEFT_TURN_ABS_ENC,
+                  SC1.Chain.BACK_LEFT_TURN.id(),
+                  SC1.Chain.BACK_LEFT_DRIVE.id(),
+                  SC1.Chain.BACK_LEFT_TURN_ABS_ENC.id(),
                   Rotations.of(0),
                   WHEEL_BASE.div(-2.0),
                   TRACK_WIDTH.div(2.0),
@@ -346,9 +346,9 @@ public class DriveConstants {
       BACK_RIGHT =
           configureModule(
               CONSTANT_CREATOR.createModuleConstants(
-                  SC1.BACK_RIGHT_TURN,
-                  SC1.BACK_RIGHT_DRIVE,
-                  SC1.BACK_RIGHT_TURN_ABS_ENC,
+                  SC1.Chain.BACK_RIGHT_TURN.id(),
+                  SC1.Chain.BACK_RIGHT_DRIVE.id(),
+                  SC1.Chain.BACK_RIGHT_TURN_ABS_ENC.id(),
                   Rotations.of(0),
                   WHEEL_BASE.div(-2.0),
                   TRACK_WIDTH.div(-2.0),

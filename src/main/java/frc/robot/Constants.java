@@ -12,6 +12,7 @@ package frc.robot;
 
 import com.ctre.phoenix6.CANBus;
 import frc.lib.RobotMode;
+import frc.lib.hardware.CANChainDevice;
 import org.wpilib.framework.RobotBase;
 import org.wpilib.hardware.bus.CANPort;
 
@@ -88,6 +89,21 @@ public final class Constants {
     public static final int ALLIANCE_COLOR_SELECTOR = 3;
   }
 
+  /**
+   * The CAN buses and the devices on them.
+   *
+   * <p>Each bus lists its devices in a {@code Chain} enum, in daisy-chain order: the first constant
+   * is the device wired closest to the SystemCore port, and each next constant is the next device
+   * along the cable. A device's position in the enum is its CAN index, and the robot uses that
+   * position for nothing else. The CAN ID and name of every device live only here, so device code
+   * reads its ID from the enum, e.g. {@code SC1.Chain.FRONT_LEFT_DRIVE.id()}.
+   *
+   * <p>To trace a bus: start at its SystemCore port and follow the CAN wires to the terminator,
+   * reordering the enum constants to match. The bus is assumed to be one line with the SystemCore
+   * at one end. A device on a side branch goes at the point where the branch leaves the main line.
+   * Then set {@code CHAIN_ORDER_TRACED} to the date and your name. While it is null, the robot
+   * doesn't trust the order and gives no break-location hint for that bus.
+   */
   public static final class CANBusPorts {
 
     /**
@@ -99,11 +115,25 @@ public final class Constants {
       public static final CANPort BUS_ID = CANPort.CAN_S0;
       public static final CANBus BUS = new CANBus(BUS_ID);
 
-      // Power distribution
-      public static final int PD = 1;
+      /** When and by whom the Chain order was traced from the wiring, or null if not yet. */
+      public static final String CHAIN_ORDER_TRACED = null;
 
-      // Drivetrain
-      public static final int GYRO = 0;
+      /** SC0 devices in daisy-chain order from the SystemCore. */
+      public enum Chain implements CANChainDevice {
+        PD(1),
+        GYRO(0);
+
+        private final int id;
+
+        Chain(int id) {
+          this.id = id;
+        }
+
+        @Override
+        public int id() {
+          return id;
+        }
+      }
     }
 
     /**
@@ -115,21 +145,35 @@ public final class Constants {
       public static final CANPort BUS_ID = CANPort.CAN_S1;
       public static final CANBus BUS = new CANBus(BUS_ID);
 
-      // Drivetrain
-      public static final int BACK_LEFT_DRIVE = 10;
-      public static final int BACK_RIGHT_DRIVE = 18;
-      public static final int FRONT_RIGHT_DRIVE = 20;
-      public static final int FRONT_LEFT_DRIVE = 28;
+      /** When and by whom the Chain order was traced from the wiring, or null if not yet. */
+      public static final String CHAIN_ORDER_TRACED = null;
 
-      public static final int BACK_LEFT_TURN = 11;
-      public static final int BACK_RIGHT_TURN = 19;
-      public static final int FRONT_RIGHT_TURN = 21;
-      public static final int FRONT_LEFT_TURN = 29;
+      /** SC1 devices in daisy-chain order from the SystemCore. */
+      public enum Chain implements CANChainDevice {
+        BACK_LEFT_DRIVE(10),
+        BACK_RIGHT_DRIVE(18),
+        FRONT_RIGHT_DRIVE(20),
+        FRONT_LEFT_DRIVE(28),
+        BACK_LEFT_TURN(11),
+        BACK_RIGHT_TURN(19),
+        FRONT_RIGHT_TURN(21),
+        FRONT_LEFT_TURN(29),
+        BACK_RIGHT_TURN_ABS_ENC(31),
+        FRONT_RIGHT_TURN_ABS_ENC(33),
+        FRONT_LEFT_TURN_ABS_ENC(43),
+        BACK_LEFT_TURN_ABS_ENC(45);
 
-      public static final int BACK_RIGHT_TURN_ABS_ENC = 31;
-      public static final int FRONT_RIGHT_TURN_ABS_ENC = 33;
-      public static final int FRONT_LEFT_TURN_ABS_ENC = 43;
-      public static final int BACK_LEFT_TURN_ABS_ENC = 45;
+        private final int id;
+
+        Chain(int id) {
+          this.id = id;
+        }
+
+        @Override
+        public int id() {
+          return id;
+        }
+      }
     }
   }
 }

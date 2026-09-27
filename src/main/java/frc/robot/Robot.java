@@ -19,6 +19,7 @@ import frc.lib.RobotMode;
 import frc.lib.autoselect.AllianceSelector;
 import frc.lib.autoselect.AutoOption;
 import frc.lib.autoselect.AutoSelector;
+import frc.lib.hardware.CANChainMonitor;
 import frc.lib.hardware.KernelLogMonitor;
 import frc.lib.hardware.LoggedCANBus;
 import frc.lib.hardware.LoggedPowerDistribution;
@@ -30,6 +31,7 @@ import frc.lib.input.ControllerSelector.DriverController;
 import frc.lib.input.ControllerSelector.OperatorConfig;
 import frc.lib.stats.RobotStats;
 import frc.robot.Constants.CANBusPorts.SC0;
+import frc.robot.Constants.CANBusPorts.SC1;
 import frc.robot.Constants.DIOPorts;
 import frc.robot.Constants.FeatureFlags;
 import frc.robot.Constants.USBStorageConstants;
@@ -53,6 +55,10 @@ import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.subsystems.vision.VisionThread;
 import frc.robot.util.odometry.CanandgyroThread;
 import frc.robot.util.odometry.SparkOdometryThread;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -74,6 +80,7 @@ import org.wpilib.hardware.power.PowerDistribution.ModuleType;
 import org.wpilib.math.filter.LinearFilter;
 import org.wpilib.simulation.BatterySim;
 import org.wpilib.simulation.RoboRioSim;
+import org.wpilib.system.Timer;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -101,12 +108,16 @@ public class Robot extends LoggedRobot {
   public static final AutoSelector autoSelector =
       new AutoSelector(DIOPorts.AUTONOMOUS_MODE_SELECTOR, allianceSelector::getAllianceColor);
   public final LoggedPowerDistribution powerDistribution =
-      new LoggedPowerDistribution(SC0.BUS_ID, SC0.PD, ModuleType.REV, "PD");
+      new LoggedPowerDistribution(SC0.BUS_ID, SC0.Chain.PD.id(), ModuleType.REV, "PD");
 
   private final LoggedCANBus sc0CANBus =
       new LoggedCANBus(Constants.CANBusPorts.SC0.NAME, Constants.CANBusPorts.SC0.BUS);
   private final LoggedCANBus sc1CANBus =
       new LoggedCANBus(Constants.CANBusPorts.SC1.NAME, Constants.CANBusPorts.SC1.BUS);
+
+  // Break-location hints for each bus's daisy chain. Built once the drive exists.
+  private CANChainMonitor sc0Chain;
+  private CANChainMonitor sc1Chain;
 
   private final java.util.Set<String> activeCommands = new java.util.LinkedHashSet<>();
 
@@ -127,6 +138,8 @@ public class Robot extends LoggedRobot {
     Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
     Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
     Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
+    // CAN FD's fast data phase is less tolerant of wiring faults, so record the bus mode
+    Logger.recordMetadata("SC1NetworkFD", Boolean.toString(SC1.BUS.isNetworkFD()));
     switch (BuildConstants.DIRTY) {
       case 0:
         Logger.recordMetadata("GitDirty", "All changes committed");
@@ -223,6 +236,24 @@ public class Robot extends LoggedRobot {
         break;
     }
 
+    Map<Integer, BooleanSupplier> sc0Connections = new HashMap<>();
+    sc0Connections.put(SC0.Chain.PD.id(), powerDistribution::isConnected);
+    sc0Connections.put(SC0.Chain.GYRO.id(), drive::isGyroConnected);
+    sc0Chain =
+        new CANChainMonitor(
+            SC0.NAME,
+            List.of(SC0.Chain.values()),
+            SC0.CHAIN_ORDER_TRACED,
+            sc0Connections,
+            CANChainMonitor.DEFAULT_STABLE_SECONDS);
+    sc1Chain =
+        new CANChainMonitor(
+            SC1.NAME,
+            List.of(SC1.Chain.values()),
+            SC1.CHAIN_ORDER_TRACED,
+            drive.sc1Connections(),
+            CANChainMonitor.DEFAULT_STABLE_SECONDS);
+
     // Start background threads (for non-blocking CAN/network reads)
     SparkOdometryThread.getInstance().start();
     if (FeatureFlags.VISION_ENABLED) VisionThread.getInstance().start();
@@ -262,6 +293,8 @@ public class Robot extends LoggedRobot {
     sc0CANBus.log();
     sc1CANBus.log();
     powerDistribution.log();
+    sc0Chain.update(Timer.getTimestamp());
+    sc1Chain.update(Timer.getTimestamp());
     logHIDs();
     logScheduler();
     GameState.logValues();
