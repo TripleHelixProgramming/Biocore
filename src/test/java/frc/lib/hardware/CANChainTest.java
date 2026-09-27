@@ -17,13 +17,17 @@ import org.junit.jupiter.api.Test;
 import org.wpilib.hardware.bus.CANPort;
 
 class CANChainTest {
-  private static final List<CANChain.Device> CHAIN =
-      List.of(
-          new CANChain.Device(CANPort.CAN_S1, 28, "FrontLeft drive"),
-          new CANChain.Device(CANPort.CAN_S1, 29, "FrontLeft turn"),
-          new CANChain.Device(CANPort.CAN_S1, 43, "FrontLeft turn encoder"),
-          new CANChain.Device(CANPort.CAN_S1, 20, "FrontRight drive"),
-          new CANChain.Device(CANPort.CAN_S1, 21, "FrontRight turn"));
+  private static CANChain sc1Chain() {
+    var chain = new CANChain("SC1", CANPort.CAN_S1);
+    chain.add(28, "FrontLeft drive");
+    chain.add(29, "FrontLeft turn");
+    chain.add(43, "FrontLeft turn encoder");
+    chain.add(20, "FrontRight drive");
+    chain.add(21, "FrontRight turn");
+    return chain;
+  }
+
+  private static final List<CANChain.Device> CHAIN = sc1Chain().devices();
 
   private static boolean[] up(boolean... connected) {
     return connected;
@@ -79,7 +83,7 @@ class CANChainTest {
         "CAN chain break on SC1 (order traced 2026-10-03 A.Student): #0–#2 respond, #3–#4 don't."
             + " Check #2 FrontLeft turn encoder (ID 43)'s outgoing connector, the cable, and"
             + " #3 FrontRight drive (ID 20)'s incoming connector.",
-        CANChain.hint("SC1", CHAIN, 3, "2026-10-03 A.Student"));
+        sc1Chain().hint(3, "2026-10-03 A.Student"));
   }
 
   @Test
@@ -88,7 +92,7 @@ class CANChainTest {
         "CAN chain break on SC1 (order traced 2026-10-03 A.Student): no device responds."
             + " Check the SystemCore SC1 port and plug, and the cable to"
             + " #0 FrontLeft drive (ID 28).",
-        CANChain.hint("SC1", CHAIN, 0, "2026-10-03 A.Student"));
+        sc1Chain().hint(0, "2026-10-03 A.Student"));
   }
 
   @Test
@@ -123,12 +127,12 @@ class CANChainTest {
   void addReturnsTheDeviceOnTheChainsPort() {
     assertEquals(
         new CANChain.Device(CANPort.CAN_S1, 28, "FrontLeft drive"),
-        new CANChain(CANPort.CAN_S1).add(28, "FrontLeft drive"));
+        new CANChain("SC1", CANPort.CAN_S1).add(28, "FrontLeft drive"));
   }
 
   @Test
   void devicesKeepDeclarationOrder() {
-    var chain = new CANChain(CANPort.CAN_S1);
+    var chain = new CANChain("SC1", CANPort.CAN_S1);
     chain.add(28, "FrontLeft drive");
     chain.add(29, "FrontLeft turn");
     chain.add(10, "BackLeft drive");
@@ -142,7 +146,7 @@ class CANChainTest {
 
   @Test
   void addAfterReadThrows() {
-    var chain = new CANChain(CANPort.CAN_S1);
+    var chain = new CANChain("SC1", CANPort.CAN_S1);
     chain.add(28, "FrontLeft drive");
     chain.devices();
     var error = assertThrows(IllegalStateException.class, () -> chain.add(29, "FrontLeft turn"));
@@ -151,7 +155,7 @@ class CANChainTest {
 
   @Test
   void devicesCannotBeModified() {
-    var chain = new CANChain(CANPort.CAN_S1);
+    var chain = new CANChain("SC1", CANPort.CAN_S1);
     chain.add(28, "FrontLeft drive");
     assertThrows(
         UnsupportedOperationException.class,

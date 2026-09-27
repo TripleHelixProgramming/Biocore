@@ -36,14 +36,12 @@ public class LoggedCANBus {
   /**
    * Creates a logged CAN bus status reporter.
    *
-   * @param name the bus name (used as the log key)
-   * @param bus the CAN bus to report status for
-   * @param chain the bus's devices in daisy-chain order
+   * @param chain the bus's devices in daisy-chain order, which also names the bus and its port
    * @param chainOrderTraced when and by whom the chain order was traced, or null if not yet
    */
-  public LoggedCANBus(String name, CANBus bus, CANChain chain, String chainOrderTraced) {
-    this.name = name;
-    this.bus = bus;
+  public LoggedCANBus(CANChain chain, String chainOrderTraced) {
+    this.name = chain.name();
+    this.bus = new CANBus(chain.port());
     this.chain = chain;
     this.chainOrderTraced = chainOrderTraced;
   }
@@ -71,7 +69,7 @@ public class LoggedCANBus {
     }
     chainMonitor =
         new CANChainMonitor(
-            name, chain, chainOrderTraced, connections, CANChainMonitor.DEFAULT_STABLE_SECONDS);
+            chain, chainOrderTraced, connections, CANChainMonitor.DEFAULT_STABLE_SECONDS);
   }
 
   public void log() {

@@ -9,6 +9,7 @@ package frc.robot.subsystems.drive;
 
 import static org.wpilib.units.Units.*;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.ClosedLoopGeneralConfigs;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -275,7 +276,7 @@ public class DriveConstants {
   }
 
   public static final SwerveDrivetrainConstants DRIVETRAIN_CONSTANTS =
-      new SwerveDrivetrainConstants().withNetwork(SC1.BUS);
+      new SwerveDrivetrainConstants().withNetwork(new CANBus(SC1.CHAIN.port()));
 
   private static final SwerveModuleConstantsFactory<
           TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>

@@ -34,7 +34,7 @@ public class CANChainMonitor {
   /** Default hold time. It exceeds the 2 s Redux timeout minus the 0.5 s Phoenix debounce. */
   public static final double DEFAULT_STABLE_SECONDS = 2.5;
 
-  private final String bus;
+  private final CANChain chain;
   private final List<CANChain.Device> devices;
   private final String traced;
   private final BooleanSupplier[] sources;
@@ -47,20 +47,19 @@ public class CANChainMonitor {
   private int shownBreak = -1;
 
   /**
-   * @param bus the bus name, e.g. "SC1"
    * @param chain the bus's devices in chain order
    * @param traced when and by whom the chain order was traced, or null if not yet
    * @param connectedById each device's connection state, keyed by CAN ID
    * @param stableSeconds how long a break must hold before the alert shows
    */
   public CANChainMonitor(
-      String bus,
       CANChain chain,
       String traced,
       Map<Integer, BooleanSupplier> connectedById,
       double stableSeconds) {
-    this.bus = bus;
+    this.chain = chain;
     this.devices = chain.devices();
+    String bus = chain.name();
     this.traced = traced;
     this.stableSeconds = stableSeconds;
     this.alert = new Alert("CANBus/" + bus + "/chainBreak", "", Alert.Level.HIGH);
@@ -99,7 +98,7 @@ public class CANChainMonitor {
     }
     int settledBreak = rawBreak >= 0 && now - rawBreakSince >= stableSeconds ? rawBreak : -1;
     if (settledBreak >= 0 && settledBreak != shownBreak) {
-      alert.setText(CANChain.hint(bus, devices, settledBreak, traced));
+      alert.setText(chain.hint(settledBreak, traced));
     }
     shownBreak = settledBreak;
     alert.set(settledBreak >= 0);

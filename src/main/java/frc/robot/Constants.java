@@ -10,7 +10,6 @@
 
 package frc.robot;
 
-import com.ctre.phoenix6.CANBus;
 import frc.lib.RobotMode;
 import frc.lib.hardware.CANChain;
 import org.wpilib.framework.RobotBase;
@@ -92,7 +91,7 @@ public final class Constants {
   /**
    * The CAN buses and the devices on them.
    *
-   * <p>Each bus declares its {@code CHAIN} after its {@code BUS_ID}, then its devices in
+   * <p>Each bus declares its {@code CHAIN}, which names the bus and its port, then its devices in
    * daisy-chain order: the first device is wired closest to the SystemCore port, and each next line
    * is the next device along the cable. Java runs these lines in the order written, so the order of
    * the lines is the chain order, and a device's position is its CAN index (see {@link CANChain}).
@@ -110,12 +109,8 @@ public final class Constants {
      * distribution and gyro.
      */
     public static final class SC0 {
-      public static final String NAME = "SC0";
-      public static final CANPort BUS_ID = CANPort.CAN_S0;
-      public static final CANBus BUS = new CANBus(BUS_ID);
-
       // Devices in daisy-chain order from the SystemCore
-      public static final CANChain CHAIN = new CANChain(BUS_ID);
+      public static final CANChain CHAIN = new CANChain("SC0", CANPort.CAN_S0);
       public static final CANChain.Device PD = CHAIN.add(1, "Power distribution");
       public static final CANChain.Device GYRO = CHAIN.add(0, "Gyro");
 
@@ -128,12 +123,8 @@ public final class Constants {
      * controllers and CANcoders.
      */
     public static final class SC1 {
-      public static final String NAME = "SC1";
-      public static final CANPort BUS_ID = CANPort.CAN_S1;
-      public static final CANBus BUS = new CANBus(BUS_ID);
-
       // Devices in daisy-chain order from the SystemCore
-      public static final CANChain CHAIN = new CANChain(BUS_ID);
+      public static final CANChain CHAIN = new CANChain("SC1", CANPort.CAN_S1);
       public static final CANChain.Device BACK_LEFT_DRIVE = CHAIN.add(10, "BackLeft drive");
       public static final CANChain.Device BACK_RIGHT_DRIVE = CHAIN.add(18, "BackRight drive");
       public static final CANChain.Device FRONT_RIGHT_DRIVE = CHAIN.add(20, "FrontRight drive");

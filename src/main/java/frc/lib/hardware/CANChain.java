@@ -23,7 +23,7 @@ import org.wpilib.hardware.bus.CANPort;
  * the SystemCore:
  *
  * <pre>{@code
- * public static final CANChain CHAIN = new CANChain(BUS_ID);
+ * public static final CANChain CHAIN = new CANChain("SC1", CANPort.CAN_S1);
  * public static final CANChain.Device FRONT_LEFT_DRIVE = CHAIN.add(28, "FrontLeft drive");
  * public static final CANChain.Device FRONT_LEFT_TURN = CHAIN.add(29, "FrontLeft turn");
  * }</pre>
@@ -47,15 +47,23 @@ public class CANChain {
    */
   public record Device(CANPort port, int id, String label) {}
 
+  private final String name;
   private final CANPort port;
   private final List<Device> devices = new ArrayList<>();
   private boolean frozen = false;
 
   /**
+   * @param name the bus name used in logs and alerts, e.g. "SC1"
    * @param port the SystemCore CAN port this chain starts from
    */
-  public CANChain(CANPort port) {
+  public CANChain(String name, CANPort port) {
+    this.name = name;
     this.port = port;
+  }
+
+  /** Returns the bus name used in logs and alerts. */
+  public String name() {
+    return name;
   }
 
   /** Returns the SystemCore CAN port this chain starts from. */
@@ -110,12 +118,12 @@ public class CANChain {
   /**
    * Describes where to look for a break found by {@link #findBreak}.
    *
-   * @param bus the bus name, e.g. "SC1"
-   * @param chain the bus's devices in chain order
    * @param k the index of the first disconnected device
    * @param traced when and by whom the chain order was traced from the wiring
    */
-  public static String hint(String bus, List<Device> chain, int k, String traced) {
+  public String hint(int k, String traced) {
+    List<Device> chain = devices();
+    String bus = name;
     int last = chain.size() - 1;
     String prefix = "CAN chain break on " + bus + " (order traced " + traced + "): ";
     if (k == 0) {

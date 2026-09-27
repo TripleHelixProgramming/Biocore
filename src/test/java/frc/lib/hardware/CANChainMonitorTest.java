@@ -25,15 +25,15 @@ class CANChainMonitorTest {
 
   /** Builds a monitor over six devices with IDs 1..6. Each gets its own bus name. */
   private CANChainMonitor monitor(String traced) {
-    var chain = new CANChain(CANPort.CAN_S1);
+    busCount++;
+    var chain = new CANChain("TEST" + busCount, CANPort.CAN_S1);
     Map<Integer, BooleanSupplier> sources = new HashMap<>();
     for (int i = 0; i < DEVICES; i++) {
       int index = i;
       int id = chain.add(i + 1, "Device " + (i + 1)).id();
       sources.put(id, () -> connected[index]);
     }
-    busCount++;
-    return new CANChainMonitor("TEST" + busCount, chain, traced, sources, 2.5);
+    return new CANChainMonitor(chain, traced, sources, 2.5);
   }
 
   /** Disconnects every device from index k on. */

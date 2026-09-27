@@ -104,10 +104,8 @@ public class Robot extends LoggedRobot {
   public final LoggedPowerDistribution powerDistribution =
       new LoggedPowerDistribution(SC0.PD, ModuleType.REV, "PD");
 
-  private final LoggedCANBus sc0CANBus =
-      new LoggedCANBus(SC0.NAME, SC0.BUS, SC0.CHAIN, SC0.CHAIN_ORDER_TRACED);
-  private final LoggedCANBus sc1CANBus =
-      new LoggedCANBus(SC1.NAME, SC1.BUS, SC1.CHAIN, SC1.CHAIN_ORDER_TRACED);
+  private final LoggedCANBus sc0CANBus = new LoggedCANBus(SC0.CHAIN, SC0.CHAIN_ORDER_TRACED);
+  private final LoggedCANBus sc1CANBus = new LoggedCANBus(SC1.CHAIN, SC1.CHAIN_ORDER_TRACED);
 
   private final java.util.Set<String> activeCommands = new java.util.LinkedHashSet<>();
 
