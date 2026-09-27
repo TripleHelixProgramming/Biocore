@@ -9,9 +9,13 @@ package frc.lib.autoselect;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.wpilib.command2.Command;
+import org.wpilib.command2.CommandScheduler;
 import org.wpilib.command2.Commands;
 import org.wpilib.driverstation.Alliance;
 import org.wpilib.hardware.hal.HAL;
@@ -28,6 +32,8 @@ class AutoSelectorTest {
     new Pose2d(1, 1, Rotation2d.ZERO), new Pose2d(2, 1, Rotation2d.ZERO)
   };
 
+  private static final FreshCommandAuto FRESH_COMMAND_AUTO = new FreshCommandAuto();
+
   private static AllianceSelector allianceSelector;
   private static AutoSelector autoSelector;
 
@@ -38,6 +44,12 @@ class AutoSelectorTest {
     autoSelector = new AutoSelector(AUTO_PORTS, allianceSelector::getAllianceColor);
     autoSelector.addAuto(new AutoOption(Alliance.BLUE, 1, new FakeAuto(BLUE_PATH)));
     autoSelector.addAuto(new AutoOption(Alliance.BLUE, 2)); // reserved for no auto
+    autoSelector.addAuto(new AutoOption(Alliance.BLUE, 3, FRESH_COMMAND_AUTO));
+  }
+
+  @AfterEach
+  void clearScheduler() {
+    CommandScheduler.getInstance().cancelAll();
   }
 
   @Test
@@ -53,6 +65,16 @@ class AutoSelectorTest {
 
     select(2); // an option reserved for no auto
     assertEquals(0, autoSelector.getLoggedTrajectory().length);
+  }
+
+  @Test
+  void cancelAutoCancelsTheScheduledCommand() {
+    select(3);
+    autoSelector.scheduleAuto();
+    assertTrue(FRESH_COMMAND_AUTO.built.stream().anyMatch(Command::isScheduled));
+
+    autoSelector.cancelAuto();
+    assertTrue(FRESH_COMMAND_AUTO.built.stream().noneMatch(Command::isScheduled));
   }
 
   /** Sets the switches to blue and the given position, then lets the selectors settle. */
@@ -82,6 +104,24 @@ class AutoSelectorTest {
     @Override
     public Pose2d[] getLoggableTrajectory() {
       return path;
+    }
+  }
+
+  /** Builds a new command on every call, as a Choreo routine's cmd() does. */
+  private static class FreshCommandAuto implements NamedAuto {
+    final List<Command> built = new ArrayList<>();
+
+    @Override
+    public String getName() {
+      return "FreshCommandAuto";
+    }
+
+    @Override
+    public Command getAutoCommand() {
+      // Runs while disabled, because the scheduler ignores other commands in a disabled test
+      Command command = Commands.idle().ignoringDisable(true);
+      built.add(command);
+      return command;
     }
   }
 }
