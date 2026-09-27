@@ -20,7 +20,6 @@ import frc.robot.Constants;
 import frc.robot.Constants.CANBusPorts.SC0;
 import frc.robot.Constants.FeatureFlags;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -154,11 +153,10 @@ public class Drive extends SubsystemBase {
    * from logged inputs, so they replay.
    */
   public Map<CANChain.Device, BooleanSupplier> canConnections() {
-    var moduleConstants = List.of(FRONT_LEFT, FRONT_RIGHT, BACK_LEFT, BACK_RIGHT);
     Map<CANChain.Device, BooleanSupplier> connections = new HashMap<>();
     for (int i = 0; i < modules.length; i++) {
       Module module = modules[i];
-      var devices = DriveConstants.devices(moduleConstants.get(i));
+      var devices = DriveConstants.MODULE_DEVICES[i];
       connections.put(devices.drive(), module::isDriveConnected);
       connections.put(devices.turn(), module::isTurnConnected);
       connections.put(devices.turnEncoder(), module::isTurnEncoderConnected);

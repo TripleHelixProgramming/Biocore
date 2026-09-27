@@ -51,8 +51,10 @@ class DriveConstantsTest {
 
   @Test
   void moduleConstantsUseTheirDevicesIds() {
-    for (var module : MODULES) {
-      var devices = DriveConstants.devices(module);
+    assertEquals(MODULES.size(), DriveConstants.MODULE_DEVICES.length);
+    for (int i = 0; i < MODULES.size(); i++) {
+      var module = MODULES.get(i);
+      var devices = DriveConstants.MODULE_DEVICES[i];
       assertEquals(devices.drive().id(), module.DriveMotorId);
       assertEquals(devices.turn().id(), module.SteerMotorId);
       assertEquals(devices.turnEncoder().id(), module.EncoderId);
@@ -72,8 +74,7 @@ class DriveConstantsTest {
 
   @Test
   void allModuleDevicesAreOnTheDrivetrainBus() {
-    for (var module : MODULES) {
-      var devices = DriveConstants.devices(module);
+    for (var devices : DriveConstants.MODULE_DEVICES) {
       for (var device : List.of(devices.drive(), devices.turn(), devices.turnEncoder())) {
         assertEquals(CANPort.CAN_S1, device.port(), device.label());
       }
