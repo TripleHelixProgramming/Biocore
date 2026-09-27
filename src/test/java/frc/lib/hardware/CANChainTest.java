@@ -14,13 +14,13 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class CANChainTest {
-  private static final List<CANChainDevice> CHAIN =
+  private static final List<CANChain.Device> CHAIN =
       List.of(
-          new CANChainDevice(28, "FrontLeft drive"),
-          new CANChainDevice(29, "FrontLeft turn"),
-          new CANChainDevice(43, "FrontLeft turn encoder"),
-          new CANChainDevice(20, "FrontRight drive"),
-          new CANChainDevice(21, "FrontRight turn"));
+          new CANChain.Device(28, "FrontLeft drive"),
+          new CANChain.Device(29, "FrontLeft turn"),
+          new CANChain.Device(43, "FrontLeft turn encoder"),
+          new CANChain.Device(20, "FrontRight drive"),
+          new CANChain.Device(21, "FrontRight turn"));
 
   private static boolean[] up(boolean... connected) {
     return connected;
@@ -109,7 +109,44 @@ class CANChainTest {
 
   @Test
   void duplicateChainIdIsReported() {
-    var chain = List.of(new CANChainDevice(10, "A"), new CANChainDevice(10, "B"));
+    var chain = List.of(new CANChain.Device(10, "A"), new CANChain.Device(10, "B"));
     assertEquals("CAN ID 10 appears twice in the chain", CANChain.validate(chain, Set.of(10)));
+  }
+
+  @Test
+  void addReturnsTheId() {
+    assertEquals(28, new CANChain().add(28, "FrontLeft drive"));
+  }
+
+  @Test
+  void devicesKeepDeclarationOrder() {
+    var chain = new CANChain();
+    chain.add(28, "FrontLeft drive");
+    chain.add(29, "FrontLeft turn");
+    chain.add(10, "BackLeft drive");
+    assertEquals(
+        List.of(
+            new CANChain.Device(28, "FrontLeft drive"),
+            new CANChain.Device(29, "FrontLeft turn"),
+            new CANChain.Device(10, "BackLeft drive")),
+        chain.devices());
+  }
+
+  @Test
+  void addAfterReadThrows() {
+    var chain = new CANChain();
+    chain.add(28, "FrontLeft drive");
+    chain.devices();
+    var error = assertThrows(IllegalStateException.class, () -> chain.add(29, "FrontLeft turn"));
+    assertTrue(error.getMessage().contains("FrontLeft turn (ID 29)"));
+  }
+
+  @Test
+  void devicesCannotBeModified() {
+    var chain = new CANChain();
+    chain.add(28, "FrontLeft drive");
+    assertThrows(
+        UnsupportedOperationException.class,
+        () -> chain.devices().add(new CANChain.Device(1, "extra")));
   }
 }

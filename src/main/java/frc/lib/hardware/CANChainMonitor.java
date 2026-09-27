@@ -18,9 +18,14 @@ import org.wpilib.util.Alert;
  * Raises an alert naming where a CAN bus's daisy chain is broken.
  *
  * <p>Each cycle it reads every device's connection state in chain order, logs the raw break index,
- * and raises a HIGH alert once the same break has held for the hold time (see {@link
- * CANChainTracker}). The connection sources should read logged inputs, so replay reproduces the
- * alert.
+ * and raises a HIGH alert once the same break has held for the hold time. The connection sources
+ * should read logged inputs, so replay reproduces the alert.
+ *
+ * <p>The hold time matters because devices notice a lost connection at different speeds. Phoenix
+ * connection flags here drop 0.5 s after the last message, while a Redux device's {@code
+ * isConnected()} waits 2 s. During a break, the fast devices drop first, so the pattern can briefly
+ * show a split further along the chain than the real one. The hold time must be longer than the gap
+ * between the slowest and fastest devices on the bus, so the reported break is the settled one.
  *
  * <p>The monitor stays off when the chain order hasn't been traced, or when the chain and the
  * connection sources don't match one to one. A mismatch is reported once to the Driver Station.
@@ -30,13 +35,15 @@ public class CANChainMonitor {
   public static final double DEFAULT_STABLE_SECONDS = 2.5;
 
   private final String bus;
-  private final List<? extends CANChainDevice> chain;
+  private final List<CANChain.Device> devices;
   private final String traced;
   private final BooleanSupplier[] sources;
   private final boolean enabled;
-  private final CANChainTracker tracker;
+  private final double stableSeconds;
   private final Alert alert;
   private final String indexKey;
+  private int rawBreak = -1;
+  private double rawBreakSince = 0.0;
   private int shownBreak = -1;
 
   /**
@@ -48,27 +55,27 @@ public class CANChainMonitor {
    */
   public CANChainMonitor(
       String bus,
-      List<? extends CANChainDevice> chain,
+      CANChain chain,
       String traced,
       Map<Integer, BooleanSupplier> connectedById,
       double stableSeconds) {
     this.bus = bus;
-    this.chain = chain;
+    this.devices = chain.devices();
     this.traced = traced;
-    this.tracker = new CANChainTracker(stableSeconds);
+    this.stableSeconds = stableSeconds;
     this.alert = new Alert("CANBus/" + bus + "/chainBreak", "", Alert.Level.HIGH);
     this.indexKey = "CANBus/" + bus + "/ChainBreakIndex";
 
-    String problem = traced == null ? null : CANChain.validate(chain, connectedById.keySet());
+    String problem = traced == null ? null : CANChain.validate(devices, connectedById.keySet());
     if (problem != null) {
       DriverStationErrors.reportWarning(
           "CAN chain hint for " + bus + " is off: " + problem + ".", false);
     }
     enabled = traced != null && problem == null;
-    sources = new BooleanSupplier[chain.size()];
+    sources = new BooleanSupplier[devices.size()];
     if (enabled) {
       for (int i = 0; i < sources.length; i++) {
-        sources[i] = connectedById.get(chain.get(i).id());
+        sources[i] = connectedById.get(devices.get(i).id());
       }
     }
   }
@@ -77,19 +84,25 @@ public class CANChainMonitor {
    * Checks the chain for a break and updates the alert.
    *
    * @param now the current timestamp in seconds
+   * @return the index of the break the alert shows, or -1 when it shows none
    */
-  public void update(double now) {
-    if (!enabled) return;
+  public int update(double now) {
+    if (!enabled) return -1;
     boolean[] connected = new boolean[sources.length];
     for (int i = 0; i < sources.length; i++) connected[i] = sources[i].getAsBoolean();
-    int rawBreak = CANChain.findBreak(connected);
-    Logger.recordOutput(indexKey, rawBreak);
+    int breakIndex = CANChain.findBreak(connected);
+    Logger.recordOutput(indexKey, breakIndex);
 
-    int settledBreak = tracker.update(now, rawBreak);
+    if (breakIndex != rawBreak) {
+      rawBreak = breakIndex;
+      rawBreakSince = now;
+    }
+    int settledBreak = rawBreak >= 0 && now - rawBreakSince >= stableSeconds ? rawBreak : -1;
     if (settledBreak >= 0 && settledBreak != shownBreak) {
-      alert.setText(CANChain.hint(bus, chain, settledBreak, traced));
+      alert.setText(CANChain.hint(bus, devices, settledBreak, traced));
     }
     shownBreak = settledBreak;
     alert.set(settledBreak >= 0);
+    return settledBreak;
   }
 }

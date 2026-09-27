@@ -7,19 +7,64 @@
 
 package frc.lib.hardware;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * Pure logic for locating a break along a CAN daisy chain.
+ * A CAN bus's devices in daisy-chain order, and the logic for locating a break along it.
  *
- * <p>A chain lists a bus's devices in wiring order from the SystemCore. A single break in the cable
- * leaves every device before it connected and every device after it disconnected. This class finds
- * that split and describes where to look. It uses no WPILib or Phoenix types.
+ * <p>Declare the chain first, then one device per line, starting with the device wired closest to
+ * the SystemCore:
+ *
+ * <pre>{@code
+ * public static final CANChain CHAIN = new CANChain();
+ * public static final int FRONT_LEFT_DRIVE = CHAIN.add(28, "FrontLeft drive");
+ * public static final int FRONT_LEFT_TURN = CHAIN.add(29, "FrontLeft turn");
+ * }</pre>
+ *
+ * <p>Java runs static field initializers in the order they are written, so the order of the {@code
+ * add} lines is the chain order, and a device's position is its CAN index. The chain freezes the
+ * first time {@link #devices()} is read; a later {@code add} throws.
+ *
+ * <p>A single break in the cable leaves every device before it connected and every device after it
+ * disconnected. The static methods find that split and describe where to look. They use no WPILib
+ * or Phoenix types.
  */
-public final class CANChain {
-  private CANChain() {}
+public class CANChain {
+  /**
+   * A device on the chain.
+   *
+   * @param id the device's CAN ID
+   * @param label a name that tells the pit crew where the device is, e.g. "FrontLeft drive"
+   */
+  public record Device(int id, String label) {}
+
+  private final List<Device> devices = new ArrayList<>();
+  private boolean frozen = false;
+
+  /**
+   * Adds the next device along the chain.
+   *
+   * @param id the device's CAN ID
+   * @param label a name that tells the pit crew where the device is
+   * @return the CAN ID, so the constant holds the ID
+   */
+  public int add(int id, String label) {
+    if (frozen) {
+      throw new IllegalStateException(
+          label + " (ID " + id + ") was added after the chain was first read.");
+    }
+    devices.add(new Device(id, label));
+    return id;
+  }
+
+  /** Returns the devices in chain order. No devices can be added afterward. */
+  public List<Device> devices() {
+    frozen = true;
+    return List.copyOf(devices);
+  }
 
   /**
    * Finds a single break in the chain.
@@ -50,8 +95,7 @@ public final class CANChain {
    * @param k the index of the first disconnected device
    * @param traced when and by whom the chain order was traced from the wiring
    */
-  public static String hint(
-      String bus, List<? extends CANChainDevice> chain, int k, String traced) {
+  public static String hint(String bus, List<Device> chain, int k, String traced) {
     int last = chain.size() - 1;
     String prefix = "CAN chain break on " + bus + " (order traced " + traced + "): ";
     if (k == 0) {
@@ -76,8 +120,8 @@ public final class CANChain {
         + "'s incoming connector.";
   }
 
-  private static String describe(List<? extends CANChainDevice> chain, int index) {
-    CANChainDevice device = chain.get(index);
+  private static String describe(List<Device> chain, int index) {
+    Device device = chain.get(index);
     return "#" + index + " " + device.label() + " (ID " + device.id() + ")";
   }
 
@@ -88,9 +132,9 @@ public final class CANChain {
    * @param sourceIds the CAN IDs that have a connection source
    * @return a description of the first problem found, or null if the chain is usable
    */
-  public static String validate(List<? extends CANChainDevice> chain, Set<Integer> sourceIds) {
+  public static String validate(List<Device> chain, Set<Integer> sourceIds) {
     Set<Integer> chainIds = new HashSet<>();
-    for (CANChainDevice device : chain) {
+    for (Device device : chain) {
       if (!chainIds.add(device.id())) {
         return "CAN ID " + device.id() + " appears twice in the chain";
       }
