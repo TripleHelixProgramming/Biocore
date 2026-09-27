@@ -27,8 +27,9 @@ import org.wpilib.util.Alert;
  *
  * <p>Each failed read sends an error to the Driver Station ({@code PowerDistributionJNI.cpp},
  * allwpilib v2027.0.0-alpha-7). While the module is missing, the other readings are skipped and the
- * voltage is read only once per {@link #MISSING_RETRY_SECONDS}, which limits that to about one
- * error per second. A module that comes back is noticed at its next read.
+ * voltage is read only once per {@link #MISSING_RETRY_SECONDS}, timed with {@link
+ * Timer#advanceIfElapsed}. That limits the errors to about one per second. A module that comes back
+ * is noticed at its next read.
  */
 public class LoggedPowerDistribution extends PowerDistribution {
   @AutoLog
@@ -44,7 +45,8 @@ public class LoggedPowerDistribution extends PowerDistribution {
   private final PowerDistributionInputsAutoLogged inputs = new PowerDistributionInputsAutoLogged();
   private final Debouncer connectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.FALLING);
   private final Alert disconnectedAlert;
-  private double lastReadTime = Double.NEGATIVE_INFINITY;
+  // Restarted on every connected read, so the first retry comes one period after the last one
+  private final Timer retryTimer = Timer.createStarted();
 
   /**
    * Creates a logged power distribution module.
@@ -74,25 +76,12 @@ public class LoggedPowerDistribution extends PowerDistribution {
     return Map.of(device, this::isConnected);
   }
 
-  /**
-   * Returns whether to read the module this cycle: always while it is connected, and once per
-   * {@link #MISSING_RETRY_SECONDS} while it is missing.
-   *
-   * @param connected whether the module was connected at the last check
-   * @param now the current timestamp in seconds
-   * @param lastReadTime the timestamp of the last read in seconds
-   */
-  static boolean shouldRead(boolean connected, double now, double lastReadTime) {
-    return connected || now - lastReadTime >= MISSING_RETRY_SECONDS;
-  }
-
   public void log() {
-    double now = Timer.getTimestamp();
     double voltage = 0.0;
-    if (shouldRead(inputs.connected, now, lastReadTime)) {
-      lastReadTime = now;
+    if (inputs.connected || retryTimer.advanceIfElapsed(MISSING_RETRY_SECONDS)) {
       voltage = getVoltage();
       inputs.connected = connectedDebounce.calculate(voltage > 0.0);
+      if (inputs.connected) retryTimer.restart();
     }
     Logger.processInputs(key, inputs);
     disconnectedAlert.set(!inputs.connected);

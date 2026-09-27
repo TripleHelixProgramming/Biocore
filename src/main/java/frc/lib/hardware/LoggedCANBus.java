@@ -11,10 +11,12 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.CANBus.CANBusStatus;
 import frc.lib.Util;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.driverstation.DriverStationErrors;
+import org.wpilib.system.Notifier;
 import org.wpilib.system.Timer;
 import org.wpilib.util.Alert;
 
@@ -22,10 +24,10 @@ import org.wpilib.util.Alert;
  * Logs a CAN bus's controller status, raises alerts when the bus is in trouble, and watches its
  * daisy chain for a break.
  *
- * <p>{@link CANBus#getStatus()} can block for up to 1 ms (its Javadoc), so a background thread
- * reads it and the main loop only copies the latest sample. Without {@link #start()}, as in
- * simulation, the inputs keep their defaults. Alerts come only from the logged inputs, so replay
- * reproduces them.
+ * <p>{@link CANBus#getStatus()} can block for up to 1 ms (its Javadoc), so a {@link Notifier} reads
+ * it in the background and the main loop only copies the latest sample. Without {@link #start()},
+ * as in simulation, the inputs keep their defaults. Alerts come only from the logged inputs, so
+ * replay reproduces them.
  *
  * <p>Each {@link #log()} runs one bus-health step: log the status, update the bus alerts, then
  * update the chain-break hint, which is held back while the bus alert shows a bus-wide fault.
@@ -46,8 +48,8 @@ public class LoggedCANBus {
     public long sampleCount = 0;
   }
 
-  /** How often the background thread reads the bus status, in milliseconds. */
-  private static final long SAMPLE_PERIOD_MS = 400;
+  /** How often the background reader reads the bus status, in seconds. */
+  private static final double SAMPLE_PERIOD_SECONDS = 0.4;
 
   /** One status read, paired with its sequence number so the two are published together. */
   private record Sample(CANBusStatus status, long sequence) {}
@@ -62,8 +64,11 @@ public class LoggedCANBus {
   private final Alert errorAlert;
   private final Alert warningAlert;
   private CANChainMonitor chainMonitor = null;
+  private final Notifier reader;
+  private final AtomicLong sequence = new AtomicLong();
   private volatile Sample latest = null;
-  private Thread reader = null;
+  private volatile boolean readFailureReported = false;
+  private boolean started = false;
 
   /**
    * Creates a logged CAN bus status reporter.
@@ -80,6 +85,8 @@ public class LoggedCANBus {
     this.chainOrderTraced = chainOrderTraced;
     errorAlert = new Alert(key + "/errors", "", Alert.Level.HIGH);
     warningAlert = new Alert(key + "/warning", "", Alert.Level.MEDIUM);
+    reader = new Notifier(this::read);
+    reader.setName("CANBusReader-" + name);
   }
 
   /**
@@ -96,34 +103,24 @@ public class LoggedCANBus {
             chain, chainOrderTraced, connections, CANChainMonitor.DEFAULT_STABLE_SECONDS);
   }
 
-  /** Reads the status once, then starts the background thread that keeps reading it. */
+  /** Reads the status once, then starts the background reader that keeps reading it. */
   public synchronized void start() {
-    if (reader != null) return;
-    latest = new Sample(bus.getStatus(), 1);
-    reader = new Thread(this::readLoop, "CANBusReader-" + name);
-    reader.setDaemon(true);
-    reader.start();
+    if (started) return;
+    started = true;
+    read();
+    reader.startPeriodic(SAMPLE_PERIOD_SECONDS);
   }
 
-  private void readLoop() {
-    long sequence = latest.sequence();
-    boolean warned = false;
-    while (!Thread.currentThread().isInterrupted()) {
-      try {
-        Thread.sleep(SAMPLE_PERIOD_MS);
-      } catch (InterruptedException e) {
-        return;
-      }
-      try {
-        sequence++;
-        latest = new Sample(bus.getStatus(), sequence);
-      } catch (RuntimeException e) {
-        // Keep reading. A stalled sample count raises the stale alert.
-        if (!warned) {
-          DriverStationErrors.reportWarning(
-              "CAN status read failed on " + name + ": " + e.getMessage(), false);
-          warned = true;
-        }
+  /** Reads the bus status once and publishes it with the next sequence number. */
+  private void read() {
+    try {
+      latest = new Sample(bus.getStatus(), sequence.incrementAndGet());
+    } catch (RuntimeException e) {
+      // Keep reading. A stalled sample count raises the stale alert.
+      if (!readFailureReported) {
+        DriverStationErrors.reportWarning(
+            "CAN status read failed on " + name + ": " + e.getMessage(), false);
+        readFailureReported = true;
       }
     }
   }
