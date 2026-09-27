@@ -51,10 +51,10 @@ class DriveConstantsTest {
 
   @Test
   void moduleConstantsUseTheirDevicesIds() {
-    assertEquals(MODULES.size(), DriveConstants.MODULE_DEVICES.length);
+    assertEquals(MODULES.size(), DriveConstants.MODULE_DEVICES.size());
     for (int i = 0; i < MODULES.size(); i++) {
       var module = MODULES.get(i);
-      var devices = DriveConstants.MODULE_DEVICES[i];
+      var devices = DriveConstants.MODULE_DEVICES.get(i);
       assertEquals(devices.drive().id(), module.DriveMotorId);
       assertEquals(devices.turn().id(), module.SteerMotorId);
       assertEquals(devices.turnEncoder().id(), module.EncoderId);
@@ -79,5 +79,11 @@ class DriveConstantsTest {
         assertEquals(CANPort.CAN_S1, device.port(), device.label());
       }
     }
+  }
+
+  @Test
+  void moduleDevicesCannotBeReplaced() {
+    var devices = DriveConstants.MODULE_DEVICES;
+    assertThrows(UnsupportedOperationException.class, () -> devices.set(0, devices.get(1)));
   }
 }

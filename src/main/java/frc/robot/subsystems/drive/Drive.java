@@ -156,7 +156,7 @@ public class Drive extends SubsystemBase {
     Map<CANChain.Device, BooleanSupplier> connections = new HashMap<>();
     for (int i = 0; i < modules.length; i++) {
       Module module = modules[i];
-      var devices = DriveConstants.MODULE_DEVICES[i];
+      var devices = DriveConstants.MODULE_DEVICES.get(i);
       connections.put(devices.drive(), module::isDriveConnected);
       connections.put(devices.turn(), module::isTurnConnected);
       connections.put(devices.turnEncoder(), module::isTurnEncoderConnected);
