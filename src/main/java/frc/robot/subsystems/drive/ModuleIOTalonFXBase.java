@@ -13,6 +13,7 @@ package frc.robot.subsystems.drive;
 import static frc.robot.util.odometry.PhoenixUtil.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -27,6 +28,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
+import frc.lib.hardware.PhoenixFirmware;
 import frc.robot.Constants.CANBusPorts.SC1;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.util.Units;
@@ -67,6 +69,25 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
   protected final StatusSignal<Voltage> turnAppliedVolts;
   protected final StatusSignal<Current> turnCurrent;
 
+  // Setup results. The encoder refresh result stays fixed after construction: a failed refresh
+  // means cancoderConfig holds defaults, so its magnet offset is not the device's real zero.
+  private final StatusCode driveSetupStatus;
+  private final StatusCode turnConfigStatus;
+  private final StatusCode turnEncoderRefreshStatus;
+  private StatusCode turnEncoderApplyStatus = StatusCode.OK;
+
+  // Results of the most recent setControl calls, which report when Phoenix blocks output
+  private StatusCode driveControlStatus = StatusCode.OK;
+  private StatusCode turnControlStatus = StatusCode.OK;
+
+  // Firmware versions, read until each first arrives. See readFirmware().
+  private final StatusSignal<Integer> driveVersion;
+  private final StatusSignal<Integer> turnVersion;
+  private final StatusSignal<Integer> turnEncoderVersion;
+  private String driveFirmware = "";
+  private String turnFirmware = "";
+  private String turnEncoderFirmware = "";
+
   protected ModuleIOTalonFXBase(
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
           constants) {
@@ -75,18 +96,30 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
     turnTalon = new TalonFX(constants.SteerMotorId, SC1.BUS);
     cancoder = new CANcoder(constants.EncoderId, SC1.BUS);
 
-    tryUntilOk(
-        5, () -> driveTalon.getConfigurator().apply(constants.DriveMotorInitialConfigs, 0.25));
-    tryUntilOk(5, () -> driveTalon.setPosition(0.0, 0.25));
-    tryUntilOk(
-        5, () -> turnTalon.getConfigurator().apply(constants.SteerMotorInitialConfigs, 0.25));
+    // A failed config apply skips setPosition, which would fail the same way
+    StatusCode driveConfigStatus =
+        tryUntilOk(
+            5, () -> driveTalon.getConfigurator().apply(constants.DriveMotorInitialConfigs, 0.25));
+    driveSetupStatus =
+        driveConfigStatus.isOK()
+            ? tryUntilOk(5, () -> driveTalon.setPosition(0.0, 0.25))
+            : driveConfigStatus;
+    turnConfigStatus =
+        tryUntilOk(
+            5, () -> turnTalon.getConfigurator().apply(constants.SteerMotorInitialConfigs, 0.25));
 
-    cancoder.getConfigurator().refresh(cancoderConfig);
+    // Read the CANcoder's config first so the apply keeps settings made in Phoenix Tuner. If the
+    // read fails, skip the apply rather than write defaults over the device.
+    turnEncoderRefreshStatus =
+        tryUntilOk(5, () -> cancoder.getConfigurator().refresh(cancoderConfig));
     cancoderConfig.MagnetSensor.SensorDirection =
         constants.EncoderInverted
             ? SensorDirectionValue.Clockwise_Positive
             : SensorDirectionValue.CounterClockwise_Positive;
-    cancoder.getConfigurator().apply(cancoderConfig);
+    if (turnEncoderRefreshStatus.isOK()) {
+      turnEncoderApplyStatus =
+          tryUntilOk(5, () -> cancoder.getConfigurator().apply(cancoderConfig));
+    }
 
     drivePosition = driveTalon.getPosition();
     driveVelocity = driveTalon.getVelocity();
@@ -97,6 +130,9 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
     turnVelocity = turnTalon.getVelocity();
     turnAppliedVolts = turnTalon.getMotorVoltage();
     turnCurrent = turnTalon.getStatorCurrent();
+    driveVersion = driveTalon.getVersion(false);
+    turnVersion = turnTalon.getVersion(false);
+    turnEncoderVersion = cancoder.getVersion(false);
   }
 
   /** Refreshes all status signals and populates the non-connection, non-odometry inputs. */
@@ -123,24 +159,58 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
     inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble());
     inputs.turnAppliedVolts = turnAppliedVolts.getValueAsDouble();
     inputs.turnCurrentAmps = turnCurrent.getValueAsDouble();
+
+    inputs.driveSetupStatus = driveSetupStatus.getName();
+    inputs.turnConfigStatus = turnConfigStatus.getName();
+    inputs.turnEncoderRefreshStatus = turnEncoderRefreshStatus.getName();
+    inputs.turnEncoderApplyStatus = turnEncoderApplyStatus.getName();
+    inputs.driveControlStatus = driveControlStatus.getName();
+    inputs.turnControlStatus = turnControlStatus.getName();
+
+    readFirmware();
+    inputs.driveFirmware = driveFirmware;
+    inputs.turnFirmware = turnFirmware;
+    inputs.turnEncoderFirmware = turnEncoderFirmware;
+  }
+
+  /**
+   * Reads each device's firmware version until it first arrives, then stops reading it.
+   *
+   * <p>Phoenix sends the version at 4 Hz, so it is usually missing at construction. Each read here
+   * takes the latest received value without waiting, and without reporting an error: a missing
+   * device already raises its disconnected alert. A device that joins the bus late gets its version
+   * once it starts sending.
+   */
+  private void readFirmware() {
+    if (driveFirmware.isEmpty()) driveFirmware = firmwareVersion(driveVersion);
+    if (turnFirmware.isEmpty()) turnFirmware = firmwareVersion(turnVersion);
+    if (turnEncoderFirmware.isEmpty()) turnEncoderFirmware = firmwareVersion(turnEncoderVersion);
+  }
+
+  /** Returns the signal's firmware version as "major.minor.bugfix.build", or "" when unknown. */
+  private static String firmwareVersion(StatusSignal<Integer> version) {
+    version.refresh(false);
+    return version.getStatus().isOK() ? PhoenixFirmware.format(version.getValue()) : "";
   }
 
   @Override
   public void setDriveOpenLoop(double output) {
-    driveTalon.setControl(
-        switch (constants.DriveMotorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(output);
-          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
-        });
+    driveControlStatus =
+        driveTalon.setControl(
+            switch (constants.DriveMotorClosedLoopOutput) {
+              case Voltage -> voltageRequest.withOutput(output);
+              case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
+            });
   }
 
   @Override
   public void setTurnOpenLoop(double output) {
-    turnTalon.setControl(
-        switch (constants.SteerMotorClosedLoopOutput) {
-          case Voltage -> voltageRequest.withOutput(output);
-          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
-        });
+    turnControlStatus =
+        turnTalon.setControl(
+            switch (constants.SteerMotorClosedLoopOutput) {
+              case Voltage -> voltageRequest.withOutput(output);
+              case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
+            });
   }
 
   @Override
@@ -151,15 +221,18 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
             constants.DriveMotorClosedLoopOutput,
             feedforwardWheelTorqueNm,
             constants.DriveMotorGearRatio);
-    driveTalon.setControl(
-        switch (constants.DriveMotorClosedLoopOutput) {
-          case Voltage ->
-              velocityVoltageRequest.withVelocity(velocityRotPerSec).withFeedForward(feedforward);
-          case TorqueCurrentFOC ->
-              velocityTorqueCurrentRequest
-                  .withVelocity(velocityRotPerSec)
-                  .withFeedForward(feedforward);
-        });
+    driveControlStatus =
+        driveTalon.setControl(
+            switch (constants.DriveMotorClosedLoopOutput) {
+              case Voltage ->
+                  velocityVoltageRequest
+                      .withVelocity(velocityRotPerSec)
+                      .withFeedForward(feedforward);
+              case TorqueCurrentFOC ->
+                  velocityTorqueCurrentRequest
+                      .withVelocity(velocityRotPerSec)
+                      .withFeedForward(feedforward);
+            });
   }
 
   /**
@@ -181,17 +254,22 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
 
   @Override
   public void setTurnPosition(Rotation2d rotation) {
-    turnTalon.setControl(
-        switch (constants.SteerMotorClosedLoopOutput) {
-          case Voltage -> motionMagicVoltageRequest.withPosition(rotation.getRotations());
-          case TorqueCurrentFOC ->
-              motionMagicTorqueCurrentRequest.withPosition(rotation.getRotations());
-        });
+    turnControlStatus =
+        turnTalon.setControl(
+            switch (constants.SteerMotorClosedLoopOutput) {
+              case Voltage -> motionMagicVoltageRequest.withPosition(rotation.getRotations());
+              case TorqueCurrentFOC ->
+                  motionMagicTorqueCurrentRequest.withPosition(rotation.getRotations());
+            });
   }
 
   @Override
   public void setTurnZero(Rotation2d rotation) {
+    // After a failed refresh, cancoderConfig holds defaults. Applying it would overwrite the
+    // device's other settings, so leave the device and the stored offset untouched.
+    if (!turnEncoderRefreshStatus.isOK()) return;
     cancoderConfig.MagnetSensor.MagnetOffset = rotation.getRotations();
-    cancoder.getConfigurator().apply(cancoderConfig);
+    // One attempt only: this runs on the main loop, where retries would stall the robot
+    turnEncoderApplyStatus = cancoder.getConfigurator().apply(cancoderConfig);
   }
 }

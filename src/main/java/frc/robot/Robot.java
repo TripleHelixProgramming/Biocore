@@ -87,17 +87,18 @@ import org.wpilib.simulation.RoboRioSim;
  * project.
  */
 public class Robot extends LoggedRobot {
-  // SESSION_DIR and SignalLogger.setPath() must be initialized before any CTRE device is
-  // constructed. A static initializer guarantees this runs before the constructor or any
-  // instance field initializer that could trigger CANHD class loading.
+  // Phoenix starts writing .hoot signal logs on its own, on SystemCore and in simulation. It starts
+  // once the robot is enabled at least 1 s after startup, or at least 5 s after startup with the
+  // DS connected (in simulation, at 5 s without a DS). The logging choice must be made before
+  // then. This static initializer runs before the constructor and every instance field.
   private static final String SESSION_DIR;
 
   static {
-    if (Constants.currentMode == RobotMode.REAL) {
-      SESSION_DIR = createSessionDir();
-      SignalLogger.setPath(SESSION_DIR);
+    SESSION_DIR = Constants.currentMode == RobotMode.REAL ? createSessionDir() : null;
+    if (FeatureFlags.HOOT_LOGGING_ENABLED) {
+      if (SESSION_DIR != null) SignalLogger.setPath(SESSION_DIR);
     } else {
-      SESSION_DIR = null;
+      SignalLogger.enableAutoLogging(false);
     }
   }
 
@@ -147,8 +148,8 @@ public class Robot extends LoggedRobot {
     // Set up data receivers & replay source
     switch (Constants.currentMode) {
       case REAL: // Running on a real robot
-        // SESSION_DIR and SignalLogger.setPath() were already set in the static initializer.
-        // SignalLogger will create a nested timestamp subdir inside SESSION_DIR for hoot files.
+        // The static initializer created SESSION_DIR. With hoot logging enabled, Phoenix writes
+        // its .hoot files to a timestamped subdirectory of it.
         Logger.addDataReceiver(new WPILOGWriter(SESSION_DIR));
         Logger.addDataReceiver(new NT4Publisher());
 
@@ -591,9 +592,8 @@ public class Robot extends LoggedRobot {
   }
 
   /**
-   * Creates and returns a timestamped session directory under /U/logs/. Must be called before any
-   * CTRE devices are constructed so that SignalLogger.setPath() takes effect before auto-logging
-   * begins.
+   * Creates and returns a numbered session directory under /U/logs/. AdvantageKit writes its log
+   * there, and Phoenix writes .hoot files there when hoot logging is enabled.
    */
   private static String createSessionDir() {
     java.io.File logsDir = new java.io.File("/U/logs");

@@ -12,7 +12,10 @@ package frc.robot.subsystems.drive;
 
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
+import frc.lib.Util;
 import frc.robot.Constants.FeatureFlags;
+import java.util.ArrayList;
+import java.util.List;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
@@ -31,6 +34,9 @@ public class Module {
 
   private final Alert driveDisconnectedAlert;
   private final Alert turnDisconnectedAlert;
+  private final Alert turnEncoderDisconnectedAlert;
+  private final Alert setupFailedAlert;
+  private final Alert firmwareBlockedAlert;
   private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
 
   public Module(ModuleIO io, String name) {
@@ -47,6 +53,13 @@ public class Module {
             "Module/" + name + "/turnDisconnected",
             "Disconnected turn motor on module " + name + ".",
             Alert.Level.HIGH);
+    turnEncoderDisconnectedAlert =
+        new Alert(
+            "Module/" + name + "/turnEncoderDisconnected",
+            "Disconnected turn encoder on module " + name + ".",
+            Alert.Level.HIGH);
+    setupFailedAlert = new Alert("Module/" + name + "/setupFailed", "", Alert.Level.HIGH);
+    firmwareBlockedAlert = new Alert("Module/" + name + "/firmwareBlocked", "", Alert.Level.HIGH);
   }
 
   public void periodic() {
@@ -57,16 +70,20 @@ public class Module {
     long t2 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
     if (!encoderInitialized) {
-      // Set turn zero from preferences
-      Rotation2d turnZeroFromCancoder = inputs.turnZero;
-      Preferences.initDouble(ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians());
-      Rotation2d turnZeroFromPreferences =
-          new Rotation2d(
-              Preferences.getDouble(
-                  ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians()));
-      io.setTurnZero(turnZeroFromPreferences);
-      Logger.recordOutput(
-          "Drive/Module" + name + "/TurnZeroRad", turnZeroFromPreferences.getRadians());
+      // Set turn zero from preferences. The CANcoder's zero seeds a missing preference only when
+      // its config was read. After a failed read the zero is a default, so neither the preference
+      // nor the device is touched, and the setupFailed alert says so.
+      if (canUseTurnZero(inputs.turnEncoderRefreshStatus)) {
+        Rotation2d turnZeroFromCancoder = inputs.turnZero;
+        Preferences.initDouble(ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians());
+        Rotation2d turnZeroFromPreferences =
+            new Rotation2d(
+                Preferences.getDouble(
+                    ZERO_ROTATION_KEY + "/" + name, turnZeroFromCancoder.getRadians()));
+        io.setTurnZero(turnZeroFromPreferences);
+        Logger.recordOutput(
+            "Drive/Module" + name + "/TurnZeroRad", turnZeroFromPreferences.getRadians());
+      }
       encoderInitialized = true;
     }
 
@@ -82,6 +99,17 @@ public class Module {
     // Update alerts
     driveDisconnectedAlert.set(!inputs.driveConnected);
     turnDisconnectedAlert.set(!inputs.turnConnected);
+    turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
+    String setupFailure =
+        setupFailure(
+            name,
+            inputs.driveSetupStatus,
+            inputs.turnConfigStatus,
+            inputs.turnEncoderRefreshStatus,
+            inputs.turnEncoderApplyStatus);
+    Util.setAlert(setupFailedAlert, setupFailure != null, setupFailure);
+    String blocked = firmwareBlocked(name, inputs.driveControlStatus, inputs.turnControlStatus);
+    Util.setAlert(firmwareBlockedAlert, blocked != null, blocked);
     Logger.recordOutput("Faults/Module" + name + "/DriveDisconnected", !inputs.driveConnected);
     Logger.recordOutput("Faults/Module" + name + "/TurnDisconnected", !inputs.turnConnected);
     long t3 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
@@ -215,11 +243,76 @@ public class Module {
     return inputs.driveCurrentAmps + inputs.turnCurrentAmps;
   }
 
-  /** Sets the zero position of the turn axis to the current rotation */
+  /**
+   * Sets the zero position of the turn axis to the current rotation. Does nothing when the turn
+   * encoder's config could not be read, because the current zero is then a default.
+   */
   public void setTurnZero() {
+    if (!canUseTurnZero(inputs.turnEncoderRefreshStatus)) return;
     Rotation2d newTurnZero = inputs.turnZero.minus(inputs.turnPosition);
     io.setTurnZero(newTurnZero);
     Preferences.setDouble(ZERO_ROTATION_KEY + "/" + name, newTurnZero.getRadians());
     Logger.recordOutput("Drive/Module" + name + "/TurnZeroRad", newTurnZero.getRadians());
+  }
+
+  /** Returns true when the turn encoder's config was read, so its zero is the device's own. */
+  static boolean canUseTurnZero(String turnEncoderRefreshStatus) {
+    return "OK".equals(turnEncoderRefreshStatus);
+  }
+
+  /**
+   * Describes every failed device setup step on a module.
+   *
+   * @param module the module name
+   * @param driveSetup the drive motor config and position-reset status
+   * @param turnConfig the turn motor config status
+   * @param encoderRefresh the turn encoder config read status
+   * @param encoderApply the turn encoder config write status
+   * @return the alert text, or null when every step is "OK"
+   */
+  static String setupFailure(
+      String module,
+      String driveSetup,
+      String turnConfig,
+      String encoderRefresh,
+      String encoderApply) {
+    List<String> failures = new ArrayList<>();
+    if (!"OK".equals(driveSetup)) failures.add("drive motor setup (" + driveSetup + ")");
+    if (!"OK".equals(turnConfig)) failures.add("turn motor config (" + turnConfig + ")");
+    if (!canUseTurnZero(encoderRefresh)) {
+      failures.add("turn encoder config read (" + encoderRefresh + "); turn zero not saved");
+    } else if (!"OK".equals(encoderApply)) {
+      failures.add("turn encoder config write (" + encoderApply + ")");
+    }
+    if (failures.isEmpty()) return null;
+    return "Setup failed on module " + module + ": " + String.join("; ", failures) + ".";
+  }
+
+  /**
+   * Describes which motors Phoenix is blocking on a module.
+   *
+   * <p>Phoenix compares a device's firmware compliancy with the API's. On a mismatch it sends a
+   * neutral output instead of the request and returns {@code FirmwareTooOld} or {@code ApiTooOld}
+   * from {@code setControl} ({@code ParentDevice.setControlPrivate}, Phoenix 26.70.0-alpha-2).
+   *
+   * @param module the module name
+   * @param driveControl the drive motor's latest {@code setControl} status name
+   * @param turnControl the turn motor's latest {@code setControl} status name
+   * @return the alert text, or null when neither motor is blocked
+   */
+  static String firmwareBlocked(String module, String driveControl, String turnControl) {
+    List<String> blocked = new ArrayList<>();
+    if (isBlocked(driveControl)) blocked.add("drive motor (" + driveControl + ")");
+    if (isBlocked(turnControl)) blocked.add("turn motor (" + turnControl + ")");
+    if (blocked.isEmpty()) return null;
+    return "Phoenix is blocking output on module "
+        + module
+        + ": "
+        + String.join(", ", blocked)
+        + ". Update the motor firmware or the Phoenix library.";
+  }
+
+  private static boolean isBlocked(String controlStatus) {
+    return "FirmwareTooOld".equals(controlStatus) || "ApiTooOld".equals(controlStatus);
   }
 }
