@@ -7,6 +7,8 @@
 
 package frc.lib.hardware;
 
+import java.util.Map;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.hardware.bus.CANPort;
@@ -31,6 +33,7 @@ public class LoggedPowerDistribution extends PowerDistribution {
   }
 
   private final String key;
+  private final CANChain.Address address;
   private final PowerDistributionInputsAutoLogged inputs = new PowerDistributionInputsAutoLogged();
   private final Debouncer connectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.FALLING);
   private final Alert disconnectedAlert;
@@ -46,6 +49,7 @@ public class LoggedPowerDistribution extends PowerDistribution {
   public LoggedPowerDistribution(CANPort busId, int module, ModuleType moduleType, String logKey) {
     super(busId, module, moduleType);
     this.key = logKey;
+    this.address = new CANChain.Address(busId, module);
     disconnectedAlert =
         new Alert(
             logKey + "/disconnected",
@@ -56,6 +60,11 @@ public class LoggedPowerDistribution extends PowerDistribution {
   /** Returns true while the power distribution module is responding on CAN. */
   public boolean isConnected() {
     return inputs.connected;
+  }
+
+  /** Returns this module's connection state, keyed by its address, from the logged input. */
+  public Map<CANChain.Address, BooleanSupplier> canConnections() {
+    return Map.of(address, this::isConnected);
   }
 
   public void log() {

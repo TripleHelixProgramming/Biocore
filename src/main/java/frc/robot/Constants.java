@@ -92,10 +92,10 @@ public final class Constants {
   /**
    * The CAN buses and the devices on them.
    *
-   * <p>Each bus declares its {@code CHAIN} first, then its devices in daisy-chain order: the first
-   * device is wired closest to the SystemCore port, and each next line is the next device along the
-   * cable. Java runs these lines in the order written, so the order of the lines is the chain
-   * order, and a device's position is its CAN index (see {@link CANChain}).
+   * <p>Each bus declares its {@code CHAIN} after its {@code BUS_ID}, then its devices in
+   * daisy-chain order: the first device is wired closest to the SystemCore port, and each next line
+   * is the next device along the cable. Java runs these lines in the order written, so the order of
+   * the lines is the chain order, and a device's position is its CAN index (see {@link CANChain}).
    *
    * <p>To trace a bus: start at its SystemCore port and follow the CAN wires to the terminator,
    * reordering the device lines to match. The bus is assumed to be one line with the SystemCore at
@@ -115,7 +115,7 @@ public final class Constants {
       public static final CANBus BUS = new CANBus(BUS_ID);
 
       // Devices in daisy-chain order from the SystemCore
-      public static final CANChain CHAIN = new CANChain();
+      public static final CANChain CHAIN = new CANChain(BUS_ID);
       public static final int PD = CHAIN.add(1, "Power distribution");
       public static final int GYRO = CHAIN.add(0, "Gyro");
 
@@ -133,7 +133,7 @@ public final class Constants {
       public static final CANBus BUS = new CANBus(BUS_ID);
 
       // Devices in daisy-chain order from the SystemCore
-      public static final CANChain CHAIN = new CANChain();
+      public static final CANChain CHAIN = new CANChain(BUS_ID);
       public static final int BACK_LEFT_DRIVE = CHAIN.add(10, "BackLeft drive");
       public static final int BACK_RIGHT_DRIVE = CHAIN.add(18, "BackRight drive");
       public static final int FRONT_RIGHT_DRIVE = CHAIN.add(20, "FrontRight drive");

@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import org.junit.jupiter.api.Test;
+import org.wpilib.hardware.bus.CANPort;
 
 class CANChainMonitorTest {
   private static final double STEP = 0.02;
@@ -24,7 +25,7 @@ class CANChainMonitorTest {
 
   /** Builds a monitor over six devices with IDs 1..6. Each gets its own bus name. */
   private CANChainMonitor monitor(String traced) {
-    var chain = new CANChain();
+    var chain = new CANChain(CANPort.CAN_S1);
     Map<Integer, BooleanSupplier> sources = new HashMap<>();
     for (int i = 0; i < DEVICES; i++) {
       int index = i;

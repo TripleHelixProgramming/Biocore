@@ -10,8 +10,11 @@ package frc.lib.hardware;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import org.junit.jupiter.api.Test;
+import org.wpilib.hardware.bus.CANPort;
 
 class CANChainTest {
   private static final List<CANChain.Device> CHAIN =
@@ -115,12 +118,12 @@ class CANChainTest {
 
   @Test
   void addReturnsTheId() {
-    assertEquals(28, new CANChain().add(28, "FrontLeft drive"));
+    assertEquals(28, new CANChain(CANPort.CAN_S1).add(28, "FrontLeft drive"));
   }
 
   @Test
   void devicesKeepDeclarationOrder() {
-    var chain = new CANChain();
+    var chain = new CANChain(CANPort.CAN_S1);
     chain.add(28, "FrontLeft drive");
     chain.add(29, "FrontLeft turn");
     chain.add(10, "BackLeft drive");
@@ -134,7 +137,7 @@ class CANChainTest {
 
   @Test
   void addAfterReadThrows() {
-    var chain = new CANChain();
+    var chain = new CANChain(CANPort.CAN_S1);
     chain.add(28, "FrontLeft drive");
     chain.devices();
     var error = assertThrows(IllegalStateException.class, () -> chain.add(29, "FrontLeft turn"));
@@ -143,10 +146,46 @@ class CANChainTest {
 
   @Test
   void devicesCannotBeModified() {
-    var chain = new CANChain();
+    var chain = new CANChain(CANPort.CAN_S1);
     chain.add(28, "FrontLeft drive");
     assertThrows(
         UnsupportedOperationException.class,
         () -> chain.devices().add(new CANChain.Device(1, "extra")));
+  }
+
+  @Test
+  void connectionsOnKeepsOnlyThatBus() {
+    BooleanSupplier up = () -> true;
+    BooleanSupplier down = () -> false;
+    var drive =
+        Map.of(
+            new CANChain.Address(CANPort.CAN_S1, 28), up,
+            new CANChain.Address(CANPort.CAN_S0, 0), down);
+    var pd = Map.of(new CANChain.Address(CANPort.CAN_S0, 1), up);
+
+    var sc1 = CANChain.connectionsOn(CANPort.CAN_S1, drive, pd);
+    assertEquals(Set.of(28), sc1.keySet());
+    assertTrue(sc1.get(28).getAsBoolean());
+
+    var sc0 = CANChain.connectionsOn(CANPort.CAN_S0, drive, pd);
+    assertEquals(Set.of(0, 1), sc0.keySet());
+    assertFalse(sc0.get(0).getAsBoolean());
+  }
+
+  @Test
+  void sameIdOnDifferentBusesIsAllowed() {
+    var a = Map.of(new CANChain.Address(CANPort.CAN_S0, 10), (BooleanSupplier) () -> true);
+    var b = Map.of(new CANChain.Address(CANPort.CAN_S1, 10), (BooleanSupplier) () -> false);
+    assertEquals(Set.of(10), CANChain.connectionsOn(CANPort.CAN_S1, a, b).keySet());
+  }
+
+  @Test
+  void sameAddressFromTwoSourcesThrows() {
+    var a = Map.of(new CANChain.Address(CANPort.CAN_S1, 10), (BooleanSupplier) () -> true);
+    var b = Map.of(new CANChain.Address(CANPort.CAN_S1, 10), (BooleanSupplier) () -> false);
+    var error =
+        assertThrows(
+            IllegalArgumentException.class, () -> CANChain.connectionsOn(CANPort.CAN_S1, a, b));
+    assertEquals("CAN ID 10 on CAN_S1 is reported twice", error.getMessage());
   }
 }

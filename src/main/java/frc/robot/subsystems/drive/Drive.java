@@ -15,7 +15,10 @@ import static org.wpilib.units.Units.*;
 
 import choreo.trajectory.SwerveSample;
 import frc.lib.RobotMode;
+import frc.lib.hardware.CANChain;
 import frc.robot.Constants;
+import frc.robot.Constants.CANBusPorts.SC0;
+import frc.robot.Constants.CANBusPorts.SC1;
 import frc.robot.Constants.FeatureFlags;
 import java.util.HashMap;
 import java.util.List;
@@ -148,25 +151,24 @@ public class Drive extends SubsystemBase {
   }
 
   /**
-   * Returns each SC1 module device's connection state, keyed by CAN ID. The states come from logged
-   * inputs, so they replay.
+   * Returns the connection state of every CAN device the drive owns, on any bus. The states come
+   * from logged inputs, so they replay.
    */
-  public Map<Integer, BooleanSupplier> sc1Connections() {
+  public Map<CANChain.Address, BooleanSupplier> canConnections() {
     var moduleConstants = List.of(FRONT_LEFT, FRONT_RIGHT, BACK_LEFT, BACK_RIGHT);
-    Map<Integer, BooleanSupplier> connections = new HashMap<>();
+    Map<CANChain.Address, BooleanSupplier> connections = new HashMap<>();
     for (int i = 0; i < modules.length; i++) {
       Module module = modules[i];
       var constants = moduleConstants.get(i);
-      connections.put(constants.DriveMotorId, module::isDriveConnected);
-      connections.put(constants.SteerMotorId, module::isTurnConnected);
-      connections.put(constants.EncoderId, module::isTurnEncoderConnected);
+      connections.put(
+          new CANChain.Address(SC1.BUS_ID, constants.DriveMotorId), module::isDriveConnected);
+      connections.put(
+          new CANChain.Address(SC1.BUS_ID, constants.SteerMotorId), module::isTurnConnected);
+      connections.put(
+          new CANChain.Address(SC1.BUS_ID, constants.EncoderId), module::isTurnEncoderConnected);
     }
+    connections.put(new CANChain.Address(SC0.BUS_ID, SC0.GYRO), () -> gyroInputs.connected);
     return connections;
-  }
-
-  /** Returns true while the gyro is connected. */
-  public boolean isGyroConnected() {
-    return gyroInputs.connected;
   }
 
   @Override

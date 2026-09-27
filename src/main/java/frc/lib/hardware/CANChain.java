@@ -8,9 +8,13 @@
 package frc.lib.hardware;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
+import org.wpilib.hardware.bus.CANPort;
 
 /**
  * A CAN bus's devices in daisy-chain order, and the logic for locating a break along it.
@@ -19,7 +23,7 @@ import java.util.Set;
  * the SystemCore:
  *
  * <pre>{@code
- * public static final CANChain CHAIN = new CANChain();
+ * public static final CANChain CHAIN = new CANChain(BUS_ID);
  * public static final int FRONT_LEFT_DRIVE = CHAIN.add(28, "FrontLeft drive");
  * public static final int FRONT_LEFT_TURN = CHAIN.add(29, "FrontLeft turn");
  * }</pre>
@@ -29,8 +33,8 @@ import java.util.Set;
  * first time {@link #devices()} is read; a later {@code add} throws.
  *
  * <p>A single break in the cable leaves every device before it connected and every device after it
- * disconnected. The static methods find that split and describe where to look. They use no WPILib
- * or Phoenix types.
+ * disconnected. The static methods find that split and describe where to look. Apart from the
+ * {@link CANPort} enum, they use no WPILib or Phoenix types.
  */
 public class CANChain {
   /**
@@ -41,8 +45,29 @@ public class CANChain {
    */
   public record Device(int id, String label) {}
 
+  /**
+   * Where a device sits: its bus and CAN ID. A CAN ID is only unique within one bus.
+   *
+   * @param port the SystemCore CAN port the device is wired to
+   * @param id the device's CAN ID
+   */
+  public record Address(CANPort port, int id) {}
+
+  private final CANPort port;
   private final List<Device> devices = new ArrayList<>();
   private boolean frozen = false;
+
+  /**
+   * @param port the SystemCore CAN port this chain starts from
+   */
+  public CANChain(CANPort port) {
+    this.port = port;
+  }
+
+  /** Returns the SystemCore CAN port this chain starts from. */
+  public CANPort port() {
+    return port;
+  }
 
   /**
    * Adds the next device along the chain.
@@ -148,5 +173,33 @@ public class CANChain {
       }
     }
     return null;
+  }
+
+  /**
+   * Collects the connection states of the devices on one bus.
+   *
+   * <p>Each subsystem reports every device it owns, on any bus. This keeps the ones on {@code
+   * port}, keyed by CAN ID.
+   *
+   * @param port the bus to collect
+   * @param sources each subsystem's connection states, keyed by address
+   * @return the connection states on {@code port}, keyed by CAN ID
+   * @throws IllegalArgumentException if two sources report the same address
+   */
+  @SafeVarargs
+  public static Map<Integer, BooleanSupplier> connectionsOn(
+      CANPort port, Map<Address, BooleanSupplier>... sources) {
+    Map<Integer, BooleanSupplier> onPort = new HashMap<>();
+    for (Map<Address, BooleanSupplier> source : sources) {
+      for (var entry : source.entrySet()) {
+        Address address = entry.getKey();
+        if (address.port() != port) continue;
+        if (onPort.put(address.id(), entry.getValue()) != null) {
+          throw new IllegalArgumentException(
+              "CAN ID " + address.id() + " on " + port + " is reported twice");
+        }
+      }
+    }
+    return onPort;
   }
 }

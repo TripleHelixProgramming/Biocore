@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.driverstation.DriverStationErrors;
 import org.wpilib.system.Timer;
 
 /** Logs a CAN bus's status and watches its daisy chain for a break. */
@@ -53,12 +54,26 @@ public class LoggedCANBus {
    * Starts watching the daisy chain for a break. Call once, after the devices that report the
    * connection states exist.
    *
-   * @param connectedById each device's connection state, keyed by CAN ID, read from logged inputs
+   * <p>Each source is one subsystem's connection states for every device it owns, on any bus. This
+   * bus keeps the ones on its own port. The states should come from logged inputs, so replay
+   * reproduces the alert. If two sources report the same device, the chain check stays off and the
+   * Driver Station gets one warning.
+   *
+   * @param sources each subsystem's connection states, keyed by address
    */
-  public void monitorChain(Map<Integer, BooleanSupplier> connectedById) {
+  @SafeVarargs
+  public final void monitorChain(Map<CANChain.Address, BooleanSupplier>... sources) {
+    Map<Integer, BooleanSupplier> connections;
+    try {
+      connections = CANChain.connectionsOn(chain.port(), sources);
+    } catch (IllegalArgumentException e) {
+      DriverStationErrors.reportWarning(
+          "CAN chain hint for " + name + " is off: " + e.getMessage() + ".", false);
+      return;
+    }
     chainMonitor =
         new CANChainMonitor(
-            name, chain, chainOrderTraced, connectedById, CANChainMonitor.DEFAULT_STABLE_SECONDS);
+            name, chain, chainOrderTraced, connections, CANChainMonitor.DEFAULT_STABLE_SECONDS);
   }
 
   public void log() {

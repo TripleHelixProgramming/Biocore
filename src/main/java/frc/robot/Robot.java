@@ -54,7 +54,6 @@ import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.subsystems.vision.VisionThread;
 import frc.robot.util.odometry.CanandgyroThread;
 import frc.robot.util.odometry.SparkOdometryThread;
-import java.util.Map;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -226,9 +225,8 @@ public class Robot extends LoggedRobot {
     }
 
     // Watch each bus's daisy chain, now that the devices reporting connection states exist
-    sc0CANBus.monitorChain(
-        Map.of(SC0.PD, powerDistribution::isConnected, SC0.GYRO, drive::isGyroConnected));
-    sc1CANBus.monitorChain(drive.sc1Connections());
+    sc0CANBus.monitorChain(drive.canConnections(), powerDistribution.canConnections());
+    sc1CANBus.monitorChain(drive.canConnections(), powerDistribution.canConnections());
 
     // Start background threads (for non-blocking CAN/network reads)
     SparkOdometryThread.getInstance().start();
