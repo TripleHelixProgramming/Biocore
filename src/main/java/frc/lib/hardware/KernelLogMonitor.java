@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -285,26 +286,10 @@ public class KernelLogMonitor {
       return;
     }
 
-    // Drain the queue and publish all events
-    var recentEvents = new StringBuilder();
-    var eventsPublished = 0;
-
-    KernelEvent event;
-    while ((event = eventQueue.poll()) != null && eventsPublished < MAX_EVENTS_PER_CYCLE) {
-      recentEvents
-          .append('[')
-          .append(event.timestamp())
-          .append("] ")
-          .append(event.eventType())
-          .append(": ")
-          .append(event.message())
-          .append('\n');
-      eventsPublished++;
-    }
-
-    if (eventsPublished > 0) {
+    var recentEvents = drainEvents(eventQueue, MAX_EVENTS_PER_CYCLE);
+    if (!recentEvents.isEmpty()) {
       // Publish to NetworkTables via Logger (automatically handled by NT4Publisher)
-      Logger.recordOutput("Kernel/RecentEvents", recentEvents.toString());
+      Logger.recordOutput("Kernel/RecentEvents", recentEvents);
     }
 
     // Update queue size after draining some events
@@ -323,6 +308,29 @@ public class KernelLogMonitor {
     } else {
       Logger.recordOutput("Kernel/QueueNearFull", false);
     }
+  }
+
+  /**
+   * Removes up to {@code maxEvents} events from the queue and formats them one per line. Events
+   * past the limit stay queued for the next call.
+   *
+   * @return The formatted events, or an empty string if the queue was empty
+   */
+  static String drainEvents(Queue<KernelEvent> queue, int maxEvents) {
+    var text = new StringBuilder();
+    var drained = 0;
+    KernelEvent event;
+    while (drained < maxEvents && (event = queue.poll()) != null) {
+      text.append('[')
+          .append(event.timestamp())
+          .append("] ")
+          .append(event.eventType())
+          .append(": ")
+          .append(event.message())
+          .append('\n');
+      drained++;
+    }
+    return text.toString();
   }
 
   /**
