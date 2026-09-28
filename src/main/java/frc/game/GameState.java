@@ -7,7 +7,6 @@
 
 package frc.game;
 
-import frc.robot.Robot;
 import java.util.List;
 import java.util.Optional;
 import org.littletonrobotics.junction.Logger;
@@ -48,8 +47,6 @@ public class GameState {
     }
   }
 
-  private static Alliance myAlliance;
-
   public static GamePhase getCurrentPhase() {
     if (!RobotState.isDSAttached() && !RobotState.isFMSAttached()) {
       return GamePhase.None;
@@ -67,14 +64,6 @@ public class GameState {
     return GamePhase.None;
   }
 
-  public static Alliance getMyAlliance() {
-    if (myAlliance == null) {
-      // myAlliance = MatchState.getAlliance().orElse(null);
-      myAlliance = Robot.allianceSelector.getAllianceColor();
-    }
-    return myAlliance;
-  }
-
   public static double getMatchTime() {
     return MatchState.getMatchTime();
   }
@@ -84,13 +73,11 @@ public class GameState {
   }
 
   public static void logValues() {
-    getMyAlliance();
     Logger.recordOutput("GameState/IsDSAttached", RobotState.isDSAttached());
     Logger.recordOutput("GameState/IsFMSAttached", RobotState.isFMSAttached());
     Logger.recordOutput("GameState/MatchType", MatchState.getMatchType());
     Logger.recordOutput("GameState/IsAutonomus", RobotState.isAutonomous());
     Logger.recordOutput("GameState/MatchTime", MatchState.getMatchTime());
-    Logger.recordOutput("GameState/Alliance", myAlliance);
     Logger.recordOutput("GameState/GameData", MatchState.getGameData().orElse(""));
     Logger.recordOutput("GameState/CurrentPhase", getCurrentPhase());
   }
