@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import frc.lib.hardware.KernelLogMonitor.EventPattern;
 import frc.lib.hardware.KernelLogMonitor.KernelEvent;
 import java.lang.reflect.Method;
+import java.util.ArrayDeque;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
@@ -496,5 +497,33 @@ class KernelLogMonitorTest {
     var field = KernelLogMonitor.class.getDeclaredField("eventQueue");
     field.setAccessible(true);
     return (BlockingQueue<KernelEvent>) field.get(monitor);
+  }
+
+  @Nested
+  @DisplayName("Event Draining Tests")
+  class DrainEventsTests {
+
+    @Test
+    @DisplayName("Events past the per-cycle limit stay queued for the next cycle")
+    void eventsPastTheLimitStayQueued() {
+      var queue = new ArrayDeque<KernelEvent>();
+      for (int i = 0; i < 11; i++) {
+        queue.add(new KernelEvent(Integer.toString(i), "event " + i, "KERNEL_WARNING"));
+      }
+
+      var first = KernelLogMonitor.drainEvents(queue, 10);
+      assertEquals(10, first.lines().count());
+      assertTrue(first.startsWith("[0] KERNEL_WARNING: event 0"));
+
+      var second = KernelLogMonitor.drainEvents(queue, 10);
+      assertEquals("[10] KERNEL_WARNING: event 10\n", second);
+      assertTrue(queue.isEmpty());
+    }
+
+    @Test
+    @DisplayName("An empty queue drains to an empty string")
+    void emptyQueueDrainsToEmptyString() {
+      assertEquals("", KernelLogMonitor.drainEvents(new ArrayDeque<>(), 10));
+    }
   }
 }
