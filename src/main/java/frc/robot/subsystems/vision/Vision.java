@@ -34,6 +34,7 @@ import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.linalg.VecBuilder;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
+import org.wpilib.system.Timer;
 import org.wpilib.util.Alert;
 
 public class Vision extends SubsystemBase {
@@ -51,7 +52,7 @@ public class Vision extends SubsystemBase {
   private ArrayList<Pose3d> allRobotPosesRejected = new ArrayList<Pose3d>();
 
   // Buffer to accumulate observations across loops for batched processing
-  // Cleared after processing every processingIntervalLoops
+  // Cleared after processing every PROCESSING_INTERVAL_SECS
   private ArrayList<TestedObservation> observationBuffer = new ArrayList<TestedObservation>();
 
   // Initialize logging values
@@ -74,8 +75,9 @@ public class Vision extends SubsystemBase {
   private final Pose2d[] lastAcceptedPose;
   private final double[] lastAcceptedTimestamp;
 
-  // Cycle counter for throttled logging
-  private int loopCounter = 0;
+  // Started on the first periodic(), after Logger.start() sets the clock that replay reproduces
+  private final Timer processingTimer = new Timer();
+  private final Timer summaryLoggingTimer = new Timer();
 
   // Vision tests to apply (remove from set to disable specific tests)
   public static final EnumSet<Test> enabledTests = VisionFilter.DEFAULT_ENABLED_TESTS;
@@ -128,7 +130,8 @@ public class Vision extends SubsystemBase {
   @Override
   public void periodic() {
     long visionStart = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
-    loopCounter++;
+    processingTimer.start();
+    summaryLoggingTimer.start();
 
     // Copy cached inputs from background thread (should be fast - volatile reads)
     for (int i = 0; i < io.length; i++) {
@@ -136,12 +139,9 @@ public class Vision extends SubsystemBase {
     }
     long t1 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
-    // Log inputs via AdvantageKit (throttled - serialization is expensive)
-    // Note: Throttling reduces CPU load but loses data granularity for replay
-    if (loopCounter % LOGGING_DIVISOR == 0) {
-      for (int i = 0; i < io.length; i++) {
-        Logger.processInputs("Vision/Camera" + Integer.toString(i), inputs[i]);
-      }
+    // Log inputs via AdvantageKit every loop, so replay sees every observation that is fused
+    for (int i = 0; i < io.length; i++) {
+      Logger.processInputs("Vision/Camera" + Integer.toString(i), inputs[i]);
     }
     long t2 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
@@ -223,9 +223,9 @@ public class Vision extends SubsystemBase {
 
     long t3 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
-    // Process observations in batches every processingIntervalLoops
+    // Process observations in batches every PROCESSING_INTERVAL_SECS
     // This allows cameras to accumulate observations before fusion decides what agrees
-    if (loopCounter % PROCESSING_INTERVAL_LOOPS == 0) {
+    if (processingTimer.advanceIfElapsed(PROCESSING_INTERVAL_SECS)) {
       // Remove unacceptable observations before fusion
       observationBuffer.removeIf(o -> o.score() < MIN_SCORE);
 
@@ -261,8 +261,8 @@ public class Vision extends SubsystemBase {
     }
     long t4 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
-    // Log summary data (throttled along with processInputs)
-    if (loopCounter % LOGGING_DIVISOR == 0) {
+    // Log summary data (throttled, because serialization is expensive)
+    if (summaryLoggingTimer.advanceIfElapsed(SUMMARY_LOGGING_INTERVAL_SECS)) {
       if (LOG_SUMMARY_POSES) {
         Logger.recordOutput("Vision/Summary/TagPoses", allTagPoses.toArray(Pose3d[]::new));
         Logger.recordOutput("Vision/Summary/RobotPoses", allRobotPoses.toArray(Pose3d[]::new));

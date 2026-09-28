@@ -150,12 +150,12 @@ public class VisionConstants {
   public static boolean LOG_ACCEPTED_POSES = true;
   public static boolean LOG_REJECTED_POSES = true;
 
-  // Logging frequency (1 = every cycle, 2 = every other cycle, etc.)
-  // Higher values reduce CPU load but loses data granularity for replay
-  public static int LOGGING_DIVISOR = 2;
+  // Interval between summary pose logs. Longer intervals reduce CPU load but log fewer poses.
+  // Camera inputs are logged every loop regardless, so replay sees every observation.
+  public static double SUMMARY_LOGGING_INTERVAL_SECS = 0.04;
 
-  // Vision processing interval (1 = every loop, 5 = every 5th loop = 10Hz at 50Hz robot loop)
-  // Higher values batch more observations together for fusion, reducing jitter but adding latency.
-  // At 5 loops (100ms batches), cameras have time to all report before fusion decides what agrees.
-  public static int PROCESSING_INTERVAL_LOOPS = 5;
+  // Interval between fusion batches. Longer intervals batch more observations together for
+  // fusion, reducing jitter but adding latency. At 100 ms, cameras have time to all report before
+  // fusion decides what agrees.
+  public static double PROCESSING_INTERVAL_SECS = 0.1;
 }

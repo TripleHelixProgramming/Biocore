@@ -132,7 +132,7 @@ This gives you real-time visibility into whether the robot is consistently laggi
 
 #### Reduce vision processing interval during auto
 
-The vision system batches observations for 5 robot loops (~100 ms) before processing them. During fast auto movement, this adds 100 ms of latency before the pose estimator gets a correction. Consider reducing `processingIntervalLoops` to 2-3 during auto for faster vision correction, at the cost of less multi-camera temporal correlation.
+The vision system batches observations for 100 ms (`PROCESSING_INTERVAL_SECS`) before processing them. During fast auto movement, this adds 100 ms of latency before the pose estimator gets a correction. Consider reducing `PROCESSING_INTERVAL_SECS` to 0.04-0.06 s during auto for faster vision correction, at the cost of less multi-camera temporal correlation.
 
 **Expected impact**: faster pose convergence during the first seconds of auto.
 
