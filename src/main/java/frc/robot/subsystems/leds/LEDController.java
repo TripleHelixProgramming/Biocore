@@ -10,12 +10,12 @@ package frc.robot.subsystems.leds;
 import static org.wpilib.units.Units.Seconds;
 
 import frc.game.GameState;
+import frc.lib.Util;
 import frc.lib.autoselect.PoseSeekError;
 import frc.robot.Constants.PoseSeekConstants;
 import frc.robot.Robot;
 import java.util.function.Supplier;
 import org.wpilib.command2.SubsystemBase;
-import org.wpilib.driverstation.Alliance;
 import org.wpilib.driverstation.MatchState;
 import org.wpilib.driverstation.RobotState;
 import org.wpilib.hardware.led.LEDPattern;
@@ -161,9 +161,7 @@ public class LEDController extends SubsystemBase {
           // Urgency threshold (10 seconds)
           10.0,
           // Fill color
-          () -> {
-            return GameState.getMyAlliance() == Alliance.BLUE ? Color.BLUE : Color.RED;
-          },
+          () -> Util.allianceToColor(Robot.allianceSelector.getAllianceColor()),
           // Background color
           Color.BLACK,
           // Blink period (0.25s = 4Hz flash)
