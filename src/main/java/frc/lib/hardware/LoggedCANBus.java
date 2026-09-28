@@ -8,9 +8,30 @@
 package frc.lib.hardware;
 
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.CANBus.CANBusStatus;
+import frc.lib.Util;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.driverstation.DriverStationErrors;
+import org.wpilib.system.Notifier;
+import org.wpilib.system.Timer;
+import org.wpilib.util.Alert;
 
+/**
+ * Logs a CAN bus's controller status, raises alerts when the bus is in trouble, and watches its
+ * daisy chain for a break.
+ *
+ * <p>{@link CANBus#getStatus()} can block for up to 1 ms (its Javadoc), so a {@link Notifier} reads
+ * it in the background and the main loop only copies the latest sample. Without {@link #start()},
+ * as in simulation, the inputs keep their defaults. Alerts come only from the logged inputs, so
+ * replay reproduces them.
+ *
+ * <p>Each {@link #log()} runs one bus-health step: log the status, update the bus alerts, then
+ * update the chain-break hint, which is held back while the bus alert shows a bus-wide fault.
+ */
 public class LoggedCANBus {
   @AutoLog
   public static class CANBusStatusInputs {
@@ -19,30 +40,133 @@ public class LoggedCANBus {
     public long txFullCount = 0;
     public long receiveErrorCount = 0;
     public long transmitErrorCount = 0;
+    public long busErrorCount = 0;
+    public long arbitrationLostCount = 0;
+    public long restartCount = 0;
+    public String state = "ErrorActive";
+    public String status = "OK";
+    public long sampleCount = 0;
   }
 
-  private final CANBus bus;
+  /** How often the background reader reads the bus status, in seconds. */
+  private static final double SAMPLE_PERIOD_SECONDS = 0.4;
+
+  /** One status read, paired with its sequence number so the two are published together. */
+  private record Sample(CANBusStatus status, long sequence) {}
+
+  private final String name;
   private final String key;
+  private final CANBus bus;
+  private final CANChain chain;
+  private final String chainOrderTraced;
   private final CANBusStatusInputsAutoLogged inputs = new CANBusStatusInputsAutoLogged();
+  private final CANBusHealth health = new CANBusHealth();
+  private final Alert errorAlert;
+  private final Alert warningAlert;
+  private CANChainMonitor chainMonitor = null;
+  private final Notifier reader;
+  private final AtomicLong sequence = new AtomicLong();
+  private volatile Sample latest = null;
+  private volatile boolean readFailureReported = false;
+  private boolean started = false;
 
   /**
    * Creates a logged CAN bus status reporter.
    *
-   * @param name the bus name (used as the log key)
-   * @param bus the CAN bus to report status for
+   * @param chain the bus's devices in daisy-chain order, which also names the bus
+   * @param bus the Phoenix bus on the chain's port
+   * @param chainOrderTraced when and by whom the chain order was traced, or null if not yet
    */
-  public LoggedCANBus(String name, CANBus bus) {
-    this.bus = bus;
+  public LoggedCANBus(CANChain chain, CANBus bus, String chainOrderTraced) {
+    this.name = chain.name();
     this.key = "CANBus/" + name;
+    this.bus = bus;
+    this.chain = chain;
+    this.chainOrderTraced = chainOrderTraced;
+    errorAlert = new Alert(key + "/errors", "", Alert.Level.HIGH);
+    warningAlert = new Alert(key + "/warning", "", Alert.Level.MEDIUM);
+    reader = new Notifier(this::read);
+    reader.setName("CANBusReader-" + name);
+  }
+
+  /**
+   * Starts watching the daisy chain for a break. Call once, after the devices that report the
+   * connection states exist. Does nothing while the chain order is untraced.
+   *
+   * @param connections each device's connection state, on any bus. The states should come from
+   *     logged inputs, so replay reproduces the alert.
+   */
+  public void monitorChain(Map<CANChain.Device, BooleanSupplier> connections) {
+    if (chainOrderTraced == null) return;
+    chainMonitor =
+        new CANChainMonitor(
+            chain, chainOrderTraced, connections, CANChainMonitor.DEFAULT_STABLE_SECONDS);
+  }
+
+  /** Reads the status once, then starts the background reader that keeps reading it. */
+  public synchronized void start() {
+    if (started) return;
+    started = true;
+    read();
+    reader.startPeriodic(SAMPLE_PERIOD_SECONDS);
+  }
+
+  /** Reads the bus status once and publishes it with the next sequence number. */
+  private void read() {
+    try {
+      latest = new Sample(bus.getStatus(), sequence.incrementAndGet());
+    } catch (RuntimeException e) {
+      // Keep reading. A stalled sample count raises the stale alert.
+      if (!readFailureReported) {
+        DriverStationErrors.reportWarning(
+            "CAN status read failed on " + name + ": " + e.getMessage(), false);
+        readFailureReported = true;
+      }
+    }
   }
 
   public void log() {
-    var status = bus.getStatus();
-    inputs.busUtilization = status.BusUtilization;
-    inputs.busOffCount = status.BusOffCount;
-    inputs.txFullCount = status.TxFullCount;
-    inputs.receiveErrorCount = status.REC;
-    inputs.transmitErrorCount = status.TEC;
+    Sample sample = latest;
+    if (sample != null) {
+      CANBusStatus status = sample.status();
+      inputs.busUtilization = status.BusUtilization;
+      inputs.busOffCount = status.BusOffCount;
+      inputs.txFullCount = status.TxFullCount;
+      inputs.receiveErrorCount = status.REC;
+      inputs.transmitErrorCount = status.TEC;
+      inputs.busErrorCount = status.BusErrorCount;
+      inputs.arbitrationLostCount = status.ArbitrationLostCount;
+      inputs.restartCount = status.RestartCount;
+      inputs.state = String.valueOf(status.State);
+      inputs.status = status.Status.getName();
+      inputs.sampleCount = sample.sequence();
+    }
     Logger.processInputs(key, inputs);
+
+    double now = Timer.getTimestamp();
+    health.update(
+        now,
+        inputs.sampleCount,
+        inputs.status,
+        inputs.state,
+        inputs.busOffCount,
+        inputs.restartCount);
+    boolean busFaulted = health.isHighActive(now);
+    Util.setAlert(
+        errorAlert,
+        busFaulted,
+        "CAN errors on "
+            + name
+            + " ("
+            + inputs.state
+            + ", "
+            + inputs.status
+            + "); robot may not be controllable.");
+    Util.setAlert(
+        warningAlert,
+        health.isMediumActive(now),
+        "CAN error warning on " + name + " (" + inputs.state + ").");
+
+    if (chainMonitor != null) chainMonitor.update(now, busFaulted);
   }
 }

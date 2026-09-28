@@ -19,6 +19,7 @@ import frc.lib.RobotMode;
 import frc.lib.autoselect.AllianceSelector;
 import frc.lib.autoselect.AutoOption;
 import frc.lib.autoselect.AutoSelector;
+import frc.lib.hardware.CANChain;
 import frc.lib.hardware.KernelLogMonitor;
 import frc.lib.hardware.LoggedCANBus;
 import frc.lib.hardware.LoggedPowerDistribution;
@@ -30,6 +31,7 @@ import frc.lib.input.ControllerSelector.DriverController;
 import frc.lib.input.ControllerSelector.OperatorConfig;
 import frc.lib.stats.RobotStats;
 import frc.robot.Constants.CANBusPorts.SC0;
+import frc.robot.Constants.CANBusPorts.SC1;
 import frc.robot.Constants.DIOPorts;
 import frc.robot.Constants.FeatureFlags;
 import frc.robot.Constants.USBStorageConstants;
@@ -53,6 +55,9 @@ import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.subsystems.vision.VisionThread;
 import frc.robot.util.odometry.CanandgyroThread;
 import frc.robot.util.odometry.SparkOdometryThread;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -82,17 +87,18 @@ import org.wpilib.simulation.RoboRioSim;
  * project.
  */
 public class Robot extends LoggedRobot {
-  // SESSION_DIR and SignalLogger.setPath() must be initialized before any CTRE device is
-  // constructed. A static initializer guarantees this runs before the constructor or any
-  // instance field initializer that could trigger CANHD class loading.
+  // Phoenix starts writing .hoot signal logs on its own, on SystemCore and in simulation. It starts
+  // once the robot is enabled at least 1 s after startup, or at least 5 s after startup with the
+  // DS connected (in simulation, at 5 s without a DS). The logging choice must be made before
+  // then. This static initializer runs before the constructor and every instance field.
   private static final String SESSION_DIR;
 
   static {
-    if (Constants.currentMode == RobotMode.REAL) {
-      SESSION_DIR = createSessionDir();
-      SignalLogger.setPath(SESSION_DIR);
+    SESSION_DIR = Constants.currentMode == RobotMode.REAL ? createSessionDir() : null;
+    if (FeatureFlags.HOOT_LOGGING_ENABLED) {
+      if (SESSION_DIR != null) SignalLogger.setPath(SESSION_DIR);
     } else {
-      SESSION_DIR = null;
+      SignalLogger.enableAutoLogging(false);
     }
   }
 
@@ -101,12 +107,12 @@ public class Robot extends LoggedRobot {
   public static final AutoSelector autoSelector =
       new AutoSelector(DIOPorts.AUTONOMOUS_MODE_SELECTOR, allianceSelector::getAllianceColor);
   public final LoggedPowerDistribution powerDistribution =
-      new LoggedPowerDistribution(SC0.BUS_ID, SC0.PD, ModuleType.REV, "PD");
+      new LoggedPowerDistribution(SC0.PD, ModuleType.REV, "PD");
 
   private final LoggedCANBus sc0CANBus =
-      new LoggedCANBus(Constants.CANBusPorts.SC0.NAME, Constants.CANBusPorts.SC0.BUS);
+      new LoggedCANBus(SC0.CHAIN, SC0.BUS, SC0.CHAIN_ORDER_TRACED);
   private final LoggedCANBus sc1CANBus =
-      new LoggedCANBus(Constants.CANBusPorts.SC1.NAME, Constants.CANBusPorts.SC1.BUS);
+      new LoggedCANBus(SC1.CHAIN, SC1.BUS, SC1.CHAIN_ORDER_TRACED);
 
   private final java.util.Set<String> activeCommands = new java.util.LinkedHashSet<>();
 
@@ -142,8 +148,8 @@ public class Robot extends LoggedRobot {
     // Set up data receivers & replay source
     switch (Constants.currentMode) {
       case REAL: // Running on a real robot
-        // SESSION_DIR and SignalLogger.setPath() were already set in the static initializer.
-        // SignalLogger will create a nested timestamp subdir inside SESSION_DIR for hoot files.
+        // The static initializer created SESSION_DIR. With hoot logging enabled, Phoenix writes
+        // its .hoot files to a timestamped subdirectory of it.
         Logger.addDataReceiver(new WPILOGWriter(SESSION_DIR));
         Logger.addDataReceiver(new NT4Publisher());
 
@@ -223,10 +229,20 @@ public class Robot extends LoggedRobot {
         break;
     }
 
+    // Watch each bus's daisy chain, now that the devices reporting connection states exist
+    Map<CANChain.Device, BooleanSupplier> canConnections = new HashMap<>(drive.canConnections());
+    canConnections.putAll(powerDistribution.canConnections());
+    sc0CANBus.monitorChain(canConnections);
+    sc1CANBus.monitorChain(canConnections);
+
     // Start background threads (for non-blocking CAN/network reads)
     SparkOdometryThread.getInstance().start();
     if (FeatureFlags.VISION_ENABLED) VisionThread.getInstance().start();
     CanandgyroThread.getInstance().start();
+    if (Constants.currentMode == RobotMode.REAL) {
+      sc0CANBus.start();
+      sc1CANBus.start();
+    }
 
     // Start AdvantageKit logger
     Logger.start();
@@ -259,9 +275,9 @@ public class Robot extends LoggedRobot {
     ControllerSelector.getInstance().getBindingLoop().poll();
     long t1 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
+    powerDistribution.log(); // Before the buses, whose chain checks read its connection state
     sc0CANBus.log();
     sc1CANBus.log();
-    powerDistribution.log();
     logHIDs();
     logScheduler();
     GameState.logValues();
@@ -580,9 +596,8 @@ public class Robot extends LoggedRobot {
   }
 
   /**
-   * Creates and returns a timestamped session directory under /U/logs/. Must be called before any
-   * CTRE devices are constructed so that SignalLogger.setPath() takes effect before auto-logging
-   * begins.
+   * Creates and returns a numbered session directory under /U/logs/. AdvantageKit writes its log
+   * there, and Phoenix writes .hoot files there when hoot logging is enabled.
    */
   private static String createSessionDir() {
     java.io.File logsDir = new java.io.File("/U/logs");

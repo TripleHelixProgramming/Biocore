@@ -15,10 +15,15 @@ import static org.wpilib.units.Units.*;
 
 import choreo.trajectory.SwerveSample;
 import frc.lib.RobotMode;
+import frc.lib.hardware.CANChain;
 import frc.robot.Constants;
+import frc.robot.Constants.CANBusPorts.SC0;
 import frc.robot.Constants.FeatureFlags;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.Command;
@@ -142,6 +147,23 @@ public class Drive extends SubsystemBase {
         .onTrue(Commands.runOnce(this::zeroAbsoluteEncoders, this).ignoringDisable(true));
   }
 
+  /**
+   * Returns the connection state of every CAN device the drive owns, on any bus. The states come
+   * from logged inputs, so they replay.
+   */
+  public Map<CANChain.Device, BooleanSupplier> canConnections() {
+    Map<CANChain.Device, BooleanSupplier> connections = new HashMap<>();
+    for (int i = 0; i < modules.length; i++) {
+      Module module = modules[i];
+      var devices = DriveConstants.MODULE_DEVICES.get(i);
+      connections.put(devices.drive(), module::isDriveConnected);
+      connections.put(devices.turn(), module::isTurnConnected);
+      connections.put(devices.turnEncoder(), module::isTurnEncoderConnected);
+    }
+    connections.put(SC0.GYRO, () -> gyroInputs.connected);
+    return connections;
+  }
+
   @Override
   public void periodic() {
     long startNanos = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
@@ -158,7 +180,9 @@ public class Drive extends SubsystemBase {
     long t4 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
     ODOMETRY_LOCK.unlock();
 
-    // Stop moving when disabled
+    // Stop the modules on every loop while disabled. Phoenix keeps re-sending a motor's last
+    // control request, so this keeps an old setpoint from resuming at enable. It also keeps each
+    // motor's setControl status current, which the firmware-blocked alert in Module reads.
     if (RobotState.isDisabled()) {
       for (var module : modules) {
         module.stop();

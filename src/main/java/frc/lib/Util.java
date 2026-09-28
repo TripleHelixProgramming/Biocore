@@ -8,6 +8,7 @@
 package frc.lib;
 
 import org.wpilib.driverstation.Alliance;
+import org.wpilib.util.Alert;
 import org.wpilib.util.Color;
 
 public interface Util {
@@ -30,5 +31,17 @@ public interface Util {
    */
   public static boolean nearlyEqual(double a, double b) {
     return Math.abs(a - b) < Math.ulp(1);
+  }
+
+  /**
+   * Activates or clears an alert, updating its text only while active and only when it changed.
+   *
+   * @param alert the alert to update
+   * @param active whether the alert should be active
+   * @param text the alert text to show while active
+   */
+  public static void setAlert(Alert alert, boolean active, String text) {
+    if (active && !text.equals(alert.getText())) alert.setText(text);
+    alert.set(active);
   }
 }
