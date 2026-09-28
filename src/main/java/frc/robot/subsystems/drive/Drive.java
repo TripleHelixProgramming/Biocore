@@ -93,7 +93,6 @@ public class Drive extends SubsystemBase {
         new SwerveModulePosition(), new SwerveModulePosition(),
         new SwerveModulePosition(), new SwerveModulePosition()
       };
-  private ChassisVelocities chassisVelocities;
 
   private double totalDistanceTraveledMeters = 0.0;
 
@@ -203,8 +202,6 @@ public class Drive extends SubsystemBase {
 
       // Apply update
       visionPose.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
-
-      chassisVelocities = kinematics.toChassisVelocities(getModuleStates());
     }
     long t6 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
 
@@ -384,10 +381,12 @@ public class Drive extends SubsystemBase {
     return measuredPositions;
   }
 
-  /** Returns the measured chassis velocities of the robot. */
+  /**
+   * Returns the measured robot-relative chassis velocities, from the latest module velocity inputs.
+   */
   @AutoLogOutput(key = "SwerveChassisVelocities/Measured")
   public ChassisVelocities getRobotRelativeChassisVelocities() {
-    return chassisVelocities;
+    return kinematics.toChassisVelocities(getModuleStates());
   }
 
   /** Returns the position of each module in radians. */
