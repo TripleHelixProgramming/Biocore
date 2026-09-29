@@ -12,6 +12,7 @@ package frc.robot.subsystems.drive;
 
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
+import com.ctre.phoenix6.alerts.AlertableCollection;
 import frc.robot.Constants.FeatureFlags;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.geometry.Rotation2d;
@@ -198,6 +199,11 @@ public class Module {
   /** Returns the total motor current draw for battery simulation. */
   public double getSimCurrentDrawAmps() {
     return inputs.driveCurrentAmps + inputs.turnCurrentAmps;
+  }
+
+  /** Registers the module's Phoenix device alerts with the given collection. */
+  public void registerAlerts(AlertableCollection alerts) {
+    io.registerAlerts(alerts);
   }
 
   /** Sets the zero position of the turn axis to the current rotation */

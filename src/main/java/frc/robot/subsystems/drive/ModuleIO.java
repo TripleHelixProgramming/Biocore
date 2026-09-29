@@ -7,6 +7,7 @@
 
 package frc.robot.subsystems.drive;
 
+import com.ctre.phoenix6.alerts.AlertableCollection;
 import org.littletonrobotics.junction.AutoLog;
 import org.wpilib.math.geometry.Rotation2d;
 
@@ -61,4 +62,7 @@ public interface ModuleIO {
 
   /** Update the turn zero position of the turn absolute encoder */
   public default void setTurnZero(Rotation2d rotation) {}
+
+  /** Registers the module's Phoenix device alerts with the given collection. */
+  public default void registerAlerts(AlertableCollection alerts) {}
 }

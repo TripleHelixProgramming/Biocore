@@ -14,6 +14,7 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import static org.wpilib.units.Units.*;
 
 import choreo.trajectory.SwerveSample;
+import com.ctre.phoenix6.alerts.AlertableCollection;
 import frc.lib.RobotMode;
 import frc.robot.Constants;
 import frc.robot.Constants.FeatureFlags;
@@ -59,6 +60,8 @@ public class Drive extends SubsystemBase {
           "Drive/gyroDisconnected",
           "Disconnected gyro, using kinematics as fallback.",
           Alert.Level.HIGH);
+  // Phoenix reports these alerts on a robot controller and treats them as a no-op elsewhere
+  private final AlertableCollection deviceAlerts = new AlertableCollection("Swerve");
 
   private final BooleanPublisher alignEncodersPub;
 
@@ -112,6 +115,9 @@ public class Drive extends SubsystemBase {
     modules[1] = new Module(frModuleIO, "FrontRight");
     modules[2] = new Module(blModuleIO, "BackLeft");
     modules[3] = new Module(brModuleIO, "BackRight");
+    for (var module : modules) {
+      module.registerAlerts(deviceAlerts);
+    }
 
     // Usage reporting for swerve template
     // TODO: update instance string to match the official 2027 AKit template when released.
@@ -209,6 +215,7 @@ public class Drive extends SubsystemBase {
     boolean gyroDisconnected = !gyroInputs.connected && Constants.currentMode != RobotMode.SIM;
     gyroDisconnectedAlert.set(gyroDisconnected);
     Logger.recordOutput("Faults/Drive/GyroDisconnected", gyroDisconnected);
+    deviceAlerts.report();
 
     // Profiling output
     if (FeatureFlags.PROFILING_ENABLED) {
