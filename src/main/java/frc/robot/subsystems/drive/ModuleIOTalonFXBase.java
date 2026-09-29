@@ -15,6 +15,7 @@ import static frc.robot.util.odometry.PhoenixUtil.*;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.alerts.AlertableCollection;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
@@ -222,5 +223,10 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
     cancoderConfig.MagnetSensor.MagnetOffset = rotation.getRotations();
     // One attempt only: this runs on the main loop, where retries would stall the robot
     turnEncoderApplyStatus = cancoder.getConfigurator().apply(cancoderConfig);
+  }
+
+  @Override
+  public void registerAlerts(AlertableCollection alerts) {
+    alerts.withAlertable(driveTalon).withAlertable(turnTalon).withAlertable(cancoder);
   }
 }
