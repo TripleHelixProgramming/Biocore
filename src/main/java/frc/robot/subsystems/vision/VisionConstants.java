@@ -31,7 +31,7 @@ public class VisionConstants {
   // Camera configurations (name must match name configured on coprocessor)
   public static CameraConfig FRONT_RIGHT_CAMERA =
       new CameraConfig(
-          "OV2311_TH_2026_FR",
+          "OV2311_TH_6",
           new Transform3d(
               Inches.of(-10.572),
               Inches.of(-12.337),
@@ -40,7 +40,7 @@ public class VisionConstants {
               new Rotation3d(new Quaternion(0.8735, -0.0802, -0.1540, -0.4547))));
   public static CameraConfig FRONT_LEFT_CAMERA =
       new CameraConfig(
-          "OV2311_TH_2026_FL",
+          "OV2311_TH_5",
           new Transform3d(
               Inches.of(-10.572),
               Inches.of(12.337),
@@ -49,7 +49,7 @@ public class VisionConstants {
               new Rotation3d(new Quaternion(0.8735, 0.0802, -0.1540, 0.4547))));
   public static CameraConfig BACK_RIGHT_CAMERA =
       new CameraConfig(
-          "OV2311_TH_2026_RR",
+          "OV2311_TH_1",
           new Transform3d(
               Inches.of(-13.1623),
               Inches.of(-12.1623),
@@ -58,7 +58,7 @@ public class VisionConstants {
               new Rotation3d(new Quaternion(-0.3794, 0.1206, 0.0500, 0.9160))));
   public static CameraConfig BACK_LEFT_CAMERA =
       new CameraConfig(
-          "OV2311_TH_2026_RL",
+          "OV2311_TH_7",
           new Transform3d(
               Inches.of(-13.1623),
               Inches.of(12.1623),

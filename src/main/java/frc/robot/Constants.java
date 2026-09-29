@@ -38,7 +38,7 @@ public final class Constants {
     public static final boolean PROFILING_ENABLED = false;
 
     public static final boolean LEDS_ENABLED = false;
-    public static final boolean VISION_ENABLED = false;
+    public static final boolean VISION_ENABLED = true;
   }
 
   public final class RobotConstants {
