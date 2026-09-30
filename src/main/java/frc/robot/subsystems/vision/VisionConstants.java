@@ -11,7 +11,6 @@ import static org.wpilib.units.Units.*;
 
 import frc.robot.subsystems.drive.DriveConstants;
 import org.wpilib.fields.Fields;
-import org.wpilib.math.geometry.Quaternion;
 import org.wpilib.math.geometry.Rotation3d;
 import org.wpilib.math.geometry.Transform3d;
 import org.wpilib.system.Filesystem;
@@ -36,8 +35,7 @@ public class VisionConstants {
               Inches.of(11.471),
               Inches.of(-9.971),
               Inches.of(8.158),
-              // pitch 20 degrees up, yaw 45 degrees right
-              new Rotation3d(new Quaternion(0.9098, -0.0665, -0.1604, -0.3769))));
+              Rotation3d.fromDegrees(0, -20, -45)));
   public static CameraConfig FRONT_LEFT_CAMERA =
       new CameraConfig(
           "OV2311_TH_5",
@@ -45,8 +43,7 @@ public class VisionConstants {
               Inches.of(11.471),
               Inches.of(9.971),
               Inches.of(8.158),
-              // pitch 20 degrees up, yaw 45 degrees left
-              new Rotation3d(new Quaternion(0.9098, 0.0665, -0.1604, 0.3769))));
+              Rotation3d.fromDegrees(0, -20, 45)));
   public static CameraConfig BACK_RIGHT_CAMERA =
       new CameraConfig(
           "OV2311_TH_1",
@@ -54,8 +51,7 @@ public class VisionConstants {
               Inches.of(-11.471),
               Inches.of(-9.971),
               Inches.of(8.158),
-              // pitch 20 degrees up, yaw 135 degrees right
-              new Rotation3d(new Quaternion(0.3769, -0.1604, -0.0665, -0.9098))));
+              Rotation3d.fromDegrees(0, -20, -135)));
   public static CameraConfig BACK_LEFT_CAMERA =
       new CameraConfig(
           "OV2311_TH_7",
@@ -63,8 +59,7 @@ public class VisionConstants {
               Inches.of(-11.471),
               Inches.of(9.971),
               Inches.of(8.158),
-              // pitch 20 degrees up, yaw 135 degrees left
-              new Rotation3d(new Quaternion(0.3769, 0.1604, -0.0665, 0.9098))));
+              Rotation3d.fromDegrees(0, -20, 135)));
 
   public static Distance MIN_ROBOT_WIDTH = Inches.of(36.875);
 
