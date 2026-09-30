@@ -149,31 +149,24 @@ public class VisionFilter {
     pitchError(0.7) {
       @Override
       public double test(TestContext ctx) {
-        return 1.0
-            - normalizedSigmoid(
-                Math.abs(ctx.observation().pose().getRotation().getY()),
-                PITCH_TOLERANCE_RADIANS,
-                1.0);
+        return floorPlausibility(
+            Math.abs(ctx.observation().pose().getRotation().getY()), PITCH_TOLERANCE_RADIANS);
       }
     },
 
     rollError(0.7) {
       @Override
       public double test(TestContext ctx) {
-        return 1.0
-            - normalizedSigmoid(
-                Math.abs(ctx.observation().pose().getRotation().getX()),
-                ROLL_TOLERANCE_RADIANS,
-                1.0);
+        return floorPlausibility(
+            Math.abs(ctx.observation().pose().getRotation().getX()), ROLL_TOLERANCE_RADIANS);
       }
     },
 
     heightError(0.7) {
       @Override
       public double test(TestContext ctx) {
-        return 1.0
-            - normalizedSigmoid(
-                Math.abs(ctx.observation().pose().getZ()), ELEVATION_TOLERANCE_METERS, 1.0);
+        return floorPlausibility(
+            Math.abs(ctx.observation().pose().getZ()), ELEVATION_TOLERANCE_METERS);
       }
     },
 
@@ -464,6 +457,18 @@ public class VisionFilter {
     }
 
     return result;
+  }
+
+  /**
+   * Scores an error that should be near zero for a robot sitting on the floor (height, roll or
+   * pitch). Beyond the tolerance the pose is physically impossible, so it scores 0 and the
+   * observation is rejected. The shallow sigmoid alone could not do this: a pose 0.5 m in the air
+   * with 11 degrees of roll scored 0.68 overall and passed MIN_SCORE. Within the tolerance the
+   * sigmoid still applies, so scores (and MIN_SCORE's tuning) are unchanged.
+   */
+  private static double floorPlausibility(double error, double tolerance) {
+    if (error > tolerance) return 0.0;
+    return 1.0 - normalizedSigmoid(error, tolerance, 1.0);
   }
 
   /** Normalized sigmoid function. Output is between 0 and 1. */

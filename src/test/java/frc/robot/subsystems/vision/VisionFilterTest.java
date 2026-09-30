@@ -1292,4 +1292,125 @@ class VisionFilterTest {
           "Empty test set should produce NaN or 1.0");
     }
   }
+
+  // ==================== Physical Plausibility Tests ====================
+
+  @Nested
+  @DisplayName("Physical plausibility (height, roll, pitch)")
+  class PhysicalPlausibilityTests {
+
+    @org.junit.jupiter.api.Test
+    @DisplayName("Just past each tolerance scores 0")
+    void pastToleranceScoresZero() {
+      double overHeight = VisionConstants.ELEVATION_TOLERANCE_METERS + 0.01;
+      double overAngle = VisionConstants.ROLL_TOLERANCE_RADIANS + Math.toRadians(0.5);
+      double overPitch = VisionConstants.PITCH_TOLERANCE_RADIANS + Math.toRadians(0.5);
+      var high =
+          new TestContext()
+              .observation(makeObservation(8, 4, overHeight, 0, 0, 0, 0.0, 1, 0.01, 3.0));
+      var low =
+          new TestContext()
+              .observation(makeObservation(8, 4, -overHeight, 0, 0, 0, 0.0, 1, 0.01, 3.0));
+      var rolled =
+          new TestContext()
+              .observation(makeObservation(8, 4, 0, -overAngle, 0, 0, 0.0, 1, 0.01, 3.0));
+      var pitched =
+          new TestContext()
+              .observation(makeObservation(8, 4, 0, 0, overPitch, 0, 0.0, 1, 0.01, 3.0));
+
+      assertEquals(0.0, Test.heightError.test(high), 0.0);
+      assertEquals(0.0, Test.heightError.test(low), 0.0);
+      assertEquals(0.0, Test.rollError.test(rolled), 0.0);
+      assertEquals(0.0, Test.pitchError.test(pitched), 0.0);
+    }
+
+    @org.junit.jupiter.api.Test
+    @DisplayName("Within tolerance keeps the sigmoid score (MIN_SCORE tuning unchanged)")
+    void withinToleranceUnchanged() {
+      double tolerance = VisionConstants.ELEVATION_TOLERANCE_METERS;
+      var ctx =
+          new TestContext().observation(makeObservation(8, 4, 0.1, 0, 0, 0, 0.0, 1, 0.01, 3.0));
+      assertEquals(
+          1.0 - VisionFilter.normalizedSigmoid(0.1, tolerance, 1.0),
+          Test.heightError.test(ctx),
+          1e-12);
+    }
+
+    // Poses below are copied from the 2026-09-29 practice log (akit_26-09-30_00-10-26.wpilog).
+    // Angles are the logged roll/pitch/yaw in radians.
+
+    @org.junit.jupiter.api.Test
+    @DisplayName("Rejects logged Camera3 floating pose on tag 32 (0.52 m up, 11 deg roll)")
+    void rejectsLoggedCamera3FloatingPose() {
+      // Camera3 (back-left), t = 381.41 s, robot disabled on the floor. Previously scored ~0.68.
+      var obs =
+          makeObservation(
+              3.199775478105811,
+              4.419673259869656,
+              0.5239702316510324,
+              -0.19214076705012592,
+              -0.016784055322205046,
+              1.4189031806793988,
+              381.414691,
+              1,
+              0.0,
+              2.8590104566675705);
+      assertEquals(0.0, score(obs).score(), 0.0);
+    }
+
+    @org.junit.jupiter.api.Test
+    @DisplayName("Rejects logged Camera0 floating pose on tag 32 (0.92 m up, 17 deg roll)")
+    void rejectsLoggedCamera0FloatingPose() {
+      // Camera0 (front-right), t = 687.41 s, accepted and caused a 0.63 m pose jump.
+      var obs =
+          makeObservation(
+              3.049756755541529,
+              4.264801561437661,
+              0.9155561792663559,
+              0.2943897155417375,
+              0.06193264370686318,
+              -1.7293997532980638,
+              687.407642,
+              1,
+              0.0,
+              2.7343624725208326);
+      assertEquals(0.0, score(obs).score(), 0.0);
+    }
+
+    @org.junit.jupiter.api.Test
+    @DisplayName("Still accepts logged good poses from the same moment")
+    void acceptsLoggedGoodPoses() {
+      // Camera0, t = 381.52 s: agrees with Camera2 to ~3 cm, on the floor.
+      var camera0 =
+          makeObservation(
+              2.867509776916445,
+              5.121563730987709,
+              0.015107244464515168,
+              -0.03485118542174471,
+              0.030504168320490303,
+              1.6368176020548524,
+              381.518174,
+              1,
+              0.004201701595934888,
+              2.5582716590629864);
+      // Camera2 (back-right), t = 381.35 s.
+      var camera2 =
+          makeObservation(
+              2.8641253849665382,
+              5.149237079827161,
+              0.0036847081623223588,
+              -0.005432312382305037,
+              -0.024094023527555207,
+              1.6508350689169085,
+              381.34694,
+              1,
+              7.620029670026035E-4,
+              1.5250817357380517);
+
+      double camera0Score = score(camera0).score();
+      double camera2Score = score(camera2).score();
+      assertTrue(camera0Score > VisionConstants.MIN_SCORE, "Camera0 scored " + camera0Score);
+      assertTrue(camera2Score > VisionConstants.MIN_SCORE, "Camera2 scored " + camera2Score);
+    }
+  }
 }
