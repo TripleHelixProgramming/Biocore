@@ -7,7 +7,7 @@
 
 package frc.robot.util.odometry;
 
-import com.reduxrobotics.sensors.canandgyro.Canandgyro;
+import com.reduxrobotics.canandgyro.Canandgyro;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;

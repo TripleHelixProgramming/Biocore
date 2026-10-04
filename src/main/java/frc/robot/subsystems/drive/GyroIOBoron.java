@@ -7,7 +7,7 @@
 
 package frc.robot.subsystems.drive;
 
-import com.reduxrobotics.sensors.canandgyro.Canandgyro;
+import com.reduxrobotics.canandgyro.Canandgyro;
 import frc.robot.Constants.CANBusPorts.SC0;
 import frc.robot.util.odometry.CanandgyroThread;
 import frc.robot.util.odometry.CanandgyroThread.GyroInputs;
