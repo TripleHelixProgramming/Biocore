@@ -31,7 +31,10 @@ public final class Constants {
     public static final boolean LEDS_ENABLED = false;
     public static final boolean VISION_ENABLED = true;
 
-    /** Enable to add the module forces from Choreo trajectories as drive feedforward. */
+    /**
+     * Enable to add the module forces from Choreo and PathPlanner trajectories as drive
+     * feedforward.
+     */
     public static final boolean TRAJECTORY_FORCE_FF = false;
   }
 

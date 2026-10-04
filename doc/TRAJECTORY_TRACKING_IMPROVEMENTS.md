@@ -40,19 +40,20 @@ The path follower can only correct what it can see. If the pose estimator says t
 
 ### Tier 1: Low effort, high impact
 
-#### Fix the Choreo model mismatch
+#### Verify the planning model
 
-The Choreo configuration (`Rho.chor`) and the robot code (`DriveConstants.java`) disagree on several parameters:
+`ChoreoConfigParityTest` checks that the Choreo configuration (`Rho.chor`) and the robot code (`DriveConstants.java`) agree on mass, MOI, gearing, wheel radius, module locations, and the planning derates. Two of those shared values still need checking against the real robot:
 
-| Parameter | Choreo (`Rho.chor`) | Code (`DriveConstants`) | Impact |
-|-----------|---------------------|------------------------|--------|
-| **Mass** | 130 lbs | 150 lbs | Choreo generates trajectories for a lighter robot. The real robot accelerates more slowly, so the path follower constantly lags the trajectory. |
-| **COF** | 1.0 | 1.2 | Choreo is more conservative about traction limits than PathPlanner. Inconsistency means different behavior depending on which planner generated the path. |
-| **Motor torque (tmax)** | 0.25 N*m | — | This seems very low for a Kraken X60 (stall torque ~7 N*m). If this limits Choreo's trajectory generation, the trajectories may be unnecessarily slow. |
+| Parameter | `Rho.chor` and `DriveConstants` | Impact |
+|-----------|--------------------------------|--------|
+| **Mass** | 130 lbs | If the real robot is heavier, it accelerates more slowly than the trajectories plan, so the path follower constantly lags the trajectory. |
+| **Motor torque (tmax)** | 0.25 N*m (`PLANNED_MOTOR_MAX_TORQUE`) | This seems very low for a Kraken X60 (stall torque ~7 N*m). If this limits Choreo's trajectory generation, the trajectories may be unnecessarily slow. |
+
+The COF of 1.0 (`PLANNED_WHEEL_COF`) is a deliberate derate below `WHEEL_COF` (1.2). Choreo and PathPlanner both plan with it.
 
 **Fix**: weigh the robot at competition weight (bumpers, battery, game pieces), update both `Rho.chor` and `DriveConstants` with the same value, and verify `tmax` in Choreo's documentation.
 
-**Expected impact**: this is probably the single highest-impact code change. A 15% mass error (130 vs 150 lbs) means the feedforward is systematically 15% wrong during acceleration phases.
+**Expected impact**: this is probably the single highest-impact code change. A mass error carries into the feedforward: a 15% mass error makes the feedforward systematically about 15% wrong during acceleration phases.
 
 #### Characterize wheel radius precisely
 
@@ -189,7 +190,7 @@ Instead of following a pre-computed trajectory and correcting errors with PID, r
 
 The highest-impact improvements, roughly in order:
 
-1. **Fix the Choreo mass mismatch** (130 lbs vs 150 lbs) and verify tmax — this causes systematic feedforward error in every trajectory
+1. **Weigh the robot and verify tmax** — a wrong planning mass causes systematic feedforward error in every trajectory
 2. **Verify all cameras see tags from your starting positions** — missing cameras during pre-auto eliminates multi-camera fusion at the most critical time
 3. **Characterize wheel radius on competition carpet** — free accuracy, update both code and Choreo config
 4. **Add trajectory error logging** — can't improve what you can't measure

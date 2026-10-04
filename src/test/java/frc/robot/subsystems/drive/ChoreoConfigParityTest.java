@@ -53,14 +53,14 @@ class ChoreoConfigParityTest {
 
   @Test
   void deratesMatchAndStayBelowPhysicalLimits() {
-    double vmax = DriveConstants.CHOREO_MOTOR_MAX_VELOCITY.in(RadiansPerSecond);
-    double tmax = DriveConstants.CHOREO_MOTOR_MAX_TORQUE.in(NewtonMeters);
+    double vmax = DriveConstants.PLANNED_MOTOR_MAX_VELOCITY.in(RadiansPerSecond);
+    double tmax = DriveConstants.PLANNED_MOTOR_MAX_TORQUE.in(NewtonMeters);
     assertEquals(vmax, configVal("vmax"), TOLERANCE);
     assertEquals(tmax, configVal("tmax"), TOLERANCE);
-    assertEquals(DriveConstants.CHOREO_WHEEL_COF, configVal("cof"), TOLERANCE);
+    assertEquals(DriveConstants.PLANNED_WHEEL_COF, configVal("cof"), TOLERANCE);
 
     assertTrue(vmax <= DriveConstants.DRIVE_GEARBOX.freeSpeed, "Choreo vmax exceeds free speed");
     assertTrue(tmax <= DriveConstants.DRIVE_GEARBOX.stallTorque, "Choreo tmax exceeds stall");
-    assertTrue(DriveConstants.CHOREO_WHEEL_COF <= DriveConstants.WHEEL_COF, "Choreo cof too high");
+    assertTrue(DriveConstants.PLANNED_WHEEL_COF <= DriveConstants.WHEEL_COF, "Choreo cof too high");
   }
 }

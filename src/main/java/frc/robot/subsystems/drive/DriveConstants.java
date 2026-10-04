@@ -32,6 +32,9 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants.DriveMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerFeedbackType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
+import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.path.PathConstraints;
 import frc.robot.Constants.CANBusPorts.SC1;
 import frc.robot.Constants.MotorConstants.KrakenX60Constants;
 import org.wpilib.math.geometry.Translation2d;
@@ -152,11 +155,48 @@ public class DriveConstants {
   public static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(6);
   public static final double WHEEL_COF = 1.2;
 
-  // Deliberate derates in the Choreo robot config (Rho.chor) that keep planned paths below the
-  // drive's physical limits: motor speed and torque below DRIVE_GEARBOX, friction below WHEEL_COF
-  public static final AngularVelocity CHOREO_MOTOR_MAX_VELOCITY = RPM.of(3500);
-  public static final Torque CHOREO_MOTOR_MAX_TORQUE = NewtonMeters.of(0.25);
-  public static final double CHOREO_WHEEL_COF = 1.0;
+  // Deliberate derates that keep planned paths below the drive's physical limits: motor speed and
+  // torque below DRIVE_GEARBOX, friction below WHEEL_COF. The Choreo robot config (Rho.chor) holds
+  // the same values. PathPlanner plans with the friction derate, and its path constraints hold
+  // chassis speed to the motor speed derate.
+  public static final AngularVelocity PLANNED_MOTOR_MAX_VELOCITY = RPM.of(3500);
+  public static final Torque PLANNED_MOTOR_MAX_TORQUE = NewtonMeters.of(0.25);
+  public static final double PLANNED_WHEEL_COF = 1.0;
+
+  // Feedback gains for trajectory following, shared by Choreo and PathPlanner
+  public static final double TRAJECTORY_TRANSLATION_KP = 8.01;
+  public static final double TRAJECTORY_ROTATION_KP = 8.01;
+
+  // PathPlanner configuration
+  public static final LinearVelocity PLANNED_MODULE_SPEED_LIMIT =
+      MetersPerSecond.of(
+          PLANNED_MOTOR_MAX_VELOCITY.in(RadiansPerSecond)
+              / SELECTED_RATIO.getDriveMotorReduction()
+              * WHEEL_RADIUS_METERS);
+
+  public static final PathConstraints PATH_FOLLOWING_CONSTRAINTS =
+      new PathConstraints(
+          PLANNED_MODULE_SPEED_LIMIT.in(MetersPerSecond),
+          MAX_CHASSIS_ACCELERATION.in(MetersPerSecondPerSecond),
+          PLANNED_MODULE_SPEED_LIMIT.in(MetersPerSecond) / DRIVE_BASE_RADIUS.in(Meters),
+          MAX_CHASSIS_ANGULAR_ACCELERATION.in(RadiansPerSecondPerSecond));
+
+  // ModuleConfig takes the physical top speed: PathPlanner models drive losses as the torque that
+  // holds that speed, so a derated speed there leaves no torque to accelerate. The stator limit
+  // caps
+  // drive torque; under TorqueCurrentFOC it applies alongside SLIP_CURRENT.
+  public static final RobotConfig PP_CONFIG =
+      new RobotConfig(
+          ROBOT_MASS.in(Kilograms),
+          ROBOT_MOI.in(KilogramSquareMeters),
+          new ModuleConfig(
+              WHEEL_RADIUS_METERS,
+              DRIVETRAIN_SPEED_LIMIT.in(MetersPerSecond),
+              PLANNED_WHEEL_COF,
+              DRIVE_GEARBOX.withReduction(SELECTED_RATIO.getDriveMotorReduction()),
+              KrakenX60Constants.DEFAULT_STATOR_CURRENT_LIMIT,
+              1),
+          MODULE_TRANSLATIONS);
 
   // The steer motor uses any SwerveModule.SteerRequestType control request with the
   // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput

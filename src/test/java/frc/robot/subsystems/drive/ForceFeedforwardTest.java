@@ -12,15 +12,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
+import com.pathplanner.lib.util.DriveFeedforwards;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.wpilib.hardware.hal.HAL;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.math.kinematics.SwerveModuleVelocity;
 import org.wpilib.math.system.DCMotor;
 
-/** Checks how Choreo module forces become drive feedforward torques. */
+/** Checks how Choreo and PathPlanner module forces become drive feedforward torques. */
 class ForceFeedforwardTest {
   private static final double TOLERANCE = 1e-9;
 
@@ -48,6 +50,39 @@ class ForceFeedforwardTest {
     for (Translation2d force : Drive.robotRelativeModuleForces(sample, Rotation2d.CCW_PI_2)) {
       assertEquals(5, force.getX(), TOLERANCE);
       assertEquals(-10, force.getY(), TOLERANCE);
+    }
+  }
+
+  @Test
+  void pathPlannerModuleOrderIsKept() {
+    var feedforwards =
+        new DriveFeedforwards(
+            new double[4],
+            new double[4],
+            new double[4],
+            new double[] {1, 2, 3, 4},
+            new double[] {10, 20, 30, 40});
+    Translation2d[] forces = Drive.moduleForces(feedforwards);
+    assertEquals(new Translation2d(1, 10), forces[0], "FL");
+    assertEquals(new Translation2d(2, 20), forces[1], "FR");
+    assertEquals(new Translation2d(3, 30), forces[2], "BL");
+    assertEquals(new Translation2d(4, 40), forces[3], "BR");
+  }
+
+  /**
+   * PathPlanner orders module forces by PP_CONFIG's module locations. A pure counterclockwise
+   * torque pushes each module counterclockwise around the robot center, perpendicular to that
+   * module's location, so each force must point along its own module's location rotated 90°.
+   */
+  @Test
+  void pathPlannerForcesFollowModuleTranslationOrder() {
+    Translation2d[] forces =
+        DriveConstants.PP_CONFIG.chassisForcesToWheelForceVectors(new ChassisVelocities(0, 0, 10));
+    for (int i = 0; i < 4; i++) {
+      Rotation2d expected =
+          DriveConstants.MODULE_TRANSLATIONS[i].getAngle().orElseThrow().plus(Rotation2d.CCW_PI_2);
+      Rotation2d actual = forces[i].getAngle().orElseThrow();
+      assertEquals(expected.getRadians(), actual.getRadians(), 1e-6, "module " + i);
     }
   }
 

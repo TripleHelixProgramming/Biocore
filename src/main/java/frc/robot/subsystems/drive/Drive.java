@@ -14,6 +14,12 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import static org.wpilib.units.Units.*;
 
 import choreo.trajectory.SwerveSample;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.pathfinding.Pathfinding;
+import com.pathplanner.lib.util.DriveFeedforwards;
+import com.pathplanner.lib.util.PathPlannerLogging;
 import frc.lib.RobotMode;
 import frc.robot.Constants;
 import frc.robot.Constants.FeatureFlags;
@@ -94,12 +100,16 @@ public class Drive extends SubsystemBase {
         new SwerveModulePosition(), new SwerveModulePosition()
       };
 
+  // PathPlanner trajectory logging (stored each loop for AKit compatibility)
+  private Pose2d[] lastTrajectory = new Pose2d[0];
+
   private double totalDistanceTraveledMeters = 0.0;
 
   // PID controllers for following Choreo trajectories
-  private final PIDController xController = new PIDController(8.01, 0.0, 0.0);
-  private final PIDController yController = new PIDController(8.01, 0.0, 0.0);
-  private final PIDController headingController = new PIDController(8.01, 0.0, 0.0);
+  private final PIDController xController = new PIDController(TRAJECTORY_TRANSLATION_KP, 0.0, 0.0);
+  private final PIDController yController = new PIDController(TRAJECTORY_TRANSLATION_KP, 0.0, 0.0);
+  private final PIDController headingController =
+      new PIDController(TRAJECTORY_ROTATION_KP, 0.0, 0.0);
 
   public Drive(
       GyroIO gyroIO,
@@ -119,6 +129,28 @@ public class Drive extends SubsystemBase {
 
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
+
+    // Configure AutoBuilder for PathPlanner. Red and blue paths are drawn separately, so
+    // PathPlanner never flips them by alliance.
+    AutoBuilder.configure(
+        this::getPose,
+        this::setPose,
+        this::getRobotRelativeChassisVelocities,
+        (velocities, feedforwards) ->
+            runVelocity(
+                velocities,
+                FeatureFlags.TRAJECTORY_FORCE_FF ? moduleForces(feedforwards) : NO_MODULE_FORCES),
+        new PPHolonomicDriveController(
+            new PIDConstants(TRAJECTORY_TRANSLATION_KP, 0.0, 0.0),
+            new PIDConstants(TRAJECTORY_ROTATION_KP, 0.0, 0.0)),
+        PP_CONFIG,
+        () -> false,
+        this);
+    Pathfinding.setPathfinder(new LocalADStarAK());
+    PathPlannerLogging.setLogActivePathCallback(
+        (activePath) -> {
+          if (!activePath.isEmpty()) lastTrajectory = activePath.toArray(new Pose2d[0]);
+        });
 
     // Configure SysId
     sysId =
@@ -209,6 +241,9 @@ public class Drive extends SubsystemBase {
     boolean gyroDisconnected = !gyroInputs.connected && Constants.currentMode != RobotMode.SIM;
     gyroDisconnectedAlert.set(gyroDisconnected);
     Logger.recordOutput("Faults/Drive/GyroDisconnected", gyroDisconnected);
+
+    // Log PathPlanner trajectory (stored by callback, recorded here for AKit compatibility)
+    Logger.recordOutput("Odometry/Trajectory", lastTrajectory);
 
     // Profiling output
     if (FeatureFlags.PROFILING_ENABLED) {
@@ -323,6 +358,22 @@ public class Drive extends SubsystemBase {
           new Translation2d(
                   sample.moduleForcesX()[choreoIndex], sample.moduleForcesY()[choreoIndex])
               .rotateBy(heading.unaryMinus());
+    }
+    return forces;
+  }
+
+  /**
+   * Returns the force at each module (FL, FR, BL, BR) in a PathPlanner feedforward. PathPlanner
+   * computes the forces in the robot frame and orders the modules as RobotConfig's module locations
+   * (MODULE_TRANSLATIONS in PP_CONFIG), so they need no rotation or remapping.
+   */
+  static Translation2d[] moduleForces(DriveFeedforwards feedforwards) {
+    Translation2d[] forces = new Translation2d[4];
+    for (int i = 0; i < 4; i++) {
+      forces[i] =
+          new Translation2d(
+              feedforwards.robotRelativeForcesXNewtons()[i],
+              feedforwards.robotRelativeForcesYNewtons()[i]);
     }
     return forces;
   }
