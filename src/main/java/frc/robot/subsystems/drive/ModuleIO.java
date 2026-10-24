@@ -37,15 +37,6 @@ public interface ModuleIO {
     public String turnConfigStatus = "OK";
     public String turnEncoderRefreshStatus = "OK";
     public String turnEncoderApplyStatus = "OK";
-
-    // Phoenix StatusCode names returned by the most recent setControl call on each motor
-    public String driveControlStatus = "OK";
-    public String turnControlStatus = "OK";
-
-    // Firmware versions as "major.minor.bugfix.build", or "" until first read
-    public String driveFirmware = "";
-    public String turnFirmware = "";
-    public String turnEncoderFirmware = "";
   }
 
   /** Updates the set of loggable inputs. */

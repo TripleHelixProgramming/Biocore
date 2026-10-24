@@ -14,8 +14,6 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 
 import frc.lib.Util;
 import frc.robot.Constants.FeatureFlags;
-import java.util.ArrayList;
-import java.util.List;
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.geometry.Translation2d;
@@ -36,7 +34,6 @@ public class Module {
   private final Alert turnDisconnectedAlert;
   private final Alert turnEncoderDisconnectedAlert;
   private final Alert setupFailedAlert;
-  private final Alert firmwareBlockedAlert;
   private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
 
   public Module(ModuleIO io, String name) {
@@ -59,7 +56,6 @@ public class Module {
             "Disconnected turn encoder on module " + name + ".",
             Alert.Level.HIGH);
     setupFailedAlert = new Alert("Module/" + name + "/setupFailed", "", Alert.Level.HIGH);
-    firmwareBlockedAlert = new Alert("Module/" + name + "/firmwareBlocked", "", Alert.Level.HIGH);
   }
 
   public void periodic() {
@@ -100,16 +96,8 @@ public class Module {
     driveDisconnectedAlert.set(!inputs.driveConnected);
     turnDisconnectedAlert.set(!inputs.turnConnected);
     turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
-    String setupFailure =
-        setupFailure(
-            name,
-            inputs.driveSetupStatus,
-            inputs.turnConfigStatus,
-            inputs.turnEncoderRefreshStatus,
-            inputs.turnEncoderApplyStatus);
+    String setupFailure = setupFailure(name, inputs.turnEncoderRefreshStatus);
     Util.setAlert(setupFailedAlert, setupFailure != null, setupFailure);
-    String blocked = firmwareBlocked(name, inputs.driveControlStatus, inputs.turnControlStatus);
-    Util.setAlert(firmwareBlockedAlert, blocked != null, blocked);
     Logger.recordOutput("Faults/Module" + name + "/DriveDisconnected", !inputs.driveConnected);
     Logger.recordOutput("Faults/Module" + name + "/TurnDisconnected", !inputs.turnConnected);
     long t3 = FeatureFlags.PROFILING_ENABLED ? System.nanoTime() : 0;
@@ -262,58 +250,21 @@ public class Module {
   }
 
   /**
-   * Describes every failed device setup step on a module.
+   * Describes a failed turn encoder config read, which leaves the module without its turn zero.
+   *
+   * <p>Phoenix raises its own alerts for config write failures and firmware mismatches. This alert
+   * covers only what Phoenix cannot know: that the turn zero in Preferences was not saved.
    *
    * @param module the module name
-   * @param driveSetup the drive motor config and position-reset status
-   * @param turnConfig the turn motor config status
    * @param encoderRefresh the turn encoder config read status
-   * @param encoderApply the turn encoder config write status
-   * @return the alert text, or null when every step is "OK"
+   * @return the alert text, or null when the read succeeded
    */
-  static String setupFailure(
-      String module,
-      String driveSetup,
-      String turnConfig,
-      String encoderRefresh,
-      String encoderApply) {
-    List<String> failures = new ArrayList<>();
-    if (!"OK".equals(driveSetup)) failures.add("drive motor setup (" + driveSetup + ")");
-    if (!"OK".equals(turnConfig)) failures.add("turn motor config (" + turnConfig + ")");
-    if (!canUseTurnZero(encoderRefresh)) {
-      failures.add("turn encoder config read (" + encoderRefresh + "); turn zero not saved");
-    } else if (!"OK".equals(encoderApply)) {
-      failures.add("turn encoder config write (" + encoderApply + ")");
-    }
-    if (failures.isEmpty()) return null;
-    return "Setup failed on module " + module + ": " + String.join("; ", failures) + ".";
-  }
-
-  /**
-   * Describes which motors Phoenix is blocking on a module.
-   *
-   * <p>Phoenix compares a device's firmware compliancy with the API's. On a mismatch it sends a
-   * neutral output instead of the request and returns {@code FirmwareTooOld} or {@code ApiTooOld}
-   * from {@code setControl} ({@code ParentDevice.setControlPrivate}, Phoenix 26.70.0-alpha-2).
-   *
-   * @param module the module name
-   * @param driveControl the drive motor's latest {@code setControl} status name
-   * @param turnControl the turn motor's latest {@code setControl} status name
-   * @return the alert text, or null when neither motor is blocked
-   */
-  static String firmwareBlocked(String module, String driveControl, String turnControl) {
-    List<String> blocked = new ArrayList<>();
-    if (isBlocked(driveControl)) blocked.add("drive motor (" + driveControl + ")");
-    if (isBlocked(turnControl)) blocked.add("turn motor (" + turnControl + ")");
-    if (blocked.isEmpty()) return null;
-    return "Phoenix is blocking output on module "
+  static String setupFailure(String module, String encoderRefresh) {
+    if (canUseTurnZero(encoderRefresh)) return null;
+    return "Setup failed on module "
         + module
-        + ": "
-        + String.join(", ", blocked)
-        + ". Update the motor firmware or the Phoenix library.";
-  }
-
-  private static boolean isBlocked(String controlStatus) {
-    return "FirmwareTooOld".equals(controlStatus) || "ApiTooOld".equals(controlStatus);
+        + ": turn encoder config read ("
+        + encoderRefresh
+        + "); turn zero not saved.";
   }
 }

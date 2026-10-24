@@ -28,7 +28,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.ClosedLoopOutputType;
-import frc.lib.hardware.PhoenixFirmware;
 import frc.robot.Constants.CANBusPorts.SC1;
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.util.Units;
@@ -76,18 +75,6 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
   private final StatusCode turnEncoderRefreshStatus;
   private StatusCode turnEncoderApplyStatus = StatusCode.OK;
 
-  // Results of the most recent setControl calls, which report when Phoenix blocks output
-  private StatusCode driveControlStatus = StatusCode.OK;
-  private StatusCode turnControlStatus = StatusCode.OK;
-
-  // Firmware versions, read until each first arrives. See readFirmware().
-  private final StatusSignal<Integer> driveVersion;
-  private final StatusSignal<Integer> turnVersion;
-  private final StatusSignal<Integer> turnEncoderVersion;
-  private String driveFirmware = "";
-  private String turnFirmware = "";
-  private String turnEncoderFirmware = "";
-
   protected ModuleIOTalonFXBase(
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
           constants) {
@@ -130,9 +117,6 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
     turnVelocity = turnTalon.getVelocity();
     turnAppliedVolts = turnTalon.getMotorVoltage();
     turnCurrent = turnTalon.getStatorCurrent();
-    driveVersion = driveTalon.getVersion(false);
-    turnVersion = turnTalon.getVersion(false);
-    turnEncoderVersion = cancoder.getVersion(false);
   }
 
   /** Refreshes all status signals and populates the non-connection, non-odometry inputs. */
@@ -164,53 +148,24 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
     inputs.turnConfigStatus = turnConfigStatus.getName();
     inputs.turnEncoderRefreshStatus = turnEncoderRefreshStatus.getName();
     inputs.turnEncoderApplyStatus = turnEncoderApplyStatus.getName();
-    inputs.driveControlStatus = driveControlStatus.getName();
-    inputs.turnControlStatus = turnControlStatus.getName();
-
-    readFirmware();
-    inputs.driveFirmware = driveFirmware;
-    inputs.turnFirmware = turnFirmware;
-    inputs.turnEncoderFirmware = turnEncoderFirmware;
-  }
-
-  /**
-   * Reads each device's firmware version until it first arrives, then stops reading it.
-   *
-   * <p>Phoenix sends the version at 4 Hz, so it is usually missing at construction. Each read here
-   * takes the latest received value without waiting, and without reporting an error: a missing
-   * device already raises its disconnected alert. A device that joins the bus late gets its version
-   * once it starts sending.
-   */
-  private void readFirmware() {
-    if (driveFirmware.isEmpty()) driveFirmware = firmwareVersion(driveVersion);
-    if (turnFirmware.isEmpty()) turnFirmware = firmwareVersion(turnVersion);
-    if (turnEncoderFirmware.isEmpty()) turnEncoderFirmware = firmwareVersion(turnEncoderVersion);
-  }
-
-  /** Returns the signal's firmware version as "major.minor.bugfix.build", or "" when unknown. */
-  private static String firmwareVersion(StatusSignal<Integer> version) {
-    version.refresh(false);
-    return version.getStatus().isOK() ? PhoenixFirmware.format(version.getValue()) : "";
   }
 
   @Override
   public void setDriveOpenLoop(double output) {
-    driveControlStatus =
-        driveTalon.setControl(
-            switch (constants.DriveMotorClosedLoopOutput) {
-              case Voltage -> voltageRequest.withOutput(output);
-              case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
-            });
+    driveTalon.setControl(
+        switch (constants.DriveMotorClosedLoopOutput) {
+          case Voltage -> voltageRequest.withOutput(output);
+          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
+        });
   }
 
   @Override
   public void setTurnOpenLoop(double output) {
-    turnControlStatus =
-        turnTalon.setControl(
-            switch (constants.SteerMotorClosedLoopOutput) {
-              case Voltage -> voltageRequest.withOutput(output);
-              case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
-            });
+    turnTalon.setControl(
+        switch (constants.SteerMotorClosedLoopOutput) {
+          case Voltage -> voltageRequest.withOutput(output);
+          case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
+        });
   }
 
   @Override
@@ -221,18 +176,15 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
             constants.DriveMotorClosedLoopOutput,
             feedforwardWheelTorqueNm,
             constants.DriveMotorGearRatio);
-    driveControlStatus =
-        driveTalon.setControl(
-            switch (constants.DriveMotorClosedLoopOutput) {
-              case Voltage ->
-                  velocityVoltageRequest
-                      .withVelocity(velocityRotPerSec)
-                      .withFeedForward(feedforward);
-              case TorqueCurrentFOC ->
-                  velocityTorqueCurrentRequest
-                      .withVelocity(velocityRotPerSec)
-                      .withFeedForward(feedforward);
-            });
+    driveTalon.setControl(
+        switch (constants.DriveMotorClosedLoopOutput) {
+          case Voltage ->
+              velocityVoltageRequest.withVelocity(velocityRotPerSec).withFeedForward(feedforward);
+          case TorqueCurrentFOC ->
+              velocityTorqueCurrentRequest
+                  .withVelocity(velocityRotPerSec)
+                  .withFeedForward(feedforward);
+        });
   }
 
   /**
@@ -254,13 +206,12 @@ public abstract class ModuleIOTalonFXBase implements ModuleIO {
 
   @Override
   public void setTurnPosition(Rotation2d rotation) {
-    turnControlStatus =
-        turnTalon.setControl(
-            switch (constants.SteerMotorClosedLoopOutput) {
-              case Voltage -> motionMagicVoltageRequest.withPosition(rotation.getRotations());
-              case TorqueCurrentFOC ->
-                  motionMagicTorqueCurrentRequest.withPosition(rotation.getRotations());
-            });
+    turnTalon.setControl(
+        switch (constants.SteerMotorClosedLoopOutput) {
+          case Voltage -> motionMagicVoltageRequest.withPosition(rotation.getRotations());
+          case TorqueCurrentFOC ->
+              motionMagicTorqueCurrentRequest.withPosition(rotation.getRotations());
+        });
   }
 
   @Override
